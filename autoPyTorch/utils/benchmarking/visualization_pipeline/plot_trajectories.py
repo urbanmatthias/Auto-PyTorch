@@ -3,13 +3,20 @@ from autoPyTorch.utils.config.config_option import ConfigOption, to_bool
 from autoPyTorch.pipeline.base.pipeline_node import PipelineNode
 import numpy as np
 import logging
+import json
 
 class PlotTrajectories(PipelineNode):
 
     def fit(self, pipeline_config, trajectories, train_metrics, instance):
-        # these imports won't work on meta
-        import matplotlib.pyplot as plt
-        from matplotlib.backends.backend_pdf import PdfPages
+        try:
+            # these imports won't work on meta
+            import matplotlib.pyplot as plt
+            from matplotlib.backends.backend_pdf import PdfPages
+            extension = "pdf"
+        except:
+            plt = DataPlot()
+            PdfPages = SaveDataPlot
+            extension = "json"
 
         plot_logs = pipeline_config['plot_logs'] or train_metrics
         output_folder = pipeline_config['output_folder']
@@ -29,7 +36,7 @@ class PlotTrajectories(PipelineNode):
             
             # prepare pdf
             if output_folder is not None:
-                pdf_destination = os.path.join(output_folder, instance_name + '_' + metric_name + '.pdf')
+                pdf_destination = os.path.join(output_folder, instance_name + '_' + metric_name + '.' + extension)
                 pp = PdfPages(pdf_destination)
 
             # create figure
@@ -39,7 +46,8 @@ class PlotTrajectories(PipelineNode):
                                    run_trajectories,
                                    pipeline_config['agglomeration'],
                                    pipeline_config['scale_uncertainty'],
-                                   pipeline_config['font_size']):
+                                   pipeline_config['font_size'],
+                                   plt):
                 logging.getLogger('benchmark').warn('Not showing empty plot for ' + instance)
                 continue
 
@@ -65,9 +73,8 @@ class PlotTrajectories(PipelineNode):
         ]
         return options
 
-def plot_trajectory(instance_name, metric_name, run_trajectories, agglomeration, scale_uncertainty, font_size):
+def plot_trajectory(instance_name, metric_name, run_trajectories, agglomeration, scale_uncertainty, font_size, plt):
     # iterate over the incumbent trajectories of the different runs
-    import matplotlib.pyplot as plt
     cmap = plt.get_cmap('jet')
     for i, (config_name, trajectory) in enumerate(run_trajectories.items()):
         color = cmap(i / (len(run_trajectories)))
@@ -116,3 +123,65 @@ def plot_trajectory(instance_name, metric_name, run_trajectories, agglomeration,
     plt.title(instance_name, fontsize=font_size)
     plt.xscale("log")
     return not plot_empty
+
+class DataPlot():
+    def __init__(self):
+        self._xlabel = None
+        self._ylabel = None
+        self._title = None
+        self.fontsize = None
+        self.finishing_times = list()
+        self.lowers = list()
+        self.uppers = list()
+        self.centers = list()
+        self.colors = list()
+        self.config_labels = list()
+    
+    def step(self, finishing_times, center, color, label, where):
+        self.finishing_times.append(finishing_times)
+        self.centers.append(center)
+        self.colors.append(color)
+        self.config_labels.append(label)
+    
+    def fill_between(self, finishing_times, lower, upper, step, color):
+        assert finishing_times == self.finishing_times[-1]
+        self.lowers.append(lower)
+        self.uppers.append(upper)
+    
+    def xlabel(self, xlabel, fontsize):
+        self._xlabel = xlabel
+        self.fontsize = fontsize
+    
+    def ylabel(self, ylabel, fontsize):
+        self._ylabel = ylabel
+        self.fontsize = fontsize
+    
+    def title(self, title, fontsize):
+        self._title = title
+        self.fontsize = fontsize
+    
+    def figure(self, i):
+        return self
+    
+    def show(self):
+        raise ValueError("Could not import Matplotlib. Specify output folder to save plot as json.")
+    
+    def legend(self, *args, **kwargs):
+        pass
+    
+    def xscale(self, *args, **kwargs):
+        pass
+    
+    def close(self, *args, **kwargs):
+        self.__init__()
+
+class SaveDataPlot():
+    def __init__(self, destination):
+        self.destination = destination
+    
+    def savefig(self, figure):
+        with open(self.destination, "w") as f:
+            print(json.dumps(figure.__dict__), file=f)
+    
+    def close(self, *args, **kwargs):
+        pass
