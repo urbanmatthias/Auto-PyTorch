@@ -1,5 +1,5 @@
 from autoPyTorch import AutoNetClassification, AutoNetRegression, AutoNetMultilabel, AutoNetEnsemble
-from autoPyTorch.pipeline.nodes.ensemble import test_predictions_for_ensemble
+from autoPyTorch.utils.ensemble import test_predictions_for_ensemble
 import autoPyTorch.pipeline.nodes as autonet_nodes
 import autoPyTorch.components.metrics as autonet_metrics
 from autoPyTorch.components.metrics.additional_logs import test_result
@@ -38,6 +38,6 @@ class CreateAutoNet(PipelineNode):
 
     def get_pipeline_config_options(self):
         options = [
-            ConfigOption("enable_ensemble", default=True, type=to_bool)
+            ConfigOption("enable_ensemble", default=False, type=to_bool)
         ]
         return options

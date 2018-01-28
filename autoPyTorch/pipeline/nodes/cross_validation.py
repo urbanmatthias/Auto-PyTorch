@@ -148,7 +148,7 @@ class CrossValidation(SubPipelineNode):
         if pipeline_config['cross_validator'] == "none" or budget_too_low_for_cv:
             logger.info("[AutoNet] No validation set given and either no cross validator given or budget to low for CV." + 
                              " Continue by splitting " + str(val_split) + " of training data.")
-            indices = self.shuffle_indices(list(range(dataset_info.x_shape[0])), pipeline_config['shuffle'], pipeline_config["random_seed"])
+            indices = self.shuffle_indices(np.array(list(range(dataset_info.x_shape[0]))), pipeline_config['shuffle'], pipeline_config["random_seed"])
             split = int(len(indices) * (1-val_split))
             train_indices, valid_indices = indices[:split], indices[split:]
             valid_indices = None if val_split == 0 else valid_indices
@@ -174,7 +174,7 @@ class CrossValidation(SubPipelineNode):
             return X_train, Y_train, num_cv_splits, cv_splits, 0, budget
         
         # refit
-        indices = self.shuffle_indices(list(range(dataset_info.x_shape[0])), pipeline_config['shuffle'], pipeline_config["random_seed"])
+        indices = self.shuffle_indices(np.array(list(range(dataset_info.x_shape[0]))), pipeline_config['shuffle'], pipeline_config["random_seed"])
         split = int(len(indices) * (1-val_split))
         train_indices, valid_indices = indices[:split], indices[split:]
         valid_indices = None if val_split == 0 else valid_indices

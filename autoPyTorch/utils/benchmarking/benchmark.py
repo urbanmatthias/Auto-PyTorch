@@ -13,7 +13,8 @@ from autoPyTorch.utils.benchmarking.visualization_pipeline import (CollectAutoNe
                                                                GetRunTrajectories,
                                                                PlotTrajectories,
                                                                ReadInstanceInfo,
-                                                               VisualizationSettings)
+                                                               VisualizationSettings,
+                                                               GetEnsembleTrajectories)
 from autoPyTorch.utils.benchmarking.visualization_pipeline import ForInstance as VisualizationForInstance
 from autoPyTorch.utils.config.config_file_parser import ConfigFileParser
 
@@ -58,7 +59,8 @@ class Benchmark():
                     CollectRunTrajectories([
                         ReadInstanceInfo(),
                         CreateAutoNet(),
-                        GetRunTrajectories()
+                        GetRunTrajectories(),
+                        GetEnsembleTrajectories()
                     ])
                 ]),
                 PlotTrajectories()

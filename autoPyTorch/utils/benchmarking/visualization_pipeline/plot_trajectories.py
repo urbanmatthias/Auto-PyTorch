@@ -82,11 +82,11 @@ def plot_trajectory(instance_name, metric_name, run_trajectories, agglomeration,
         finishing_times = []
 
         # iterate simultaneously over all trajectories with increasing finishing times
-        while any(trajectory_pointers[j] < len(trajectory[j]["config_ids"]) for j in range(len(trajectory))):
+        while any(trajectory_pointers[j] < len(trajectory[j]["losses"]) for j in range(len(trajectory))):
 
             # get trajectory with lowest finishing times
             times_finished, trajectory_id = min([(trajectory[j]["times_finished"][trajectory_pointers[j]], j)
-                for j in range(len(trajectory)) if trajectory_pointers[j] < len(trajectory[j]["config_ids"])])
+                for j in range(len(trajectory)) if trajectory_pointers[j] < len(trajectory[j]["losses"])])
             current_trajectory = trajectory[trajectory_id]
 
             # update trajectory values and pointers
