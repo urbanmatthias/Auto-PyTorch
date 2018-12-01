@@ -21,3 +21,9 @@ results.json
 # Build
 *build/
 *autonet.egg-info
+
+# Metalearning data
+metalearning_data/
+
+# Datasets
+datasets/
