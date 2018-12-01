@@ -1,5 +1,5 @@
-from autonet.pipeline.base.pipeline_node import PipelineNode
-from autonet.utils.config.config_option import ConfigOption
+from autoPyTorch.pipeline.base.pipeline_node import PipelineNode
+from autoPyTorch.utils.config.config_option import ConfigOption
 import pickle
 import logging
 
