@@ -62,6 +62,7 @@ class AutoNetFeatureData(AutoNet):
         from autoPyTorch.pipeline.nodes.optimizer_selector import OptimizerSelector
         from autoPyTorch.pipeline.nodes.lr_scheduler_selector import LearningrateSchedulerSelector
         from autoPyTorch.pipeline.nodes.train_node import TrainNode
+        from autoPyTorch.pipeline.nodes.cross_validation import CrossValidation
 
         from autoPyTorch.components.networks.feature import MlpNet, ResNet, ShapedMlpNet, ShapedResNet
 
@@ -71,6 +72,7 @@ class AutoNetFeatureData(AutoNet):
         from autoPyTorch.components.networks.feature import LearnedEntityEmbedding
 
         from sklearn.preprocessing import MinMaxScaler, StandardScaler, MaxAbsScaler
+        from sklearn.model_selection import KFold
 
         from autoPyTorch.components.preprocessing.feature_preprocessing import \
                 TruncatedSVD, FastICA, RandomKitchenSinks, KernelPCA, Nystroem
@@ -114,3 +116,6 @@ class AutoNetFeatureData(AutoNet):
         train_node = pipeline[TrainNode.get_name()]
         train_node.add_training_technique("early_stopping", EarlyStopping)
         train_node.add_batch_loss_computation_technique("mixup", Mixup)
+
+        cv = pipeline[CrossValidation.get_name()]
+        cv.add_cross_validator("k_fold", KFold)

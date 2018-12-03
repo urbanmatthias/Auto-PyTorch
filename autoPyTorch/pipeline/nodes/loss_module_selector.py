@@ -8,6 +8,7 @@ import torch
 import ConfigSpace
 import ConfigSpace.hyperparameters as CSH
 from autoPyTorch.pipeline.base.pipeline_node import PipelineNode
+from autoPyTorch.pipeline.nodes.cross_validation import split_data
 
 from torch.nn.modules.loss import _Loss
 from autoPyTorch.utils.configspace_wrapper import ConfigWrapper
@@ -19,7 +20,8 @@ class LossModuleSelector(PipelineNode):
         super(LossModuleSelector, self).__init__()
         self.loss_modules = dict()
 
-    def fit(self, hyperparameter_config, pipeline_config, X_train, Y_train):
+    def fit(self, hyperparameter_config, pipeline_config, X_train, Y_train, split_indices):
+        X_train, Y_train, _, _ = split_data(split_indices, X_train=X_train, Y_train=Y_train)
         hyperparameter_config = ConfigWrapper(self.get_name(), hyperparameter_config)
 
         weights = None

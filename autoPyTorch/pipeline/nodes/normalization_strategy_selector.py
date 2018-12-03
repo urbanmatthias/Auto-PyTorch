@@ -6,6 +6,7 @@ from autoPyTorch.pipeline.base.pipeline_node import PipelineNode
 from autoPyTorch.utils.config.config_option import ConfigOption
 from autoPyTorch.components.preprocessing.preprocessor_base import PreprocessorBase
 from autoPyTorch.utils.configspace_wrapper import ConfigWrapper
+from autoPyTorch.pipeline.nodes.cross_validation import split_data
 import ConfigSpace
 import ConfigSpace.hyperparameters as CSH
 from sklearn.compose import ColumnTransformer
@@ -17,8 +18,9 @@ class NormalizationStrategySelector(PipelineNode):
 
         self.normalization_strategies = {'none': None}
 
-    def fit(self, hyperparameter_config, X_train, X_valid, categorical_features):
+    def fit(self, hyperparameter_config, X_train, X_valid, split_indices, categorical_features):
         hyperparameter_config = ConfigWrapper(self.get_name(), hyperparameter_config)
+        X_train_fit, _, _, _ = split_data(split_indices, X_train=X_train, X_valid=X_valid)
 
         normalizer_name = hyperparameter_config['normalization_strategy']
 
@@ -31,7 +33,7 @@ class NormalizationStrategySelector(PipelineNode):
             transformers=[("normalize", normalizer, [i for i, c in enumerate(categorical_features) if not c])],
             remainder='passthrough'
         )
-        transformer.fit(X_train)
+        transformer.fit(X_train_fit)
 
         X_train = transformer.transform(X_train)
         if (X_valid is not None):

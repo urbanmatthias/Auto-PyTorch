@@ -1,6 +1,7 @@
 import logging
 import torch
 import time
+import numpy as np
 from hpbandster.core.worker import Worker
 
 from autoPyTorch.training.budget_types import BudgetTypeTime
@@ -64,6 +65,7 @@ class ModuleWorker(Worker):
         loss = result['loss']
         info = result['info']
 
+        info = {key: (value if not isinstance(value, np.ndarray) else value.tolist()) for key, value in info.items()}
         self.autonet_logger.debug("Result: " + str(loss) + " info: " + str(info))
 
         # that is not really elegant but we can want to achieve some kind of feedback
@@ -81,7 +83,8 @@ class ModuleWorker(Worker):
             self.autonet_logger.info("Fit optimization pipeline")
             return self.pipeline.fit_pipeline(hyperparameter_config=config, pipeline_config=self.pipeline_config, 
                                             X_train=self.X_train, Y_train=self.Y_train, X_valid=self.X_valid, Y_valid=self.Y_valid, 
-                                            budget=budget, budget_type=self.budget_type, max_budget=self.max_budget, optimize_start_time=optimize_start_time)
+                                            budget=budget, budget_type=self.budget_type, max_budget=self.max_budget, optimize_start_time=optimize_start_time,
+                                            refit=False)
         except Exception as e:
             self.autonet_logger.info(str(e))
             raise e
