@@ -18,25 +18,21 @@ class Imputation(PipelineNode):
 
     strategies = ["mean", "median", "most_frequent"]
 
-    def fit(self, hyperparameter_config, X_train, X_valid, split_indices, categorical_features):
+    def fit(self, hyperparameter_config, X, Y, train_indices, dataset_info, categorical_features):
         hyperparameter_config = ConfigWrapper(self.get_name(), hyperparameter_config)
-        X_train_fit, _, _, _ = split_data(split_indices, X_train=X_train, X_valid=X_valid)
 
         strategy = hyperparameter_config['strategy']
-        fill_value = int(np.nanmax(X_train)) + 1 if not scipy.sparse.issparse(X_train) else 0
+        fill_value = int(np.nanmax(X[train_indices])) + 1 if dataset_info.is_sparse else 0
         numerical_imputer = SimpleImputer(strategy=strategy, copy=False)
         categorical_imputer = SimpleImputer(strategy='constant', copy=False, fill_value=fill_value)
         transformer = ColumnTransformer(
             transformers=[('numerical_imputer', numerical_imputer, [i for i, c in enumerate(categorical_features) if not c]),
                           ('categorical_imputer', categorical_imputer,  [i for i, c in enumerate(categorical_features) if c])])
-        transformer.fit(X_train_fit)
-        
-        X_train = transformer.transform(X_train)
-        if (X_valid is not None):
-            X_valid = transformer.transform(X_valid)
+        transformer.fit(X[train_indices])
+        X = transformer.transform(X)
         
         categorical_features = sorted(categorical_features)
-        return { 'X_train': X_train, 'X_valid': X_valid, 'imputation_preprocessor': transformer, 'categorical_features': categorical_features }
+        return { 'X': X, 'imputation_preprocessor': transformer, 'categorical_features': categorical_features }
 
 
     def predict(self, X, imputation_preprocessor):

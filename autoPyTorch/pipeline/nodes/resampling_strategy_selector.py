@@ -8,6 +8,7 @@ __license__ = "BSD"
 from autoPyTorch.pipeline.base.pipeline_node import PipelineNode
 from autoPyTorch.utils.config.config_option import ConfigOption
 from autoPyTorch.components.preprocessing.resampling_base import ResamplingMethodNone, ResamplingMethodBase, TargetSizeStrategyBase
+from autoPyTorch.pipeline.nodes.cross_validation import CrossValidation
 from sklearn.preprocessing import OneHotEncoder
 import ConfigSpace
 import ConfigSpace.hyperparameters as CSH
@@ -29,9 +30,8 @@ class ResamplingStrategySelector(PipelineNode):
 
         self.logger = logging.getLogger('autonet')
 
-    def fit(self, hyperparameter_config, X_train, Y_train, X_valid, Y_valid, split_indices):
+    def fit(self, pipeline_config, hyperparameter_config, X, Y, train_indices, valid_indices):
         hyperparameter_config = ConfigWrapper(self.get_name(), hyperparameter_config)
-        X_train, Y_train, X_valid, Y_valid = split_data(split_indices, X_train=X_train, Y_train=Y_train, X_valid=X_valid, Y_valid=Y_valid)
         
         if hyperparameter_config['target_size_strategy'] == 'none':
             return dict()
@@ -44,7 +44,7 @@ class ResamplingStrategySelector(PipelineNode):
         )
         target_size_strategy = self.target_size_strategies[hyperparameter_config['target_size_strategy']]()
 
-        y = np.argmax(Y_train, axis=1).astype(int)
+        y = np.argmax(Y[train_indices], axis=1).astype(int)
         ohe = OneHotEncoder(categories="auto", sparse=False)
         ohe.fit(y.reshape((-1, 1)))
 
@@ -52,11 +52,15 @@ class ResamplingStrategySelector(PipelineNode):
         under_sampling_target_size = target_size_strategy.under_sample_strategy(y)
 
         self.logger.debug("Distribution before resample: " + str(np.unique(y, return_counts=True)[1]))
-        X_train, y = over_sampling_method.resample(X_train, y, over_sampling_target_size)
-        X_train, y = under_sampling_method.resample(X_train, y, under_sampling_target_size)
-        self.logger.debug("Distribution after resample: " + str(np.unique(y, return_counts=True)[1]))
-        return {'X_train': X_train, 'Y_train': ohe.transform(y.reshape((-1, 1))),
-                'X_valid': X_valid, 'Y_valid': Y_valid, "split_indices": None, "original_split_indices": split_indices}
+        X_resampled, y_resampled = over_sampling_method.resample(X[train_indices], y, over_sampling_target_size)
+        X_resampled, y_resampled  = under_sampling_method.resample(X_resampled, y_resampled, under_sampling_target_size)
+        self.logger.debug("Distribution after resample: " + str(np.unique(y_resampled, return_counts=True)[1]))
+        
+        X, Y, split_indices = CrossValidation.get_validation_set_split_indices(pipeline_config,
+                X_train=X_resampled, X_valid=X[valid_indices],
+                Y_train=ohe.transform(y._resampled.reshape((-1, 1))), Y_valid=Y[valid_indices])
+
+        return {"X": X, "Y": Y, "train_indices": split_indices[0], "valid_indices": valid_indices[1]}
 
     def add_over_sampling_method(self, name, resampling_method):
         """Add a resampling strategy.

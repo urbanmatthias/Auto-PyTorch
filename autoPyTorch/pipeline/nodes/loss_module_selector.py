@@ -20,14 +20,13 @@ class LossModuleSelector(PipelineNode):
         super(LossModuleSelector, self).__init__()
         self.loss_modules = dict()
 
-    def fit(self, hyperparameter_config, pipeline_config, X_train, Y_train, split_indices):
-        X_train, Y_train, _, _ = split_data(split_indices, X_train=X_train, Y_train=Y_train)
+    def fit(self, hyperparameter_config, pipeline_config, X, Y, train_indices):
         hyperparameter_config = ConfigWrapper(self.get_name(), hyperparameter_config)
 
         weights = None
         loss_module = self.loss_modules[hyperparameter_config["loss_module"]]
         if (loss_module.weight_strategy != None):
-            weights = loss_module.weight_strategy(pipeline_config, X_train, Y_train)
+            weights = loss_module.weight_strategy(pipeline_config, X[train_indices], Y[train_indices])
             weights = torch.from_numpy(weights).float()
 
         loss = loss_module.module

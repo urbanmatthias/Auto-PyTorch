@@ -23,7 +23,7 @@ class EmbeddingSelector(PipelineNode):
         self.embedding_modules = dict()
         self.add_embedding_module('none', NoEmbedding)
 
-    def fit(self, hyperparameter_config, pipeline_config, X_train, one_hot_encoder):
+    def fit(self, hyperparameter_config, pipeline_config, dataset_info, one_hot_encoder):
 
         if not one_hot_encoder or not one_hot_encoder.categories_:
             # no categorical features -> no embedding
@@ -35,7 +35,7 @@ class EmbeddingSelector(PipelineNode):
         embedding_type = self.embedding_modules[embedding_name]
         embedding_config = ConfigWrapper(embedding_name, hyperparameter_config)
 
-        return {'embedding': embedding_type(embedding_config, X_train.shape[1], one_hot_encoder)}
+        return {'embedding': embedding_type(embedding_config, dataset_info.x_shape[1], one_hot_encoder)}
 
 
     def add_embedding_module(self, name, embedding_module):

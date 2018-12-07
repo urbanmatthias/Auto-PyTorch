@@ -26,11 +26,14 @@ class AutoNetFeatureData(AutoNet):
         from autoPyTorch.pipeline.nodes.metric_selector import MetricSelector
         from autoPyTorch.pipeline.nodes.loss_module_selector import LossModuleSelector
         from autoPyTorch.pipeline.nodes.train_node import TrainNode
+        from autoPyTorch.pipeline.nodes.create_dataloader import CreateDataLoader
+        from autoPyTorch.pipeline.nodes.create_dataset_info import DataSetInfo
         
         # build the pipeline
         pipeline = Pipeline([
             AutoNetSettings(),
             OptimizationAlgorithm([
+                DataSetInfo(),
                 CrossValidation([
                     Imputation(),
                     NormalizationStrategySelector(),
@@ -44,6 +47,7 @@ class AutoNetFeatureData(AutoNet):
                     LogFunctionsSelector(),
                     MetricSelector(),
                     LossModuleSelector(),
+                    CreateDataLoader(),
                     TrainNode()
                 ])
             ])

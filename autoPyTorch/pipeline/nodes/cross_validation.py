@@ -48,17 +48,11 @@ class CrossValidation(SubPipelineNode):
         self.logger = logging.getLogger('autonet')
 
 
-    def fit(self, hyperparameter_config, pipeline_config, X_train, Y_train, X_valid, Y_valid, budget, budget_type, optimize_start_time, refit):
+    def fit(self, hyperparameter_config, pipeline_config, X_train, Y_train, X_valid, Y_valid, budget, budget_type, optimize_start_time, refit, dataset_info):
         loss = 0
         infos = []
-        num_cv_splits, cv_splits, loss_penalty, budget = self.initialize_cross_validation(
-            pipeline_config=pipeline_config, budget=budget, X_train=X_train, Y_train=Y_train, X_valid=X_valid, Y_valid=Y_valid, refit=refit)
-
-        # set up categorical features
-        if 'categorical_features' in pipeline_config and pipeline_config['categorical_features']:
-            categorical_features = pipeline_config['categorical_features']
-        else:
-            categorical_features = [False] * X_train.shape[1]
+        X, Y, num_cv_splits, cv_splits, loss_penalty, budget = self.initialize_cross_validation(
+            pipeline_config=pipeline_config, budget=budget, X_train=X_train, Y_train=Y_train, X_valid=X_valid, Y_valid=Y_valid, dataset_info=dataset_info, refit=refit)
         
         # adjust budget in case of budget type time
         if budget_type == BudgetTypeTime:
@@ -71,25 +65,17 @@ class CrossValidation(SubPipelineNode):
             if num_cv_splits > 1:
                 self.logger.debug("[AutoNet] CV split " + str(i) + " of " + str(num_cv_splits))
 
-            # adjust budget in case of budget type time
-            if budget_type == BudgetTypeTime:
-                remaining_budget = budget - (time.time() - cv_start_time)
-                should_be_remaining_budget = (budget - i * budget / num_cv_splits)
-                budget_type.compensate = max(10, should_be_remaining_budget - remaining_budget)
-                cur_budget = remaining_budget / (num_cv_splits - i)
-                self.logger.info("Reduced initial budget " + str(budget / num_cv_splits) + " to cv budget " + 
-                                 str(cur_budget) + " compensate for " + str(should_be_remaining_budget - remaining_budget))
-            else:
-                cur_budget = budget / num_cv_splits
-
             # fit training pipeline
+            cur_budget = self.get_current_budget(cv_index=i, budget=budget, budget_type=budget_type, cv_start_time=cv_start_time, num_cv_splits=num_cv_splits)
             result = self.sub_pipeline.fit_pipeline(
                 hyperparameter_config=hyperparameter_config, pipeline_config=pipeline_config, 
-                X_train=X_train, Y_train=Y_train, X_valid=X_valid, Y_valid=Y_valid, 
+                X=X, Y=Y, 
                 budget=cur_budget, training_techniques=[budget_type()],
                 fit_start_time=time.time(),
-                categorical_features=categorical_features,
-                split_indices=split_indices, cv_index=i)
+                train_indices=split_indices[0],
+                valid_indices=split_indices[1],
+                original_split_indices=split_indices,
+                cv_index=i)
 
             if result is not None:
                 loss += result['loss']
@@ -98,12 +84,11 @@ class CrossValidation(SubPipelineNode):
         if (len(infos) == 0):
             raise Exception("Could not finish a single cv split due to memory or time limitation")
 
+        # aggregate logs
         df = pd.DataFrame(infos)
         info = dict(df.mean())
         info['num_cv_splits'] = num_cv_splits
-
         loss = loss / num_cv_splits + loss_penalty
-
         return {'loss': loss, 'info': info}
 
     def predict(self, pipeline_config, X):
@@ -130,22 +115,37 @@ class CrossValidation(SubPipelineNode):
         super(CrossValidation, self).clean_fit_data()
         self.sub_pipeline.root.clean_fit_data()
     
-    def initialize_cross_validation(self, pipeline_config, budget, X_train, Y_train, X_valid, Y_valid, refit):
+    def initialize_cross_validation(self, pipeline_config, budget, X_train, Y_train, X_valid, Y_valid, dataset_info, refit):
         budget_too_low_for_cv = budget < pipeline_config['min_budget_for_cv']
         val_split = max(0, min(1, pipeline_config['validation_split']))
 
         # validation set given. cv ignored.
         if X_valid is not None and Y_valid is not None:
+            if pipeline_config['cross_validator'] != "none":
+                self.logger.warning('Cross validator ' + pipeline_config['cross_validator'] + ' given and validation set is specified, ' +
+                                    'autonet will ignore cv splits and evaluate on given validation set')
+            if val_split > 0.0:
+                self.logger.warning('Validation split is set to ' + str(val_split) + ' and validation set is specified, ' +
+                                    'autonet will ignore split and evaluate on given validation set')
+            
+            X, Y, indices = self.get_validation_set_split_indices(pipeline_config,
+                X_train=X_train, X_valid=X_valid, Y_train=Y_train, Y_valid=Y_valid)
+
             self.logger.info("[AutoNet] Validation set given. Continue with validation set (no cross validation).")
-            return 1, [None], 0, budget
+            return X, Y, 1, [indices], 0, budget
         
         # no cv, split train data
         if pipeline_config['cross_validator'] == "none" or budget_too_low_for_cv:
             self.logger.info("[AutoNet] No validation set given and either no cross validator given or budget to low for CV." + 
                              " Continue by splitting " + str(val_split) + " of training data.")
-            return 1, [get_valid_split_indices(pipeline_config, X_train.shape[0], val_split)], (1000 if budget_too_low_for_cv else 0), budget
+            indices = self.shuffle_indices(list(range(dataset_info.x_shape[0])), pipeline_config['shuffle'])
+            split = int(len(indices) * (1-val_split))
+            train_indices, valid_indices = indices[:split], indices[split:]
+            valid_indices = None if val_split == 0 else valid_indices
+            return X_train, Y_train, 1, [(train_indices, valid_indices)], (1000 if budget_too_low_for_cv else 0), budget
 
         # cross validation
+        self.logger.warning('Validation split is set to ' + str(val_split) + ' and cross validator specified, autonet will ignore validation split')
         cross_validator_class = self.cross_validators[pipeline_config['cross_validator']]
         adjust_y = self.cross_validators_adjust_y[pipeline_config['cross_validator']]
         available_cross_validator_args = inspect.getfullargspec(cross_validator_class.__init__)[0]
@@ -161,10 +161,15 @@ class CrossValidation(SubPipelineNode):
         cv_splits = cross_validator.split(X_train, adjust_y(Y_train))
         if not refit:
             self.logger.info("[Autonet] Continue with cross validation using " + str(pipeline_config['cross_validator']))
-            return num_cv_splits, cv_splits, 0, budget
+            return X_train, Y_train, num_cv_splits, cv_splits, 0, budget
         
+        # refit
+        indices = self.shuffle_indices(list(range(dataset_info.x_shape[0])), pipeline_config['shuffle'])
+        split = int(len(indices) * (1-val_split))
+        train_indices, valid_indices = indices[:split], indices[split:]
+        valid_indices = None if val_split == 0 else valid_indices
         self.logger.info("[Autonet] No cross validation when refitting! Continue by splitting " + str(val_split) + " of training data.")
-        return 1, [get_valid_split_indices(pipeline_config, X_train.shape[0], val_split)], 0, budget / num_cv_splits
+        return X_train, Y_train, 1, [indices], 0, budget / num_cv_splits
 
     def add_cross_validator(self, name, cross_validator, adjust_y=None):
         self.cross_validators[name] = cross_validator
@@ -173,24 +178,40 @@ class CrossValidation(SubPipelineNode):
     def remove_cross_validator(self, name):
         del self.cross_validators[name]
         del self.cross_validators_adjust_y[name]
+    
+    def get_current_budget(self, cv_index, budget, budget_type, cv_start_time, num_cv_splits):
+        # adjust budget in case of budget type time
+        if budget_type == BudgetTypeTime:
+            remaining_budget = budget - (time.time() - cv_start_time)
+            should_be_remaining_budget = (budget - cv_index * budget / num_cv_splits)
+            budget_type.compensate = max(10, should_be_remaining_budget - remaining_budget)
+            cur_budget = remaining_budget / (num_cv_splits - cv_index)
+            self.logger.info("Reduced initial budget " + str(budget / num_cv_splits) + " to cv budget " + 
+                                str(cur_budget) + " compensate for " + str(should_be_remaining_budget - remaining_budget))
+        else:
+            cur_budget = budget / num_cv_splits
+        return cur_budget
+    
+    @staticmethod
+    def concat(upper, lower):
+        if (scipy.sparse.issparse(upper)):
+            return scipy.sparse.vstack([upper, lower])
+        else:
+            return np.concatenate([upper, lower])
 
+    @staticmethod
+    def shuffle_indices(indices, shuffle=True, seed=42):
+        if shuffle:
+            np.random.shuffle(indices)
+        return indices
+    
+    @staticmethod
+    def get_validation_set_split_indices(pipeline_config, X_train, X_valid, Y_train, Y_valid):
+        train_indices = CrossValidation.shuffle_indices(list(range(X_train.shape[0])),
+            pipeline_config['shuffle'], pipeline_config['random_seed'])
+        valid_indices = CrossValidation.shuffle_indices(list(range(X_train.shape[0], X_train.shape[0] + X_valid.shape[0])),
+            pipeline_config['shuffle'], pipeline_config['random_seed'])
 
-def split_data(split_indices, X_train=None, Y_train=None, X_valid=None, Y_valid=None):
-    if split_indices is None:
-        return X_train, Y_train, X_valid, Y_valid
-    train_indices = split_indices[0]
-    valid_indices = split_indices[1]
-    return (X_train[train_indices] if X_train is not None else None,
-            Y_train[train_indices] if Y_train is not None else None,
-            X_train[valid_indices] if X_train is not None and len(valid_indices) > 0 else None,
-            Y_train[valid_indices] if Y_train is not None and len(valid_indices) > 0 else None)
-
-def get_valid_split_indices(pipeline_config, num_datapoints, val_split):
-    all_indices = np.arange(num_datapoints)
-    rng = np.random.RandomState(pipeline_config["random_seed"])
-    val_indices = np.random.choice(all_indices, int(all_indices.shape[0] * val_split), replace=False)
-    train_indices = np.array([a for a in all_indices if a not in val_indices])
-    if pipeline_config["shuffle"]:
-        rng.shuffle(train_indices)
-    return (train_indices, val_indices)
-
+        X = CrossValidation.concat(X_train, X_valid)
+        Y = CrossValidation.concat(Y_train, Y_valid)
+        return X, Y, (train_indices, valid_indices)

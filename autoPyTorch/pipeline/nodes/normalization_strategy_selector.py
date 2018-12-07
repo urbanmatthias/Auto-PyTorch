@@ -18,9 +18,8 @@ class NormalizationStrategySelector(PipelineNode):
 
         self.normalization_strategies = {'none': None}
 
-    def fit(self, hyperparameter_config, X_train, X_valid, split_indices, categorical_features):
+    def fit(self, hyperparameter_config, X, train_indices, categorical_features):
         hyperparameter_config = ConfigWrapper(self.get_name(), hyperparameter_config)
-        X_train_fit, _, _, _ = split_data(split_indices, X_train=X_train, X_valid=X_valid)
 
         normalizer_name = hyperparameter_config['normalization_strategy']
 
@@ -33,15 +32,13 @@ class NormalizationStrategySelector(PipelineNode):
             transformers=[("normalize", normalizer, [i for i, c in enumerate(categorical_features) if not c])],
             remainder='passthrough'
         )
-        transformer.fit(X_train_fit)
+        transformer.fit(X[train_indices])
 
-        X_train = transformer.transform(X_train)
-        if (X_valid is not None):
-            X_valid = transformer.transform(X_valid)
+        X = transformer.transform(X)
         
         categorical_features = sorted(categorical_features)
 
-        return {'X_train': X_train, 'X_valid': X_valid, 'normalizer': transformer, 'categorical_features': categorical_features}
+        return {'X': X, 'normalizer': transformer, 'categorical_features': categorical_features}
 
     def predict(self, X, normalizer):
         if normalizer is None:

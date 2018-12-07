@@ -19,24 +19,21 @@ class PreprocessorSelector(PipelineNode):
         self.preprocessors = dict()
         self.add_preprocessor('none', PreprocessorBase)
 
-    def fit(self, hyperparameter_config, pipeline_config, X_train, Y_train, X_valid, split_indices, one_hot_encoder):
+    def fit(self, hyperparameter_config, pipeline_config, X, Y, train_indices, valid_indices, one_hot_encoder):
         hyperparameter_config = ConfigWrapper(self.get_name(), hyperparameter_config)
-        X_train_fit, Y_train_fit, _, _ = split_data(split_indices, X_train=X_train, X_valid=X_valid, Y_train=Y_train)
 
         preprocessor_name = hyperparameter_config['preprocessor']
         preprocessor_type = self.preprocessors[preprocessor_name]
         preprocessor_config = ConfigWrapper(preprocessor_name, hyperparameter_config)
         preprocessor = preprocessor_type(preprocessor_config)
-        preprocessor.fit(X_train_fit, Y_train_fit)
+        preprocessor.fit(X[train_indices], Y[train_indices])
 
         if preprocessor_name != 'none':
             one_hot_encoder = None
 
-        X_train = preprocessor.transform(X_train)
-        if (X_valid is not None):
-            X_valid = preprocessor.transform(X_valid)
+        X = preprocessor.transform(X)
 
-        return {'X_train': X_train, 'X_valid': X_valid, 'preprocessor': preprocessor, 'one_hot_encoder': one_hot_encoder}
+        return {'X': X, 'preprocessor': preprocessor, 'one_hot_encoder': one_hot_encoder}
 
     def predict(self, preprocessor, X):
         return { 'X': preprocessor.transform(X) }
