@@ -324,7 +324,7 @@ def _eval_metrics(eval_specifics, hyperparameter_config, pipeline_config, traini
 
     if 'use_tensorboard_logger' in pipeline_config and pipeline_config['use_tensorboard_logger']:
         import tensorboard_logger as tl
-        worker_path = 'Worker_' + str(pipeline_config['task_id']) + '/'
+        worker_path = 'Train/'
         tl.log_value(worker_path + 'budget', float(budget), int(time.time()))
         for name, value in log.items():
             tl.log_value(worker_path + name, float(value), int(time.time()))

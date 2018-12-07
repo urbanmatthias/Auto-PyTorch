@@ -279,9 +279,7 @@ class tensorboard_logger(object):
             tl.log_value('BOHB/all_results', result['loss'] * -1, time_step)
             if result['loss'] < self.incumbent:
                 self.incumbent = result['loss']
-                tl.log_value('BOHB/incumbent_results', self.incumbent * -1, time_step)
-        else:
-            tl.log_value('Exceptions/' + str(exception.split('\n')[-2]), budget, time_step)
+            tl.log_value('BOHB/incumbent_results', self.incumbent * -1, time_step)
 
 
 class combined_logger(object):

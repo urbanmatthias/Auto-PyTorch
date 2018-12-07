@@ -24,8 +24,11 @@ class SetAutoNetConfig(PipelineNode):
 
         config['log_level'] = pipeline_config['log_level']
         
+        if data_manager.categorical_features:
+            config['categorical_features'] = data_manager.categorical_features
+
         # Note: PrepareResultFolder will make a small run dependent update of the autonet_config
-        autonet.update_autonet_config(categorical_features=data_manager.categorical_features, **config)
+        autonet.update_autonet_config(**config)
         return dict()
 
     def get_pipeline_config_options(self):

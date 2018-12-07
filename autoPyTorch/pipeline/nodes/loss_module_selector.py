@@ -86,6 +86,8 @@ class AutoNetLossModule():
     def __call__(self, x, y):
         if not self.requires_target_class_labels:
             return self.function(x, y)
+        elif len(y.shape) == 1:
+            return self.function(x, y)
         else:
             return self.function(x, y.max(1)[1])
 

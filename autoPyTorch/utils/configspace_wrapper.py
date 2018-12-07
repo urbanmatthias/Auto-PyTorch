@@ -1,6 +1,8 @@
 __author__ = "Max Dippel, Michael Burkart and Matthias Urban"
 __version__ = "0.0.1"
 __license__ = "BSD"
+
+import pprint
     
 class ConfigWrapper(object):
     delimiter = ':'
@@ -19,7 +21,7 @@ class ConfigWrapper(object):
 
     def __getitem__(self, key):
         if ((self.config_prefix + key) not in self.config):
-            print(self.config)
+            pprint.pprint(self.config)
         return self.config[self.config_prefix + key]
 
     def __str__(self):

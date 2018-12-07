@@ -47,7 +47,7 @@ class ModuleWorker(Worker):
 
             if self.budget_type == BudgetTypeTime:
                 grace_time = 10
-                time_limit = int(budget + 120)
+                time_limit = int(budget + 240)
 
             limit_train = pynisher.enforce_limits(mem_in_mb=self.pipeline_config['memory_limit_mb'], wall_time_in_s=time_limit)(self.optimize_pipeline)
             result = limit_train(config, budget, start_time)
@@ -86,6 +86,9 @@ class ModuleWorker(Worker):
                                             budget=budget, budget_type=self.budget_type, max_budget=self.max_budget, optimize_start_time=optimize_start_time,
                                             refit=False)
         except Exception as e:
+            if 'use_tensorboard_logger' in self.pipeline_config and self.pipeline_config['use_tensorboard_logger']:            
+                import tensorboard_logger as tl
+                tl.log_value('Exceptions/' + str(e), budget, int(time.time()))
             self.autonet_logger.info(str(e))
             raise e
 

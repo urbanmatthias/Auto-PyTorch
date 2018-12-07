@@ -14,4 +14,3 @@ from autoPyTorch.pipeline.nodes.preprocessor_selector import PreprocessorSelecto
 from autoPyTorch.pipeline.nodes.imputation import Imputation
 from autoPyTorch.pipeline.nodes.one_hot_encoding import OneHotEncoding
 from autoPyTorch.pipeline.nodes.resampling_strategy_selector import ResamplingStrategySelector
-from autoPyTorch.pipeline.nodes.multiple_datasets import MultipleDatasets
