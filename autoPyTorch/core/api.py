@@ -140,10 +140,8 @@ class AutoNet():
             raise ValueError("You have to specify a hyperparameter and autonet config in order to be able to refit")
 
         refit_data = {'hyperparameter_config': hyperparameter_config,
-                      'budget': self.optimized_hyperparameter_config_budget / autonet_config['cv_splits']}
-        autonet_config = copy.deepcopy(autonet_config)
-        autonet_config['cv_splits'] = 1
-        
+                      'budget': self.optimized_hyperparameter_config_budget}
+    
         self.pipeline.fit_pipeline(pipeline_config=autonet_config, refit=refit_data,
                                     X_train=X_train, Y_train=Y_train, X_valid=X_valid, Y_valid=Y_valid)
 

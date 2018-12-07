@@ -16,6 +16,7 @@ import ConfigSpace.hyperparameters as CSH
 from autoPyTorch.utils.configspace_wrapper import ConfigWrapper
 from autoPyTorch.utils.config.config_option import ConfigOption, to_bool
 from autoPyTorch.training.base_training import BaseTrainingTechnique, BaseBatchLossComputationTechnique
+from autoPyTorch.pipeline.nodes.cross_validation import split_data
 
 import signal
 
@@ -36,11 +37,13 @@ class TrainNode(PipelineNode):
             budget,
             loss_function,
             training_techniques,
-            fit_start_time):
+            fit_start_time,
+            split_indices):
         # prepare
         if not torch.cuda.is_available():
             pipeline_config["cuda"] = False
         hyperparameter_config = ConfigWrapper(self.get_name(), hyperparameter_config)
+        X_train, Y_train, X_valid, Y_valid = split_data(split_indices, X_train=X_train, Y_train=Y_train, X_valid=X_valid, Y_valid=Y_valid)
         training_techniques = [t() for t in self.training_techniques.values()] + training_techniques
         training_components, train_data, X_train, Y_train, X_valid, Y_valid, eval_specifics = prepare_training(
             pipeline_config=pipeline_config, hyperparameter_config=hyperparameter_config, training_techniques=training_techniques,
@@ -279,6 +282,7 @@ def predict(network, X, batch_size, device, move_network=True):
     # Batch prediction
     network.eval()
     r, n = 0, X.size()[0]
+    y_pred = None
     for batch_data in data:
         # Predict on batch
         X_batch = Variable(batch_data[0]).to(device)
