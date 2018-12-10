@@ -6,7 +6,6 @@ from autoPyTorch.pipeline.base.pipeline_node import PipelineNode
 from autoPyTorch.utils.config.config_option import ConfigOption
 from autoPyTorch.components.preprocessing.preprocessor_base import PreprocessorBase
 from autoPyTorch.utils.configspace_wrapper import ConfigWrapper
-from autoPyTorch.pipeline.nodes.cross_validation import split_data
 import ConfigSpace
 import ConfigSpace.hyperparameters as CSH
 from sklearn.compose import ColumnTransformer
@@ -18,7 +17,7 @@ class NormalizationStrategySelector(PipelineNode):
 
         self.normalization_strategies = {'none': None}
 
-    def fit(self, hyperparameter_config, X, train_indices, categorical_features):
+    def fit(self, hyperparameter_config, X, train_indices, dataset_info):
         hyperparameter_config = ConfigWrapper(self.get_name(), hyperparameter_config)
 
         normalizer_name = hyperparameter_config['normalization_strategy']
@@ -29,16 +28,16 @@ class NormalizationStrategySelector(PipelineNode):
         normalizer = self.normalization_strategies[normalizer_name]()
 
         transformer = ColumnTransformer(
-            transformers=[("normalize", normalizer, [i for i, c in enumerate(categorical_features) if not c])],
+            transformers=[("normalize", normalizer, [i for i, c in enumerate(dataset_info.categorical_features) if not c])],
             remainder='passthrough'
         )
         transformer.fit(X[train_indices])
 
         X = transformer.transform(X)
         
-        categorical_features = sorted(categorical_features)
+        dataset_info.categorical_features = sorted(dataset_info.categorical_features)
 
-        return {'X': X, 'normalizer': transformer, 'categorical_features': categorical_features}
+        return {'X': X, 'normalizer': transformer, 'dataset_info': dataset_info}
 
     def predict(self, X, normalizer):
         if normalizer is None:

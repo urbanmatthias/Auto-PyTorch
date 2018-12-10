@@ -9,31 +9,23 @@ class BudgetTypeTime(BaseTrainingTechnique):
     # OVERRIDE
     def set_up(self, training_components, pipeline_config, logger):
         super(BudgetTypeTime, self).set_up(training_components, pipeline_config, logger)
-        self.t = training_components["initial_budget"]
-        if self.t == 0:
-            self.t = (time.time() - training_components["fit_start_time"])
+        self.end_time = training_components["budget"] - self.compensate + training_components["fit_start_time"]
+        self.start_time = time.time()
         
-        if self.t >= training_components["budget"] - self.compensate:
+        if self.start_time >= self.end_time:
             raise Exception("Budget exhausted before training started")
-
-
-    # OVERRIDE
-    def before_train_batches(self, training_components, log, epoch):
-        self.epoch_start_time = time.time()
     
     # OVERRIDE
     def during_train_batches(self, batch_loss, training_components):
-        delta = (time.time() - self.epoch_start_time)
-        return self.t + delta > training_components["budget"] - self.compensate
+        return time.time() >= self.end_time
     
     # OVERRIDE
     def after_train_batches(self, training_components, log, epoch):
-        delta = (time.time() - self.epoch_start_time)
-        self.t += delta
-        training_components["network"].budget_trained = self.t
-        self.logger.debug("Budget used: " + str(self.t) + "/" + str(training_components["budget"]))
+        elapsed = time.time() - self.start_time
+        training_components["network"].budget_trained = elapsed
+        self.logger.debug("Budget used: " + str(elapsed) + "/" + str(self.end_time - self.start_time))
 
-        if self.t >= training_components["budget"] - self.compensate:
+        if time.time() >= self.end_time:
             self.logger.debug("Budget exhausted!")
             return True
         return False
@@ -45,15 +37,14 @@ class BudgetTypeEpochs(BaseTrainingTechnique):
     # OVERRIDE
     def set_up(self, training_components, pipeline_config, logger):
         super(BudgetTypeEpochs, self).set_up(training_components, pipeline_config, logger)
-        self.t = training_components["initial_budget"]
+        self.target = training_components["budget"]
     
     # OVERRIDE
     def after_train_batches(self, training_components, log, epoch):
-        self.t += 1
-        training_components["network"].budget_trained = self.t
-        self.logger.debug("Budget used: " + str(self.t) + "/" + str(training_components["budget"]))
+        training_components["network"].budget_trained = epoch
+        self.logger.debug("Budget used: " + str(epoch) + "/" + str(self.target))
 
-        if self.t >= training_components["budget"]:
+        if epoch >= self.target:
             self.logger.debug("Budget exhausted!")
             return True
         return False

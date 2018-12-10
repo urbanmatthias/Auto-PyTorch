@@ -8,7 +8,6 @@ import torch
 import ConfigSpace
 import ConfigSpace.hyperparameters as CSH
 from autoPyTorch.pipeline.base.pipeline_node import PipelineNode
-from autoPyTorch.pipeline.nodes.cross_validation import split_data
 
 from torch.nn.modules.loss import _Loss
 from autoPyTorch.utils.configspace_wrapper import ConfigWrapper

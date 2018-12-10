@@ -13,7 +13,6 @@ from sklearn.preprocessing import OneHotEncoder
 import ConfigSpace
 import ConfigSpace.hyperparameters as CSH
 from autoPyTorch.utils.configspace_wrapper import ConfigWrapper
-from autoPyTorch.pipeline.nodes.cross_validation import split_data
 import logging
 
 class ResamplingStrategySelector(PipelineNode):
@@ -55,12 +54,15 @@ class ResamplingStrategySelector(PipelineNode):
         X_resampled, y_resampled = over_sampling_method.resample(X[train_indices], y, over_sampling_target_size)
         X_resampled, y_resampled  = under_sampling_method.resample(X_resampled, y_resampled, under_sampling_target_size)
         self.logger.debug("Distribution after resample: " + str(np.unique(y_resampled, return_counts=True)[1]))
-        
+
+        if valid_indices is None:
+            indices = CrossValidation.shuffle_indices(list(range(X.shape[0])), pipeline_config['shuffle'])
+            return {"X": X_resampled, "Y": ohe.transform(y_resampled.reshape((-1, 1))), "train_indices": indices}
+
         X, Y, split_indices = CrossValidation.get_validation_set_split_indices(pipeline_config,
                 X_train=X_resampled, X_valid=X[valid_indices],
-                Y_train=ohe.transform(y._resampled.reshape((-1, 1))), Y_valid=Y[valid_indices])
-
-        return {"X": X, "Y": Y, "train_indices": split_indices[0], "valid_indices": valid_indices[1]}
+                Y_train=ohe.transform(y_resampled.reshape((-1, 1))), Y_valid=Y[valid_indices])
+        return {"X": X, "Y": Y, "train_indices": split_indices[0], "valid_indices": split_indices[1]}
 
     def add_over_sampling_method(self, name, resampling_method):
         """Add a resampling strategy.

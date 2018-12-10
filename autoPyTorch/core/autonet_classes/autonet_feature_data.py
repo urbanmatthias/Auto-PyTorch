@@ -27,13 +27,13 @@ class AutoNetFeatureData(AutoNet):
         from autoPyTorch.pipeline.nodes.loss_module_selector import LossModuleSelector
         from autoPyTorch.pipeline.nodes.train_node import TrainNode
         from autoPyTorch.pipeline.nodes.create_dataloader import CreateDataLoader
-        from autoPyTorch.pipeline.nodes.create_dataset_info import DataSetInfo
+        from autoPyTorch.pipeline.nodes.create_dataset_info import CreateDatasetInfo
         
         # build the pipeline
         pipeline = Pipeline([
             AutoNetSettings(),
             OptimizationAlgorithm([
-                DataSetInfo(),
+                CreateDatasetInfo(),
                 CrossValidation([
                     Imputation(),
                     NormalizationStrategySelector(),

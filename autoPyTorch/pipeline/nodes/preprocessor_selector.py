@@ -11,7 +11,6 @@ import ConfigSpace.hyperparameters as CSH
 from autoPyTorch.utils.configspace_wrapper import ConfigWrapper
 from autoPyTorch.utils.config.config_option import ConfigOption
 from autoPyTorch.components.preprocessing.preprocessor_base import PreprocessorBase
-from autoPyTorch.pipeline.nodes.cross_validation import split_data
 
 class PreprocessorSelector(PipelineNode):
     def __init__(self):
@@ -19,7 +18,7 @@ class PreprocessorSelector(PipelineNode):
         self.preprocessors = dict()
         self.add_preprocessor('none', PreprocessorBase)
 
-    def fit(self, hyperparameter_config, pipeline_config, X, Y, train_indices, valid_indices, one_hot_encoder):
+    def fit(self, hyperparameter_config, pipeline_config, X, Y, train_indices, one_hot_encoder):
         hyperparameter_config = ConfigWrapper(self.get_name(), hyperparameter_config)
 
         preprocessor_name = hyperparameter_config['preprocessor']

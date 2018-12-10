@@ -11,6 +11,7 @@ import signal
 import time
 import math
 import inspect
+from copy import deepcopy
 
 from sklearn.model_selection import BaseCrossValidator
 from autoPyTorch.pipeline.base.sub_pipeline_node import SubPipelineNode
@@ -55,8 +56,8 @@ class CrossValidation(SubPipelineNode):
             pipeline_config=pipeline_config, budget=budget, X_train=X_train, Y_train=Y_train, X_valid=X_valid, Y_valid=Y_valid, dataset_info=dataset_info, refit=refit)
         
         # adjust budget in case of budget type time
+        cv_start_time = time.time()
         if budget_type == BudgetTypeTime:
-            cv_start_time = time.time()
             budget = budget - (cv_start_time - optimize_start_time)
 
         # start cross validation
@@ -75,7 +76,7 @@ class CrossValidation(SubPipelineNode):
                 train_indices=split_indices[0],
                 valid_indices=split_indices[1],
                 original_split_indices=split_indices,
-                cv_index=i)
+                cv_index=i, dataset_info=deepcopy(dataset_info))
 
             if result is not None:
                 loss += result['loss']
@@ -107,7 +108,9 @@ class CrossValidation(SubPipelineNode):
                 info="Args of cross validator. \n\t\tNote that random_state and shuffle are set by " +
                      "pipeline config options random_seed and shuffle, if not specified here."),
             ConfigOption("min_budget_for_cv", default=0, type=float,
-                info='Specify minimum budget for cv. If budget is smaller use specified validation split.')
+                info='Specify minimum budget for cv. If budget is smaller use specified validation split.'),
+            ConfigOption('shuffle', default=True, type=to_bool, choices=[True, False],
+                info='Shuffle train and validation set'),
         ]
         return options
 
@@ -169,7 +172,7 @@ class CrossValidation(SubPipelineNode):
         train_indices, valid_indices = indices[:split], indices[split:]
         valid_indices = None if val_split == 0 else valid_indices
         self.logger.info("[Autonet] No cross validation when refitting! Continue by splitting " + str(val_split) + " of training data.")
-        return X_train, Y_train, 1, [indices], 0, budget / num_cv_splits
+        return X_train, Y_train, 1, [(train_indices, valid_indices)], 0, budget / num_cv_splits
 
     def add_cross_validator(self, name, cross_validator, adjust_y=None):
         self.cross_validators[name] = cross_validator

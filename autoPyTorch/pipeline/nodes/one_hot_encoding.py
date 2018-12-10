@@ -38,7 +38,8 @@ class OneHotEncoding(PipelineNode):
             y_encoder.categories_ = np.array([])
             Y = y_encoder.fit_transform(Y)
 
-        return {'X': X, 'one_hot_encoder': encoder, 'Y': Y, 'y_one_hot_encoder': y_encoder, 'categorical_features': None}
+        dataset_info.categorical_features = None
+        return {'X': X, 'one_hot_encoder': encoder, 'Y': Y, 'y_one_hot_encoder': y_encoder, 'dataset_info': dataset_info}
 
     def predict(self, pipeline_config, X, one_hot_encoder):
         categorical_features = pipeline_config["categorical_features"]

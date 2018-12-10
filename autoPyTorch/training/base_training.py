@@ -126,7 +126,7 @@ class BaseBatchLossComputationTechnique():
         self.logger = logger
     
     # VIRTUAL
-    def prepare_batch_data(self, X_batch, y_batch):
+    def prepare_data(self, X_batch, y_batch):
         """Method that gets called, before batch is but into network.
         
         Arguments:
@@ -134,23 +134,16 @@ class BaseBatchLossComputationTechnique():
             y_batch {tensor} -- The targets of the batch.
         """
 
-        self.y_batch = y_batch
+        return X_batch, {'y_batch' : y_batch}
     
     # VIRTUAL
-    def compute_batch_loss(self, loss_function, y_batch_pred):
-        """Method that computes the batch loss.
+    def criterion(self, y_batch):
+        return lambda criterion, pred: criterion(pred, y_batch)
+    
+    # VIRTUAL
+    def evaluate(self, metric, y_pred, y_batch):
+        return metric(y_batch, y_pred)
         
-        Arguments:
-            loss_function {torch.nn._Loss} -- Loss function.
-            y_batch_pred {tensor} -- The prediction of the network for the batch.
-        
-        Returns:
-            tensor -- The batch loss.
-        """
-
-        result = loss_function(y_batch_pred, self.y_batch)
-        self.y_batch = None
-        return result
     
     # VIRTUAL
     @staticmethod
