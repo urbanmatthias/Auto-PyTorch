@@ -75,8 +75,7 @@ res = autonet.fit(min_budget=300,
                   X_valid=None,
                   Y_valid=None,
                   categorical_features=dm.categorical_features,
-                  additional_logs=["test_result"],
-                  full_eval_each_epoch=True)
+                  additional_logs=["test_result"])
 
 # Calculate quality metrics using validation data.
 autonet.score(dm.X_test, dm.Y_test)

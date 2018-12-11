@@ -9,7 +9,7 @@ from autoPyTorch.utils.configspace_wrapper import ConfigWrapper
 # from checkpoints import save_checkpoint
 
 class Trainer(object):
-    def __init__(self, metrics, loss_computation, model, criterion, budget, optimizer, training_techniques, budget_type, logger, device):
+    def __init__(self, metrics, loss_computation, model, criterion, budget, optimizer, training_techniques, logger, device):
         
         self.criterion = criterion
         self.optimizer = optimizer
@@ -25,7 +25,6 @@ class Trainer(object):
         self.budget = budget
         self.loss_computation = loss_computation
 
-        self.budget_type = budget_type
         self.cumulative_time = 0
         self.logger = logger
         self.fit_start_time = None
@@ -35,10 +34,11 @@ class Trainer(object):
     def prepare(self, pipeline_config, hyperparameter_config, fit_start_time):
         self.fit_start_time = fit_start_time
         self.loss_computation.set_up(
-            pipeline_config, ConfigWrapper(hyperparameter_config["batch_loss_computation_technique"], hyperparameter_config), self.logger)
-        self.budget_type.set_up(self, pipeline_config)
+            pipeline_config=pipeline_config,
+            hyperparameter_config=ConfigWrapper(hyperparameter_config["batch_loss_computation_technique"], hyperparameter_config),
+            logger=self.logger)
         for t in self.training_techniques:
-            t.set_up(self, pipeline_config)
+            t.set_up(trainer=self, pipeline_config=pipeline_config)
     
     def to(self, device):
         self.device = device
@@ -51,11 +51,31 @@ class Trainer(object):
             pipeline_config["cuda"] = False
         return torch.device('cuda:0' if pipeline_config['cuda'] else 'cpu')
     
-    def before_train_batches(self):
-        self.budget_type.before_train_batches(self, None, None)
+    def on_epoch_start(self, log, epoch):
+        for t in self.training_techniques:
+            t.on_epoch_start(trainer=self, log=log, epoch=epoch)
     
-    def after_train_batches(self, log, epoch):
-        return self.budget_type.after_train_batches(self, log, epoch)
+    def on_epoch_end(self, log, epoch):
+        return any([t.on_epoch_end(trainer=self, log=log, epoch=epoch) for t in self.training_techniques])
+    
+    def needs_eval_on_snapshot(self):
+        return any([t.needs_eval_on_snapshot() for t in self.training_techniques])
+    
+    def final_eval(self, logs, valid_loader):
+        final_log = None
+        for t in self.training_techniques:
+            log = t.select_log(trainer=self, logs=logs)
+            if log:
+                final_log = log
+        final_log = final_log or logs[-1]
+
+        if any([t.needs_eval_on_snapshot() for t in self.training_techniques]):
+            if valid_loader is not None:
+                    valid_metric_results = self.evaluate(valid_loader)
+            for i, metric in enumerate(self.metrics):
+                if valid_loader is not None:
+                    final_log['val_' + metric.__name__] = valid_metric_results[i]
+        return final_log
 
     def train(self, epoch, train_loader):
         '''
@@ -69,52 +89,39 @@ class Trainer(object):
         metric_results = [0] * len(self.metrics)
         for step, (data, targets) in enumerate(train_loader):
    
+            # prepare
             data = data.to(self.device)
             targets = targets.to(self.device)
 
             data, criterion_kwargs = self.loss_computation.prepare_data(data, targets)
-
             data = Variable(data)
-            
             batch_size = data.size(0)
 
-            if epoch != 1 or step != 0:
-                self.lr_scheduler.step(epoch=self.cumulative_time)
-            else:
-                self.lr_scheduler.step(epoch=epoch)
+            for t in self.training_techniques:
+                t.on_batch_start(trainer=self, epoch=epoch, step=step, num_steps=len(train_loader), cumulative_time=self.cumulative_time)
 
             # used for SGDR with seconds as budget
             start_time_batch = time.time()
-
             self.optimizer.zero_grad()
-
             outputs = self.model(data)
             loss_func = self.loss_computation.criterion(**criterion_kwargs)
             loss = loss_func(self.criterion, outputs)
             loss.backward()
-
             self.optimizer.step()
 
             # used for SGDR with seconds as budget
             delta_time = time.time() - start_time_batch
             self.cumulative_time += delta_time
-            self.lr_scheduler.last_step = self.cumulative_time - delta_time - 1e-10
 
-            # Each time before the learning rate restarts we save a checkpoint in order to create snapshot ensembles after the training finishes
-            # if (epoch != 1 or step != 0) and (self.cumulative_time > self.config.T_e + delta_time + 5) and (self.lr_scheduler.last_step < 0):
-            #     save_checkpoint(int(round(self.cumulative_time)), self.model, self.optimizer, self.lr_scheduler, self.config)
-
+            # evaluate metrics
             for i, metric in enumerate(self.metrics):
                 metric_results[i] += self.loss_computation.evaluate(metric, outputs, **criterion_kwargs) * batch_size
 
             loss_sum += loss.item() * batch_size
             N += batch_size
 
-            # start_time_step = time.time()
-            # print('Update', (metric_results[0] / N), 'loss', (loss_sum / N))
-
-            if self.budget_type.during_train_batches(None, None, None, None, None):
-                # print(' * Stopping at Epoch: [%d][%d/%d] for a budget of %.3f s' % (epoch, step + 1, train_size, self.config.budget))
+            if any([t.on_batch_end(batch_loss=loss.item(), trainer=self, epoch=epoch, step=step, num_steps=len(train_loader),
+                                           cumulative_time=self.cumulative_time) for t in self.training_techniques]):
                 return [res / N for res in metric_results], loss_sum / N, True
 
         return [res / N for res in metric_results], loss_sum / N, False

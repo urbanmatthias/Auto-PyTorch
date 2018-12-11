@@ -20,6 +20,9 @@ class Imputation(PipelineNode):
     def fit(self, hyperparameter_config, X, Y, train_indices, dataset_info):
         hyperparameter_config = ConfigWrapper(self.get_name(), hyperparameter_config)
 
+        if dataset_info.is_sparse:
+            return {'imputation_preprocessor': None}
+
         strategy = hyperparameter_config['strategy']
         fill_value = int(np.nanmax(X[train_indices])) + 1 if dataset_info.is_sparse else 0
         numerical_imputer = SimpleImputer(strategy=strategy, copy=False)
@@ -35,6 +38,8 @@ class Imputation(PipelineNode):
 
 
     def predict(self, X, imputation_preprocessor):
+        if imputation_preprocessor is None:
+            return dict()
         return { 'X': imputation_preprocessor.transform(X) }
 
     @staticmethod

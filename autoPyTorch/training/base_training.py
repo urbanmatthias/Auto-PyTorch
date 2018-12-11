@@ -93,15 +93,6 @@ class BaseTrainingTechnique():
 
         return False
 
-    # VIRTUAL
-    def needs_eval_each_epoch(self):
-        """Specify if the training technique needs the network to be evaluated on the validation set.
-        
-        Returns:
-            bool -- If the network should be evaluated on the validation set.
-        """
-
-        return False
     
     # VIRTUAL
     def needs_eval_on_snapshot(self):
@@ -155,7 +146,7 @@ class BaseBatchLossComputationTechnique():
     
     # VIRTUAL
     def evaluate(self, metric, y_pred, y_batch):
-        return metric(y_batch, y_pred)
+        return metric(y_pred, y_batch)
     
     # VIRTUAL
     @staticmethod

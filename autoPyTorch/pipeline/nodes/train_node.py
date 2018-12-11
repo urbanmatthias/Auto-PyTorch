@@ -53,24 +53,25 @@ class TrainNode(PipelineNode):
             criterion=loss_function,
             budget=budget,
             optimizer=optimizer,
-            training_techniques=[t for t in training_techniques if not isinstance(t, BudgetTypeTime) and not isinstance(t, BudgetTypeEpochs)],
-            budget_type=[t for t in training_techniques if isinstance(t, BudgetTypeTime) or isinstance(t, BudgetTypeEpochs)][0],
+            training_techniques=training_techniques,
             device=Trainer.get_device(pipeline_config),
             logger=self.logger)
         trainer.prepare(pipeline_config, hyperparameter_config, fit_start_time)
 
-        logs = network.logs
-        epoch = network.epochs_trained
+        logs = trainer.model.logs
+        epoch = trainer.model.epochs_trained
         training_start_time = time.time()
         while True:
-            trainer.before_train_batches()
             # prepare epoch
             log = dict()
+            trainer.on_epoch_start(log=log, epoch=epoch)
             
+            # training
             train_metric_results, train_loss, stop_training = trainer.train(epoch + 1, train_loader)
             if valid_loader is not None:
                 valid_metric_results = trainer.evaluate(valid_loader)
 
+            # evaluate
             log['loss'] = train_loss
             for i, metric in enumerate(trainer.metrics):
                 log['train_' + metric.__name__] = train_metric_results[i]
@@ -80,47 +81,19 @@ class TrainNode(PipelineNode):
 
             # handle logs
             logs.append(log)
-            # update_logs(t, budget, log, 5, epoch + 1, verbose, True)
             self.logger.debug("Epoch: " + str(epoch) + " : " + str(log))
-            # print("Epoch: " + str(epoch) + " : " + str(log))
-            
             if 'use_tensorboard_logger' in pipeline_config and pipeline_config['use_tensorboard_logger']:
-                import tensorboard_logger as tl
-                worker_path = 'Train/'
-                tl.log_value(worker_path + 'budget', float(budget), int(time.time()))
-                tl.log_value(worker_path + 'epoch', float(epoch+1), int(time.time()))
-                for name, value in log.items():
-                    tl.log_value(worker_path + name, float(value), int(time.time()))
+                self.tensorboard_log(budget=budget, epoch=epoch, log=log)
 
-            if trainer.after_train_batches(log, epoch):
-                break
-
-            if stop_training:
+            if trainer.on_epoch_end(log=log, epoch=epoch) or stop_training:
                 break
             
             epoch += 1
             torch.cuda.empty_cache()
 
         # wrap up
-        wrap_up_start_time = time.time()
-        network.epochs_trained = epoch
-        network.logs = logs
-        opt_metric_name = 'train_' + train_metric.__name__
-        if valid_loader is not None:
-            opt_metric_name = 'val_' + train_metric.__name__
-
-        if pipeline_config["minimize"]:
-            final_log = min(logs, key=lambda x:x[opt_metric_name])
-        else:
-            final_log = max(logs, key=lambda x:x[opt_metric_name])
-
-        loss = final_log[opt_metric_name] * (1 if pipeline_config["minimize"] else -1)
-
-        self.logger.info("Finished train with budget " + str(budget) +
-                         ": Preprocessing took " + str(int(training_start_time - fit_start_time)) +
-                         "s, Training took " + str(int(wrap_up_start_time - training_start_time)) + 
-                         "s, Wrap up took " + str(int(time.time() - wrap_up_start_time)) +
-                         "s. Total time consumption in s: " + str(int(time.time() - fit_start_time)))
+        loss, final_log = self.wrap_up_training(trainer=trainer, logs=logs, epoch=epoch, minimize=pipeline_config['minimize'],
+            valid_loader=valid_loader, budget=budget, training_start_time=training_start_time, fit_start_time=fit_start_time)
     
         return {'loss': loss, 'info': final_log}
 
@@ -171,9 +144,34 @@ class TrainNode(PipelineNode):
         ]
         for name, technique in self.training_techniques.items():
             options += technique.get_pipeline_config_options()
-        for name, technique in self.batch_loss_computation_techniques.items():
-            options += technique.get_pipeline_config_options()
         return options
+    
+    def tensorboard_log(self, budget, epoch, log):
+        import tensorboard_logger as tl
+        worker_path = 'Train/'
+        tl.log_value(worker_path + 'budget', float(budget), int(time.time()))
+        tl.log_value(worker_path + 'epoch', float(epoch + 1), int(time.time()))
+        for name, value in log.items():
+            tl.log_value(worker_path + name, float(value), int(time.time()))
+    
+    def wrap_up_training(self, trainer, logs, epoch, minimize, valid_loader, budget, training_start_time, fit_start_time):
+        wrap_up_start_time = time.time()
+        trainer.model.epochs_trained = epoch
+        trainer.model.logs = logs
+        train_metric = trainer.metrics[0]
+        opt_metric_name = 'train_' + train_metric.__name__
+        if valid_loader is not None:
+            opt_metric_name = 'val_' + train_metric.__name__
+
+        final_log = trainer.final_eval(logs=logs, valid_loader=valid_loader)
+        loss = final_log[opt_metric_name] * (1 if minimize else -1)
+
+        self.logger.info("Finished train with budget " + str(budget) +
+                         ": Preprocessing took " + str(int(training_start_time - fit_start_time)) +
+                         "s, Training took " + str(int(wrap_up_start_time - training_start_time)) + 
+                         "s, Wrap up took " + str(int(time.time() - wrap_up_start_time)) +
+                         "s. Total time consumption in s: " + str(int(time.time() - fit_start_time)))
+        return loss, final_log
 
 
 def predict(network, test_loader, metrics, device, move_network=True):

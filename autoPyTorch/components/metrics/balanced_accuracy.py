@@ -4,8 +4,8 @@ import scipy as sp
 from sklearn.metrics.classification import _check_targets, type_of_target
 
 
-def balanced_accuracy(y_true, y_pred):
-    return _balanced_accuracy(y_true.max(1)[1].cpu().numpy(), y_pred.max(1)[1].cpu().numpy()) * 100
+def balanced_accuracy(y_pred, y_true):
+    return _balanced_accuracy(y_true.max(1)[1].cpu().detach().numpy(), y_pred.max(1)[1].cpu().detach().numpy()) * 100
 
 
 def _balanced_accuracy(solution, prediction):

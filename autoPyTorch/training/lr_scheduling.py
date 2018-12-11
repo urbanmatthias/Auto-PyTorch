@@ -4,23 +4,29 @@ class LrScheduling(BaseTrainingTechnique):
     """Schedule the learning rate with given learning rate scheduler.
     The learning rate scheduler is usually set in a LrSchedulerSelector pipeline node.
     """
-    def __init__(self, training_components, lr_step_after_batch, lr_step_with_time):
-        super(LrScheduling, self).__init__(self, training_components=training_components)
+    def __init__(self, training_components, lr_step_after_batch, lr_step_with_time, allow_snapshot):
+        super(LrScheduling, self).__init__(training_components=training_components)
         self.lr_step_after_batch = lr_step_after_batch
         self.lr_step_with_time = lr_step_with_time
+        self._needs_eval_on_snapshot = False
+        self.allow_snapshot = allow_snapshot
 
     # OVERRIDE
     def on_batch_end(self, batch_loss, trainer, epoch, step, num_steps, cumulative_time, **kwargs):
         if not self.lr_step_after_batch:
             return
 
+        converged = False
         if self.lr_step_with_time:
-            self.perform_scheduling(trainer, cumulative_time, batch_loss)
+            converged = self.perform_scheduling(trainer, cumulative_time, batch_loss)
         else:
-            self.perform_scheduling(trainer, (epoch - 1) * num_steps + step + 1, batch_loss)
+            converged = self.perform_scheduling(trainer, (epoch - 1) * num_steps + step + 1, batch_loss)
+        
+        if converged and self.allow_snapshot:
+            self._needs_eval_on_snapshot = True
 
     # OVERRIDE
-    def on_epoch_end(self, trainer, epoch, cumulative_time, **kwargs):
+    def on_epoch_end(self, trainer, epoch, log, **kwargs):
         if callable(getattr(trainer.lr_scheduler, "get_lr", None)):
             log['lr'] = trainer.lr_scheduler.get_lr()[0]
 
@@ -29,14 +35,14 @@ class LrScheduling(BaseTrainingTechnique):
 
         log["lr_scheduler_converged"] = False
         if self.lr_step_with_time:
-            log["lr_scheduler_converged"] = self.perform_scheduling(trainer, cumulative_time, log['loss'])
+            log["lr_scheduler_converged"] = self.perform_scheduling(trainer, trainer.cumulative_time, log['loss'])
         else:
             log["lr_scheduler_converged"]  = self.perform_scheduling(trainer, epoch, log['loss'])
         return False
     
-    def perform_scheduling(self, trainer, epoch, metric, **kwargs),:
+    def perform_scheduling(self, trainer, epoch, metric, **kwargs):
         try:
-            trainer.lr_scheduler.step(epoch=epoch, metric=metric)
+            trainer.lr_scheduler.step(epoch=epoch, metrics=metric)
         except:
             trainer.lr_scheduler.step(epoch=epoch)
         trainer.logger.debug("Perform learning rate scheduling")
@@ -46,8 +52,9 @@ class LrScheduling(BaseTrainingTechnique):
             return False
         trainer.lr_scheduler.get_lr()
         if trainer.lr_scheduler.restarted_at == (epoch + 1):
-            trainer.logger.debug("Learning rate scheduler converged. Taking Snapshot of models parameters.")
-            trainer.model.snapshot()
+            if self.allow_snapshot:
+                trainer.logger.debug("Learning rate scheduler converged. Taking Snapshot of models parameters.")
+                trainer.model.snapshot()
             return True
         return False
 
@@ -59,3 +66,6 @@ class LrScheduling(BaseTrainingTechnique):
             logs = logs[-1]
             return logs
         return False
+    
+    def needs_eval_on_snapshot(self):
+        return self._needs_eval_on_snapshot and self.allow_snapshot
