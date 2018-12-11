@@ -9,11 +9,13 @@ from autoPyTorch.utils.configspace_wrapper import ConfigWrapper
 # from checkpoints import save_checkpoint
 
 class Trainer(object):
-    def __init__(self, metrics, loss_computation, model, criterion, budget, optimizer, training_techniques, logger, device):
+    def __init__(self, metrics, log_functions, loss_computation, model, criterion,
+            budget, optimizer, training_techniques, logger, device, full_eval_each_epoch):
         
         self.criterion = criterion
         self.optimizer = optimizer
         self.metrics = metrics
+        self.log_functions = log_functions
         self.model = model
         self.device = device
 
@@ -28,6 +30,14 @@ class Trainer(object):
         self.cumulative_time = 0
         self.logger = logger
         self.fit_start_time = None
+
+        self.eval_valid_each_epoch = full_eval_each_epoch or any(t.requires_valid_eval_each_epoch() for t in self.training_techniques)
+        self.eval_train_on_snapshot = any(t.requires_train_eval_on_snapshot() for t in self.training_techniques)
+        self.eval_valid_on_snapshot = any(t.requires_valid_eval_on_snapshot() for t in self.training_techniques) \
+                                      or not self.eval_valid_each_epoch
+        
+        self.eval_additional_logs_each_epoch = full_eval_each_epoch and self.log_functions
+        self.eval_additional_logs_on_snapshot = not full_eval_each_epoch and self.log_functions
 
         self.to(device)
     
@@ -61,20 +71,35 @@ class Trainer(object):
     def needs_eval_on_snapshot(self):
         return any([t.needs_eval_on_snapshot() for t in self.training_techniques])
     
-    def final_eval(self, logs, valid_loader):
-        final_log = None
-        for t in self.training_techniques:
-            log = t.select_log(trainer=self, logs=logs)
-            if log:
-                final_log = log
-        final_log = final_log or logs[-1]
+    def final_eval(self, opt_metric_name, logs, train_loader, valid_loader, minimize, best_over_epochs, refit):
+        # select log
+        if best_over_epochs:
+            final_log = (min if minimize else max)(logs, key=lambda log: log[opt_metric_name])
+        else:
+            final_log = None
+            for t in self.training_techniques:
+                log = t.select_log(trainer=self, logs=logs)
+                if log:
+                    final_log = log
+            final_log = final_log or logs[-1]
 
-        if any([t.needs_eval_on_snapshot() for t in self.training_techniques]):
-            if valid_loader is not None:
-                    valid_metric_results = self.evaluate(valid_loader)
+        # validation on snapshot
+        if self.eval_additional_logs_on_snapshot or self.eval_valid_on_snapshot or self.eval_train_on_snapshot or refit:
+            self.model.load_snapshot()
+            train_metric_results, valid_metric_results = None, None
+            if self.eval_train_on_snapshot or (valid_loader is None and self.eval_valid_on_snapshot):
+                train_metric_results = self.evaluate(train_loader)
+            if valid_loader is not None and self.eval_valid_on_snapshot:
+                valid_metric_results = self.evaluate(valid_loader)
+
             for i, metric in enumerate(self.metrics):
-                if valid_loader is not None:
+                if train_metric_results:
+                    final_log['train_' + metric.__name__] = train_metric_results[i]
+                if valid_metric_results:
                     final_log['val_' + metric.__name__] = valid_metric_results[i]
+            if self.eval_additional_logs_on_snapshot:
+                    for additional_log in self.log_functions:
+                        final_log[additional_log.__name__] = additional_log(self.model, None)
         return final_log
 
     def train(self, epoch, train_loader):

@@ -71,7 +71,7 @@ class EarlyStopping(BaseTrainingTechnique):
             return logs
         return False
     
-    def needs_eval_on_valid_each_epoch(self):
+    def requires_valid_eval_each_epoch(self):
         return self.reset_parameters or self.patience < float("inf")
     
     # OVERRIDE

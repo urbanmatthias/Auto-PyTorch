@@ -67,5 +67,5 @@ class LrScheduling(BaseTrainingTechnique):
             return logs
         return False
     
-    def needs_eval_on_snapshot(self):
+    def requires_valid_eval_on_snapshot(self):
         return self._needs_eval_on_snapshot and self.allow_snapshot

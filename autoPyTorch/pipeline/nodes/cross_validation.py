@@ -76,7 +76,8 @@ class CrossValidation(SubPipelineNode):
                 train_indices=split_indices[0],
                 valid_indices=split_indices[1],
                 original_split_indices=split_indices,
-                cv_index=i, dataset_info=deepcopy(dataset_info))
+                cv_index=i, dataset_info=deepcopy(dataset_info),
+                refit=refit)
 
             if result is not None:
                 loss += result['loss']
@@ -88,7 +89,6 @@ class CrossValidation(SubPipelineNode):
         # aggregate logs
         df = pd.DataFrame(infos)
         info = dict(df.mean())
-        info['num_cv_splits'] = num_cv_splits
         loss = loss / num_cv_splits + loss_penalty
         return {'loss': loss, 'info': info}
 
@@ -141,7 +141,7 @@ class CrossValidation(SubPipelineNode):
         if pipeline_config['cross_validator'] == "none" or budget_too_low_for_cv:
             self.logger.info("[AutoNet] No validation set given and either no cross validator given or budget to low for CV." + 
                              " Continue by splitting " + str(val_split) + " of training data.")
-            indices = self.shuffle_indices(list(range(dataset_info.x_shape[0])), pipeline_config['shuffle'])
+            indices = self.shuffle_indices(list(range(dataset_info.x_shape[0])), pipeline_config['shuffle'], pipeline_config["random_seed"])
             split = int(len(indices) * (1-val_split))
             train_indices, valid_indices = indices[:split], indices[split:]
             valid_indices = None if val_split == 0 else valid_indices
@@ -167,7 +167,7 @@ class CrossValidation(SubPipelineNode):
             return X_train, Y_train, num_cv_splits, cv_splits, 0, budget
         
         # refit
-        indices = self.shuffle_indices(list(range(dataset_info.x_shape[0])), pipeline_config['shuffle'])
+        indices = self.shuffle_indices(list(range(dataset_info.x_shape[0])), pipeline_config['shuffle'], pipeline_config["random_seed"])
         split = int(len(indices) * (1-val_split))
         train_indices, valid_indices = indices[:split], indices[split:]
         valid_indices = None if val_split == 0 else valid_indices
@@ -204,8 +204,9 @@ class CrossValidation(SubPipelineNode):
 
     @staticmethod
     def shuffle_indices(indices, shuffle=True, seed=42):
+        rng = np.random.RandomState(42)
         if shuffle:
-            np.random.shuffle(indices)
+            rng.shuffle(indices)
         return indices
     
     @staticmethod

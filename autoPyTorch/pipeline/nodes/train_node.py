@@ -42,7 +42,8 @@ class TrainNode(PipelineNode):
             budget,
             loss_function,
             training_techniques,
-            fit_start_time):
+            fit_start_time,
+            refit):
         hyperparameter_config = ConfigWrapper(self.get_name(), hyperparameter_config) 
         self.logger.debug("Start train. Budget: " + str(budget))
 
@@ -50,12 +51,14 @@ class TrainNode(PipelineNode):
             model=network,
             loss_computation=self.batch_loss_computation_techniques[hyperparameter_config["batch_loss_computation_technique"]](),
             metrics=[train_metric] + additional_metrics,
+            log_functions=log_functions,
             criterion=loss_function,
             budget=budget,
             optimizer=optimizer,
             training_techniques=training_techniques,
             device=Trainer.get_device(pipeline_config),
-            logger=self.logger)
+            logger=self.logger,
+            full_eval_each_epoch=pipeline_config["full_eval_each_epoch"])
         trainer.prepare(pipeline_config, hyperparameter_config, fit_start_time)
 
         logs = trainer.model.logs
@@ -68,7 +71,7 @@ class TrainNode(PipelineNode):
             
             # training
             train_metric_results, train_loss, stop_training = trainer.train(epoch + 1, train_loader)
-            if valid_loader is not None:
+            if valid_loader is not None and trainer.eval_valid_each_epoch:
                 valid_metric_results = trainer.evaluate(valid_loader)
 
             # evaluate
@@ -76,8 +79,11 @@ class TrainNode(PipelineNode):
             for i, metric in enumerate(trainer.metrics):
                 log['train_' + metric.__name__] = train_metric_results[i]
 
-                if valid_loader is not None:
+                if valid_loader is not None and trainer.eval_valid_each_epoch:
                     log['val_' + metric.__name__] = valid_metric_results[i]
+            if trainer.eval_additional_logs_each_epoch:
+                for additional_log in trainer.log_functions:
+                    log[additional_log.__name__] = additional_log(trainer.model, epoch)
 
             # handle logs
             logs.append(log)
@@ -93,7 +99,8 @@ class TrainNode(PipelineNode):
 
         # wrap up
         loss, final_log = self.wrap_up_training(trainer=trainer, logs=logs, epoch=epoch, minimize=pipeline_config['minimize'],
-            valid_loader=valid_loader, budget=budget, training_start_time=training_start_time, fit_start_time=fit_start_time)
+            train_loader=train_loader, valid_loader=valid_loader, budget=budget, training_start_time=training_start_time, fit_start_time=fit_start_time,
+            best_over_epochs=pipeline_config['best_over_epochs'], refit=refit)
     
         return {'loss': loss, 'info': final_log}
 
@@ -140,7 +147,11 @@ class TrainNode(PipelineNode):
             ConfigOption(name="batch_loss_computation_techniques", default=list(self.batch_loss_computation_techniques.keys()),
                 type=str, list=True, choices=list(self.batch_loss_computation_techniques.keys())),
             ConfigOption("minimize", default=self.default_minimize_value, type=to_bool, choices=[True, False]),
-            ConfigOption("cuda", default=True, type=to_bool, choices=[True, False])
+            ConfigOption("cuda", default=True, type=to_bool, choices=[True, False]),
+            ConfigOption("full_eval_each_epoch", default=False, type=to_bool, choices=[True, False],
+                info="Whether to evaluate everything every epoch. Results in more useful output"),
+            ConfigOption("best_over_epochs", default=False, type=to_bool, choices=[True, False],
+                info="Whether to report the best performance occurred to BOHB")
         ]
         for name, technique in self.training_techniques.items():
             options += technique.get_pipeline_config_options()
@@ -154,7 +165,7 @@ class TrainNode(PipelineNode):
         for name, value in log.items():
             tl.log_value(worker_path + name, float(value), int(time.time()))
     
-    def wrap_up_training(self, trainer, logs, epoch, minimize, valid_loader, budget, training_start_time, fit_start_time):
+    def wrap_up_training(self, trainer, logs, epoch, minimize, train_loader, valid_loader, budget, training_start_time, fit_start_time, best_over_epochs, refit):
         wrap_up_start_time = time.time()
         trainer.model.epochs_trained = epoch
         trainer.model.logs = logs
@@ -163,7 +174,8 @@ class TrainNode(PipelineNode):
         if valid_loader is not None:
             opt_metric_name = 'val_' + train_metric.__name__
 
-        final_log = trainer.final_eval(logs=logs, valid_loader=valid_loader)
+        final_log = trainer.final_eval(opt_metric_name=opt_metric_name,
+            logs=logs, train_loader=train_loader, valid_loader=valid_loader, minimize=minimize, best_over_epochs=best_over_epochs, refit=refit)
         loss = final_log[opt_metric_name] * (1 if minimize else -1)
 
         self.logger.info("Finished train with budget " + str(budget) +

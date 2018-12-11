@@ -95,7 +95,7 @@ class BaseTrainingTechnique():
 
     
     # VIRTUAL
-    def needs_eval_on_snapshot(self):
+    def requires_valid_eval_on_snapshot(self):
         """ Specify if the training technique needs the network to be evaluated on a snapshot after training.
         
         Return:
@@ -103,6 +103,27 @@ class BaseTrainingTechnique():
         """
 
         return False
+    
+        # VIRTUAL
+    def requires_train_eval_on_snapshot(self):
+        """ Specify if the training technique needs the network to be evaluated on a snapshot after training.
+        
+        Return:
+            bool -- If the training technique needs the network to be evaluated on a snapshot after training
+        """
+
+        return False
+    
+        # VIRTUAL
+    def requires_valid_eval_each_epoch(self):
+        """ Specify if the training technique needs the network to be evaluated on a snapshot after training.
+        
+        Return:
+            bool -- If the training technique needs the network to be evaluated on a snapshot after training
+        """
+
+        return False
+
 
     # VIRTUAL
     @staticmethod

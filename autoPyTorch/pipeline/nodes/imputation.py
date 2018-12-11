@@ -17,14 +17,14 @@ class Imputation(PipelineNode):
 
     strategies = ["mean", "median", "most_frequent"]
 
-    def fit(self, hyperparameter_config, X, Y, train_indices, dataset_info):
+    def fit(self, hyperparameter_config, X, train_indices, dataset_info):
         hyperparameter_config = ConfigWrapper(self.get_name(), hyperparameter_config)
 
         if dataset_info.is_sparse:
             return {'imputation_preprocessor': None}
 
         strategy = hyperparameter_config['strategy']
-        fill_value = int(np.nanmax(X[train_indices])) + 1 if dataset_info.is_sparse else 0
+        fill_value = int(np.nanmax(X[train_indices])) + 1 if not dataset_info.is_sparse else 0
         numerical_imputer = SimpleImputer(strategy=strategy, copy=False)
         categorical_imputer = SimpleImputer(strategy='constant', copy=False, fill_value=fill_value)
         transformer = ColumnTransformer(

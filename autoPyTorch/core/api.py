@@ -187,4 +187,4 @@ class AutoNet():
         Y_test = OHE.transform_y(Y_test, OHE.fit_output['y_one_hot_encoder'])
 
         metric = self.pipeline[MetricSelector.get_name()].fit_output['train_metric']
-        return metric(torch.from_numpy(Y_test), torch.from_numpy(Y_pred))
+        return metric(torch.from_numpy(Y_pred), torch.from_numpy(Y_test))
