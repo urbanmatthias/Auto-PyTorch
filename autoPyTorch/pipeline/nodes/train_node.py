@@ -43,49 +43,27 @@ class TrainNode(PipelineNode):
             loss_function,
             training_techniques,
             fit_start_time):
-        lr_scheduler = [t.training_components["lr_scheduler"] for t in training_techniques if isinstance(t, LrScheduling)][0]
-        budget_type= [t for t in training_techniques if isinstance(t, BudgetTypeTime) or isinstance(t, BudgetTypeEpochs)][0]
-
-        # prepare
-        if not torch.cuda.is_available():
-            pipeline_config["cuda"] = False
-
-        device = torch.device('cuda:0' if pipeline_config['cuda'] else 'cpu')
-        network = network.to(device)
-        loss_function = loss_function.to(device)
-
-        hyperparameter_config = ConfigWrapper(self.get_name(), hyperparameter_config)
-        
-        batch_loss_computation_technique = self.batch_loss_computation_techniques[hyperparameter_config["batch_loss_computation_technique"]]()
-        batch_loss_computation_technique.set_up(
-            pipeline_config, ConfigWrapper(hyperparameter_config["batch_loss_computation_technique"], hyperparameter_config), self.logger)
-            
+        hyperparameter_config = ConfigWrapper(self.get_name(), hyperparameter_config) 
         self.logger.debug("Start train. Budget: " + str(budget))
 
-        # Training loop
-        logs = network.logs
-        epoch = network.epochs_trained
-        training_start_time = time.time()
-
-        
-        budget_type.set_up({'budget': budget, 'fit_start_time': fit_start_time}, pipeline_config, self.logger)
-
-        metrics = [train_metric] + additional_metrics
-        
         trainer = Trainer(
             model=network,
-            loss_computation=batch_loss_computation_technique,
-            metrics=metrics,
+            loss_computation=self.batch_loss_computation_techniques[hyperparameter_config["batch_loss_computation_technique"]](),
+            metrics=[train_metric] + additional_metrics,
             criterion=loss_function,
             budget=budget,
             optimizer=optimizer,
-            scheduler=lr_scheduler,
-            budget_type=budget_type,
-            device=device)
+            training_techniques=[t for t in training_techniques if not isinstance(t, BudgetTypeTime) and not isinstance(t, BudgetTypeEpochs)],
+            budget_type=[t for t in training_techniques if isinstance(t, BudgetTypeTime) or isinstance(t, BudgetTypeEpochs)][0],
+            device=Trainer.get_device(pipeline_config),
+            logger=self.logger)
+        trainer.prepare(pipeline_config, hyperparameter_config, fit_start_time)
 
+        logs = network.logs
+        epoch = network.epochs_trained
+        training_start_time = time.time()
         while True:
-
-            budget_type.before_train_batches(None, None, None)
+            trainer.before_train_batches()
             # prepare epoch
             log = dict()
             
@@ -94,7 +72,7 @@ class TrainNode(PipelineNode):
                 valid_metric_results = trainer.evaluate(valid_loader)
 
             log['loss'] = train_loss
-            for i, metric in enumerate(metrics):
+            for i, metric in enumerate(trainer.metrics):
                 log['train_' + metric.__name__] = train_metric_results[i]
 
                 if valid_loader is not None:
@@ -114,7 +92,7 @@ class TrainNode(PipelineNode):
                 for name, value in log.items():
                     tl.log_value(worker_path + name, float(value), int(time.time()))
 
-            if budget_type.after_train_batches({'network': network}, log, epoch):
+            if trainer.after_train_batches(log, epoch):
                 break
 
             if stop_training:

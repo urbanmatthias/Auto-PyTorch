@@ -7,27 +7,26 @@ class BaseTrainingTechnique():
         Keyword Arguments:
             training_components {dict} -- Maps a names to a training components necessary for this training technique (default: {None})
         """
-
         self.training_components = training_components or dict()
-    
+
     # VIRTUAL
-    def set_up(self, training_components, pipeline_config, logger):
+    def set_up(self, trainer, pipeline_config):
         """Set up the training component
         
         Arguments:
-            training_components {dict} -- All training components of training.
+            trainer {Trainer} -- The trainer object used for training.
             pipeline_config {dict} -- Configuration of the Pipeline.
             logger {Logger} -- Logger.
         """
 
-        self.logger = logger
+        pass
     
     # VIRTUAL
-    def before_train_batches(self, training_components, log, epoch):
+    def on_epoch_start(self, trainer, log, epoch):
         """Function that gets called before the train_batches method of each epoch in training.
         
         Arguments:
-            training_components {dict} -- All training components used in training.
+            trainer {Trainer} -- The trainer object used for training.
             log {dict} -- The log of the current epoch.
             epoch {int} -- The current epoch of training.
         """
@@ -35,12 +34,12 @@ class BaseTrainingTechnique():
         pass
 
     # VIRTUAL
-    def after_train_batches(self, training_components, log, epoch):
+    def on_epoch_end(self, trainer, log, epoch):
         """Function that gets called after the train_batches method of each epoch in training.
         Is able to stop training by returning True.
         
         Arguments:
-            training_components {dict} -- All training components used in training.
+            trainer {Trainer} -- The trainer object used for training.
             log {dict} -- The log of the current epoch.
             epoch {int} -- The current epoch of training.
         
@@ -51,13 +50,28 @@ class BaseTrainingTechnique():
         return False
 
     # VIRTUAL
-    def during_train_batches(self, batch_loss, training_components):
+    def on_batch_start(self, trainer, epoch, step, num_steps, cumulative_time):
         """Function that gets called in the train_batches method of training.
         Is able to cancel the current epoch by returning True.
         
         Arguments:
             batch_loss {tensor} -- The batch loss of the current batch.
-            training_components {dict} -- All training components used in training.
+            trainer {Trainer} -- The trainer object used for training
+        
+        Returns:
+            bool -- If the current epoch should be canceled.
+        """
+
+        return False
+    
+        # VIRTUAL
+    def on_batch_end(self, batch_loss, trainer, epoch, step, num_steps, cumulative_time):
+        """Function that gets called in the train_batches method of training.
+        Is able to cancel the current epoch by returning True.
+        
+        Arguments:
+            batch_loss {tensor} -- The batch loss of the current batch.
+            trainer {Trainer} -- The trainer object used for training
         
         Returns:
             bool -- If the current epoch should be canceled.
@@ -66,12 +80,12 @@ class BaseTrainingTechnique():
         return False
     
     # VIRTUAL
-    def select_log(self, logs, training_components):
+    def select_log(self, logs, trainer):
         """Select one log from the list of all epoch logs.
         
         Arguments:
             logs {list} -- A list of log. For each epoch of training there is one entry.
-            training_components {dict} -- All training components used in training.
+            trainer {Trainer} -- The trainer object used for training
         
         Returns:
             log -- The selected log. Return None if undecided.
@@ -80,7 +94,7 @@ class BaseTrainingTechnique():
         return False
 
     # VIRTUAL
-    def needs_eval_on_valid_each_epoch(self):
+    def needs_eval_each_epoch(self):
         """Specify if the training technique needs the network to be evaluated on the validation set.
         
         Returns:
@@ -90,16 +104,15 @@ class BaseTrainingTechnique():
         return False
     
     # VIRTUAL
-    def needs_eval_on_train_each_epoch(self):
-        """Specify if the training technique needs the network to be evaluated on the training set.
+    def needs_eval_on_snapshot(self):
+        """ Specify if the training technique needs the network to be evaluated on a snapshot after training.
         
-        Returns:
-            bool -- If the network should be evaluated on the training set.
+        Return:
+            bool -- If the training technique needs the network to be evaluated on a snapshot after training
         """
 
-
         return False
-    
+
     # VIRTUAL
     @staticmethod
     def get_pipeline_config_options():
@@ -143,18 +156,6 @@ class BaseBatchLossComputationTechnique():
     # VIRTUAL
     def evaluate(self, metric, y_pred, y_batch):
         return metric(y_batch, y_pred)
-        
-    
-    # VIRTUAL
-    @staticmethod
-    def get_pipeline_config_options():
-        """A list of ConfigOptions used for this technique.
-        
-        Returns:
-            list -- A list of ConfigOptions for this technique.
-        """
-
-        return []
     
     # VIRTUAL
     @staticmethod
