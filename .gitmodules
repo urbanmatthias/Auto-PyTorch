@@ -1,0 +1,3 @@
+[submodule "submodules/HpBandSter"]
+	path = submodules/HpBandSter
+	url = https://github.com/urbanmatthias/HpBandSter.git

@@ -125,8 +125,8 @@ class Trainer(object):
             for t in self.training_techniques:
                 t.on_batch_start(trainer=self, epoch=epoch, step=step, num_steps=len(train_loader), cumulative_time=self.cumulative_time)
 
-            # used for SGDR with seconds as budget
-            start_time_batch = time.time()
+            # training
+            start_time_batch = time.time()  # used for SGDR with seconds as budget
             self.optimizer.zero_grad()
             outputs = self.model(data)
             loss_func = self.loss_computation.criterion(**criterion_kwargs)
