@@ -10,22 +10,32 @@ from autoPyTorch.utils.config.config_option import ConfigOption
 
 
 class ForRun(BaseForRun):
-    def fit(self, pipeline_config, data_manager, instance, meta_features, meta_learning_model, autonet, autonet_config_file, run_id_range):
-        for run_number in self.parse_range(pipeline_config['run_number_range'], pipeline_config['num_runs']):
-            for run_id in run_id_range:
-                try:
-                    run_result_dir = get_run_result_dir(pipeline_config, instance, autonet_config_file, run_id, run_number)
-                    if not os.path.exists(run_result_dir):
-                        logging.getLogger('metalearning').debug("Skipping " + run_result_dir + "because it does not exist")
-                        continue
-                    logging.getLogger('metalearning').info("Fit run " + str(run_id) + "_" + str(run_number))
-                    self.sub_pipeline.fit_pipeline(pipeline_config=pipeline_config,
-                        data_manager=data_manager, instance=instance, 
-                        run_number=run_number, run_id=run_id, autonet_config_file=autonet_config_file,
-                        meta_features=meta_features, run_result_dir=run_result_dir, autonet=autonet,
-                        meta_learning_model=meta_learning_model)
-                    
-                except Exception as e:
-                    print(e)
-                    traceback.print_exc()
+    def fit(self, pipeline_config, instance, initial_design_learner, autonet_config_file, run_id_range):
+        run_number_range = self.parse_range(pipeline_config['run_number_range'], pipeline_config['num_runs'])
+        instance_result_dir = os.path.abspath(os.path.join(get_run_result_dir(pipeline_config, instance, autonet_config_file, "0", "0"), ".."))
+        if not os.path.exists(instance_result_dir):
+            return dict()
+        run_result_dirs = next(os.walk(instance_result_dir))[1]
+        for run_result_dir in run_result_dirs:
+            run_id, run_number = parse_run_folder_name(run_result_dir)
+            run_result_dir = get_run_result_dir(pipeline_config, instance, autonet_config_file, run_id, run_number)
+            if (run_id_range is not None and run_id not in run_id_range) or run_number not in run_number_range:
+                continue
+            logging.getLogger('metalearning').info("Fit run " + str(run_id) + "_" + str(run_number))
+            try:
+                self.sub_pipeline.fit_pipeline(pipeline_config=pipeline_config,
+                    instance=instance, 
+                    run_number=run_number, run_id=run_id, autonet_config_file=autonet_config_file,
+                    run_result_dir=run_result_dir,
+                    initial_design_learner=initial_design_learner)
+            except Exception as e:
+                print(e)
+                traceback.print_exc()
         return dict()
+    
+def parse_run_folder_name(run_folder_name):
+    assert run_folder_name.startswith("run_")
+    run_folder_name = run_folder_name[4:].split("_")
+    run_id = int(run_folder_name[0])
+    run_number = int(run_folder_name[1])
+    return run_id, run_number

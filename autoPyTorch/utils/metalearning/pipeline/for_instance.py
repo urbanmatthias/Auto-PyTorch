@@ -7,13 +7,13 @@ from autoPyTorch.utils.benchmarking.benchmark_pipeline import ForInstance as Bas
 import traceback
 
 class ForInstance(BaseForInstance):
-    def fit(self, pipeline_config, run_id_range, meta_learning_model):
+    def fit(self, pipeline_config, run_id_range, initial_design_learner):
         instances = self.get_instances(pipeline_config, instance_slice=self.parse_slice(pipeline_config["instance_slice"]))
         for i, instance in enumerate(instances):
-            logging.getLogger('metalearning').info('Process instance ' +  str(i) + ' of ' + str(len(instances)))
+            print('Process instance ' +  str(i) + ' of ' + str(len(instances)))
             try:
                 self.sub_pipeline.fit_pipeline(pipeline_config=pipeline_config, instance=instance,
-                    run_id_range=run_id_range, meta_learning_model=meta_learning_model)
+                    run_id_range=run_id_range, initial_design_learner=initial_design_learner)
             except Exception as e:
                 print(e)
                 traceback.print_exc()

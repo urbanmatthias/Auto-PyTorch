@@ -5,6 +5,7 @@ sys.path.append(os.path.abspath(os.path.join(__file__, "..", "..")))
 
 from autoPyTorch.utils.config.config_file_parser import ConfigFileParser
 from autoPyTorch.utils.metalearning.meta_model_builder import MetaModelBuilder
+from autoPyTorch.utils.benchmarking.benchmark import Benchmark
 
 import argparse
 
@@ -15,22 +16,24 @@ __license__ = "BSD"
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Run benchmarks for autonet.')
-    parser.add_argument("--run_id_range", default="0", help="An id for the run. A range of run ids can be given: start-stop.")
+    parser.add_argument("--run_id_range", default=None, help="An id for the run. A range of run ids can be given: start-stop.")
     parser.add_argument("--result_dir", default=None, help="Override result dir in benchmark config.")
-    parser.add_argument("--save_filename", default="./metamodel.pkl", help="Store the meta learning model as given filename")
+    parser.add_argument("--save_filename", default="./initial_design.pkl", help="Store the meta learning model as given filename")
     parser.add_argument('benchmark', help='The benchmark to visualize')
 
     args = parser.parse_args()
 
-    if "-" in args.run_id_range:
-        run_id_range = range(int(args.run_id_range.split("-")[0]), int(args.run_id_range.split("-")[1]) + 1)
-    else:
-        run_id_range = range(int(args.run_id_range), int(args.run_id_range) + 1)
+    run_id_range = args.run_id_range
+    if args.run_id_range is not None:
+        if "-" in args.run_id_range:
+            run_id_range = range(int(args.run_id_range.split("-")[0]), int(args.run_id_range.split("-")[1]) + 1)
+        else:
+            run_id_range = range(int(args.run_id_range), int(args.run_id_range) + 1)
     
     config_file = args.benchmark
 
-    builder = MetaModelBuilder()
-    config_parser = builder.get_config_file_parser()
+    benchmark = Benchmark()
+    config_parser = benchmark.get_benchmark_config_file_parser()
 
     config = config_parser.read(config_file)
 
@@ -39,4 +42,5 @@ if __name__ == "__main__":
 
     config['run_id_range'] = run_id_range
     config['save_filename'] = args.save_filename
+    builder = MetaModelBuilder()
     builder.run(**config)
