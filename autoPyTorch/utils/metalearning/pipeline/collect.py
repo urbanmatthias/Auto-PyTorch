@@ -22,7 +22,6 @@ class Collect(PipelineNode):
     def fit(self, pipeline_config, initial_design_learner, run_result_dir, autonet=None):
         logger = logging.getLogger("metalearning")
         print("Collecting " + run_result_dir)
-        run_result = logged_results_to_HBS_result(run_result_dir)
         if os.path.exists(os.path.join(run_result_dir, "configspace.pcs")):
             with open(os.path.join(run_result_dir, "configspace.pcs"), "r") as f:
                 config_space = read_pcs(f.readlines())
@@ -31,5 +30,5 @@ class Collect(PipelineNode):
                 config_space = read_json(f.readlines())
         else:
             config_space = autonet.get_hyperparameter_search_space()
-        initial_design_learner.add_result(run_result, config_space)
+        initial_design_learner.add_result(run_result_dir, config_space)
         return dict()
