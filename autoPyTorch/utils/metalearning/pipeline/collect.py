@@ -19,7 +19,7 @@ from ConfigSpace.read_and_write.json import read as read_json
 
 class Collect(PipelineNode):
 
-    def fit(self, pipeline_config, initial_design_learner, run_result_dir, autonet=None):
+    def fit(self, pipeline_config, initial_design_learner, warmstarted_model_builder, run_result_dir, autonet=None):
         logger = logging.getLogger("metalearning")
         print("Collecting " + run_result_dir)
         if os.path.exists(os.path.join(run_result_dir, "configspace.pcs")):
@@ -31,4 +31,5 @@ class Collect(PipelineNode):
         else:
             config_space = autonet.get_hyperparameter_search_space()
         initial_design_learner.add_result(run_result_dir, config_space)
+        warmstarted_model_builder.add_result(run_result_dir, config_space)
         return dict()

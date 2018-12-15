@@ -10,7 +10,7 @@ from autoPyTorch.utils.config.config_option import ConfigOption
 
 
 class ForRun(BaseForRun):
-    def fit(self, pipeline_config, instance, initial_design_learner, autonet_config_file, run_id_range):
+    def fit(self, pipeline_config, instance, initial_design_learner, warmstarted_model_builder, autonet_config_file, run_id_range):
         run_number_range = self.parse_range(pipeline_config['run_number_range'], pipeline_config['num_runs'])
         instance_result_dir = os.path.abspath(os.path.join(get_run_result_dir(pipeline_config, instance, autonet_config_file, "0", "0"), ".."))
         if not os.path.exists(instance_result_dir):
@@ -27,7 +27,8 @@ class ForRun(BaseForRun):
                     instance=instance, 
                     run_number=run_number, run_id=run_id, autonet_config_file=autonet_config_file,
                     run_result_dir=run_result_dir,
-                    initial_design_learner=initial_design_learner)
+                    initial_design_learner=initial_design_learner,
+                    warmstarted_model_builder=warmstarted_model_builder)
             except Exception as e:
                 print(e)
                 traceback.print_exc()

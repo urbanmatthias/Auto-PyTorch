@@ -6,6 +6,7 @@ from autoPyTorch.utils.benchmarking.benchmark_pipeline.benchmark_settings import
 from autoPyTorch.utils.config.config_file_parser import ConfigFileParser
 from autoPyTorch.utils.config.config_option import ConfigOption
 from hpbandster.metalearning.initial_design import Hydra
+from hpbandster.metalearning.model_warmstarting import WarmstartedModelBuilder
 
 
 class MetaLearningSettings(BenchmarkSettings):
@@ -16,7 +17,9 @@ class MetaLearningSettings(BenchmarkSettings):
 
         # log level for autonet is set in SetAutoNetConfig
 
-        return { 'run_id_range': pipeline_config['run_id_range'], 'initial_design_learner': Hydra()}
+        return {'run_id_range': pipeline_config['run_id_range'],
+                'initial_design_learner': Hydra(),
+                'warmstarted_model_builder': WarmstartedModelBuilder()}
 
     def get_pipeline_config_options(self):
         options = [
