@@ -11,6 +11,7 @@ class AutoNetFeatureData(AutoNet):
     def get_default_pipeline(cls):
         from autoPyTorch.pipeline.base.pipeline import Pipeline
         from autoPyTorch.pipeline.nodes.autonet_settings import AutoNetSettings
+        from autoPyTorch.pipeline.nodes.metalearning import MetaLearning
         from autoPyTorch.pipeline.nodes.optimization_algorithm import OptimizationAlgorithm
         from autoPyTorch.pipeline.nodes.cross_validation import CrossValidation
         from autoPyTorch.pipeline.nodes.imputation import Imputation
@@ -32,6 +33,7 @@ class AutoNetFeatureData(AutoNet):
         # build the pipeline
         pipeline = Pipeline([
             AutoNetSettings(),
+            MetaLearning(),
             OptimizationAlgorithm([
                 CreateDatasetInfo(),
                 CrossValidation([

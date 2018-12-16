@@ -60,7 +60,7 @@ class OptimizationAlgorithm(SubPipelineNode):
         
         self.logger = logging.getLogger('autonet')
 
-    def fit(self, pipeline_config, X_train, Y_train, X_valid, Y_valid, refit=None):
+    def fit(self, pipeline_config, X_train, Y_train, X_valid, Y_valid, initial_design=None, warmstarted_model=None, refit=None):
         res = None
 
         run_id, task_id = pipeline_config['run_id'], pipeline_config['task_id']
@@ -96,7 +96,8 @@ class OptimizationAlgorithm(SubPipelineNode):
 
             # start BOHB if not on cluster or on master node in cluster
             if task_id in [1, -1]:
-                self.run_optimization_algorithm(pipeline_config, run_id, ns_host, ns_port, NS, task_id)
+                self.run_optimization_algorithm(pipeline_config, run_id, ns_host, ns_port, NS, task_id,
+                    initial_design=initial_design, warmstarted_model=warmstarted_model)
             
 
             res = self.parse_results(pipeline_config["result_logger_dir"])
@@ -180,7 +181,8 @@ class OptimizationAlgorithm(SubPipelineNode):
                 pass
         return NameServer(run_id=run_id, nic_name=network_interface_name, working_directory=ns_credentials_dir)
     
-    def get_optimization_algorithm_instance(self, config_space, run_id, pipeline_config, ns_host, ns_port, loggers, previous_result=None):
+    def get_optimization_algorithm_instance(self, config_space, run_id, pipeline_config, ns_host, ns_port, loggers, previous_result=None,
+            initial_design=None, warmstarted_model=None):
         optimization_algorithm = self.algorithms[pipeline_config["algorithm"]]
         hb = optimization_algorithm(configspace=config_space, run_id = run_id,
                                     eta=pipeline_config["eta"], min_budget=pipeline_config["min_budget"], max_budget=pipeline_config["max_budget"],
@@ -188,7 +190,9 @@ class OptimizationAlgorithm(SubPipelineNode):
                                     result_logger=combined_logger(*loggers),
                                     ping_interval=10**6,
                                     working_directory=pipeline_config["working_dir"],
-                                    previous_result=previous_result)
+                                    previous_result=previous_result,
+                                    initial_design=initial_design,
+                                    warmstarted_model=warmstarted_model)
         return hb
 
 
@@ -223,7 +227,7 @@ class OptimizationAlgorithm(SubPipelineNode):
         worker.run(background=(task_id <= 1))
 
 
-    def run_optimization_algorithm(self, pipeline_config, run_id, ns_host, ns_port, nameserver, task_id):
+    def run_optimization_algorithm(self, pipeline_config, run_id, ns_host, ns_port, nameserver, task_id, initial_design, warmstarted_model):
         config_space = self.pipeline.get_hyperparameter_search_space(**pipeline_config)
 
 
@@ -235,7 +239,8 @@ class OptimizationAlgorithm(SubPipelineNode):
             loggers.append(tensorboard_logger())
 
         HB = self.get_optimization_algorithm_instance(config_space=config_space, run_id=run_id,
-            pipeline_config=pipeline_config, ns_host=ns_host, ns_port=ns_port, loggers=loggers)
+            pipeline_config=pipeline_config, ns_host=ns_host, ns_port=ns_port, loggers=loggers,
+            initial_design=initial_design, warmstarted_model=warmstarted_model)
 
         # start algorithm
         min_num_workers = pipeline_config["min_workers"] if task_id != -1 else 1
