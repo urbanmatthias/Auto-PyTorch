@@ -65,7 +65,7 @@ class OptimizationAlgorithm(SubPipelineNode):
 
         run_id, task_id = pipeline_config['run_id'], pipeline_config['task_id']
 
-        if pipeline_config['use_tensorboard_logger']:            
+        if pipeline_config['use_tensorboard_logger'] and not refit:            
             import tensorboard_logger as tl
             directory = os.path.join(pipeline_config['result_logger_dir'], "worker_logs_" + str(task_id))
             os.makedirs(directory, exist_ok=True)
