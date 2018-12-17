@@ -8,3 +8,5 @@ cross_validator=k_fold
 cross_validator_args={"n_splits": 5}
 normalization_strategies=[maxabs]
 preprocessors=[truncated_svd, kitchen_sinks, kernel_pca, nystroem]
+use_tensorboard_logger=True
+min_budget_for_cv=250
