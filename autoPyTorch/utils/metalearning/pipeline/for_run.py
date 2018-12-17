@@ -6,6 +6,7 @@ from autoPyTorch.pipeline.base.sub_pipeline_node import SubPipelineNode
 from autoPyTorch.utils.benchmarking.benchmark_pipeline import ForRun as BaseForRun
 from autoPyTorch.utils.benchmarking.benchmark_pipeline.prepare_result_folder import \
     get_run_result_dir
+from autoPyTorch.utils.benchmarking.visualization_pipeline.collect_trajectories import parse_run_folder_name
 from autoPyTorch.utils.config.config_option import ConfigOption
 
 
@@ -33,10 +34,3 @@ class ForRun(BaseForRun):
                 print(e)
                 traceback.print_exc()
         return dict()
-    
-def parse_run_folder_name(run_folder_name):
-    assert run_folder_name.startswith("run_")
-    run_folder_name = run_folder_name[4:].split("_")
-    run_id = int(run_folder_name[0])
-    run_number = int(run_folder_name[1])
-    return run_id, run_number
