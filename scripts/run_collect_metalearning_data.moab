@@ -1,7 +1,7 @@
 #!/bin/bash
 #MOAB -t 1-4
 #MOAB -N AUTONET
-#MOAB -l nodes=1:ppn=1,walltime=52:00:00,pmem=6GB
+#MOAB -l nodes=1:ppn=1,walltime=96:00:00,pmem=6GB
 #MOAB -V
 #MOAB -E
 
@@ -10,7 +10,7 @@ cd $OUTPUTDIR
 JOBID=(${MOAB_JOBID//[/ })
 COMMAND="python $AUTONET_HOME/scripts/run_benchmark.py $AUTONET_HOME/configs/benchmark/collect_metalearning_data.txt --partial_benchmark $INSTANCE,$CONFIG,$RUN --host_config $AUTONET_HOME/configs/hosts/nemo.txt --result_dir $TMPDIR/benchmark_results --run_id $JOBID --task_id $MOAB_JOBARRAYINDEX"
 echo "Run benchmark: $COMMAND"
-timeout -k 51.2h 51h $COMMAND 1> $TMPDIR/stdout.txt 2> $TMPDIR/stderr.txt
+timeout -k 95.2h 95h $COMMAND 1> $TMPDIR/stdout.txt 2> $TMPDIR/stderr.txt
 
 echo "Job finished. Copy output to $OUTPUTDIR"
 cp $TMPDIR/stdout.txt $OUTPUTDIR/stdout:${MOAB_JOBARRAYINDEX}.txt

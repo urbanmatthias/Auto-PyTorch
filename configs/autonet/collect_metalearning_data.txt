@@ -1,7 +1,7 @@
 max_budget=6000
 min_budget=74
 min_workers=4
-max_runtime=172800
+max_runtime=334800
 budget_type=time
 train_metric=balanced_accuracy
 cv_splits=5
