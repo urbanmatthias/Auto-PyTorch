@@ -27,14 +27,11 @@ class Trainer(object):
         self.budget = budget
         self.loss_computation = loss_computation
 
-        self.cumulative_time = 0
         self.logger = logger
         self.fit_start_time = None
 
-        self.eval_valid_each_epoch = full_eval_each_epoch or any(t.requires_valid_eval_each_epoch() for t in self.training_techniques)
-        self.eval_train_on_snapshot = any(t.requires_train_eval_on_snapshot() for t in self.training_techniques)
-        self.eval_valid_on_snapshot = any(t.requires_valid_eval_on_snapshot() for t in self.training_techniques) \
-                                      or not self.eval_valid_each_epoch
+        self.eval_valid_each_epoch = full_eval_each_epoch or any(t.requires_eval_each_epoch() for t in self.training_techniques)
+        self.eval_valid_on_snapshot = not self.eval_valid_each_epoch
         
         self.eval_additional_logs_each_epoch = full_eval_each_epoch and self.log_functions
         self.eval_additional_logs_on_snapshot = not full_eval_each_epoch and self.log_functions
@@ -84,17 +81,13 @@ class Trainer(object):
             final_log = final_log or logs[-1]
 
         # validation on snapshot
-        if self.eval_additional_logs_on_snapshot or self.eval_valid_on_snapshot or self.eval_train_on_snapshot or refit:
+        if self.eval_additional_logs_on_snapshot or self.eval_valid_on_snapshot or refit:
             self.model.load_snapshot()
-            train_metric_results, valid_metric_results = None, None
-            if self.eval_train_on_snapshot or (valid_loader is None and self.eval_valid_on_snapshot):
-                train_metric_results = self.evaluate(train_loader)
+            valid_metric_results = None
             if valid_loader is not None and self.eval_valid_on_snapshot:
                 valid_metric_results = self.evaluate(valid_loader)
 
             for i, metric in enumerate(self.metrics):
-                if train_metric_results:
-                    final_log['train_' + metric.__name__] = train_metric_results[i]
                 if valid_metric_results:
                     final_log['val_' + metric.__name__] = valid_metric_results[i]
             if self.eval_additional_logs_on_snapshot:
@@ -123,20 +116,15 @@ class Trainer(object):
             batch_size = data.size(0)
 
             for t in self.training_techniques:
-                t.on_batch_start(trainer=self, epoch=epoch, step=step, num_steps=len(train_loader), cumulative_time=self.cumulative_time)
+                t.on_batch_start(trainer=self, epoch=epoch, step=step, num_steps=len(train_loader))
 
             # training
-            start_time_batch = time.time()  # used for SGDR with seconds as budget
             self.optimizer.zero_grad()
             outputs = self.model(data)
             loss_func = self.loss_computation.criterion(**criterion_kwargs)
             loss = loss_func(self.criterion, outputs)
             loss.backward()
             self.optimizer.step()
-
-            # used for SGDR with seconds as budget
-            delta_time = time.time() - start_time_batch
-            self.cumulative_time += delta_time
 
             # evaluate metrics
             for i, metric in enumerate(self.metrics):
@@ -145,8 +133,8 @@ class Trainer(object):
             loss_sum += loss.item() * batch_size
             N += batch_size
 
-            if any([t.on_batch_end(batch_loss=loss.item(), trainer=self, epoch=epoch, step=step, num_steps=len(train_loader),
-                                           cumulative_time=self.cumulative_time) for t in self.training_techniques]):
+            if any([t.on_batch_end(batch_loss=loss.item(), trainer=self, epoch=epoch, step=step, num_steps=len(train_loader))
+                    for t in self.training_techniques]):
                 return [res / N for res in metric_results], loss_sum / N, True
 
         return [res / N for res in metric_results], loss_sum / N, False

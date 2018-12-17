@@ -50,7 +50,7 @@ class BaseTrainingTechnique():
         return False
 
     # VIRTUAL
-    def on_batch_start(self, trainer, epoch, step, num_steps, cumulative_time):
+    def on_batch_start(self, trainer, epoch, step, num_steps):
         """Function that gets called in the train_batches method of training.
         Is able to cancel the current epoch by returning True.
         
@@ -65,7 +65,7 @@ class BaseTrainingTechnique():
         return False
     
         # VIRTUAL
-    def on_batch_end(self, batch_loss, trainer, epoch, step, num_steps, cumulative_time):
+    def on_batch_end(self, batch_loss, trainer, epoch, step, num_steps):
         """Function that gets called in the train_batches method of training.
         Is able to cancel the current epoch by returning True.
         
@@ -92,30 +92,9 @@ class BaseTrainingTechnique():
         """
 
         return False
-
-    
-    # VIRTUAL
-    def requires_valid_eval_on_snapshot(self):
-        """ Specify if the training technique needs the network to be evaluated on a snapshot after training.
-        
-        Return:
-            bool -- If the training technique needs the network to be evaluated on a snapshot after training
-        """
-
-        return False
     
         # VIRTUAL
-    def requires_train_eval_on_snapshot(self):
-        """ Specify if the training technique needs the network to be evaluated on a snapshot after training.
-        
-        Return:
-            bool -- If the training technique needs the network to be evaluated on a snapshot after training
-        """
-
-        return False
-    
-        # VIRTUAL
-    def requires_valid_eval_each_epoch(self):
+    def requires_eval_each_epoch(self):
         """ Specify if the training technique needs the network to be evaluated on a snapshot after training.
         
         Return:

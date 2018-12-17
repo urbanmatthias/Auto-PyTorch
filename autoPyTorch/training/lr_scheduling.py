@@ -1,4 +1,5 @@
 from autoPyTorch.training.base_training import BaseTrainingTechnique
+import time
 
 class LrScheduling(BaseTrainingTechnique):
     """Schedule the learning rate with given learning rate scheduler.
@@ -12,15 +13,15 @@ class LrScheduling(BaseTrainingTechnique):
         self.allow_snapshot = allow_snapshot
 
     # OVERRIDE
-    def on_batch_end(self, batch_loss, trainer, epoch, step, num_steps, cumulative_time, **kwargs):
+    def on_batch_end(self, batch_loss, trainer, epoch, step, num_steps, **kwargs):
         if not self.lr_step_after_batch:
             return
 
         converged = False
         if self.lr_step_with_time:
-            converged = self.perform_scheduling(trainer, cumulative_time, batch_loss)
+            converged = self.perform_scheduling(trainer, time.time() - trainer.fit_start_time, batch_loss)
         else:
-            converged = self.perform_scheduling(trainer, (epoch - 1) * num_steps + step + 1, batch_loss)
+            converged = self.perform_scheduling(trainer, (epoch - 1) + ((step + 1) / num_steps), batch_loss)
         
         if converged and self.allow_snapshot:
             self._needs_eval_on_snapshot = True
@@ -35,7 +36,7 @@ class LrScheduling(BaseTrainingTechnique):
 
         log["lr_scheduler_converged"] = False
         if self.lr_step_with_time:
-            log["lr_scheduler_converged"] = self.perform_scheduling(trainer, trainer.cumulative_time, log['loss'])
+            log["lr_scheduler_converged"] = self.perform_scheduling(trainer, time.time() - trainer.fit_start_time, log['loss'])
         else:
             log["lr_scheduler_converged"]  = self.perform_scheduling(trainer, epoch, log['loss'])
         return False
@@ -66,6 +67,3 @@ class LrScheduling(BaseTrainingTechnique):
             logs = logs[-1]
             return logs
         return False
-    
-    def requires_valid_eval_on_snapshot(self):
-        return self._needs_eval_on_snapshot and self.allow_snapshot
