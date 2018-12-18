@@ -47,7 +47,7 @@ class LrScheduling(BaseTrainingTechnique):
         if not trainer.lr_scheduler.snapshot_before_restart:
             return False
         trainer.lr_scheduler.get_lr()
-        if trainer.lr_scheduler.restarted_at == (epoch + 1):
+        if trainer.lr_scheduler.restarted_at == epoch:
             if self.allow_snapshot:
                 trainer.logger.debug("Learning rate scheduler converged. Taking Snapshot of models parameters.")
                 trainer.model.snapshot()
