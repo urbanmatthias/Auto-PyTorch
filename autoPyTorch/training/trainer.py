@@ -66,9 +66,6 @@ class Trainer(object):
     def on_epoch_end(self, log, epoch):
         return any([t.on_epoch_end(trainer=self, log=log, epoch=epoch) for t in self.training_techniques])
     
-    def needs_eval_on_snapshot(self):
-        return any([t.needs_eval_on_snapshot() for t in self.training_techniques])
-    
     def final_eval(self, opt_metric_name, logs, train_loader, valid_loader, minimize, best_over_epochs, refit):
         # select log
         if best_over_epochs:

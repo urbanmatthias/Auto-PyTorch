@@ -9,7 +9,6 @@ class LrScheduling(BaseTrainingTechnique):
         super(LrScheduling, self).__init__(training_components=training_components)
         self.lr_step_after_batch = lr_step_after_batch
         self.lr_step_with_time = lr_step_with_time
-        self._needs_eval_on_snapshot = False
         self.allow_snapshot = allow_snapshot
 
     # OVERRIDE
@@ -17,24 +16,20 @@ class LrScheduling(BaseTrainingTechnique):
         if not self.lr_step_after_batch:
             return
 
-        converged = False
         if self.lr_step_with_time:
-            converged = self.perform_scheduling(trainer, time.time() - trainer.fit_start_time, batch_loss)
+            self.perform_scheduling(trainer, time.time() - trainer.fit_start_time, batch_loss)
         else:
-            converged = self.perform_scheduling(trainer, (epoch - 1) + ((step + 1) / num_steps), batch_loss)
-        
-        if converged and self.allow_snapshot:
-            self._needs_eval_on_snapshot = True
+            self.perform_scheduling(trainer, (epoch - 1) + ((step + 1) / num_steps), batch_loss)
 
     # OVERRIDE
     def on_epoch_end(self, trainer, epoch, log, **kwargs):
+        log["lr_scheduler_converged"] = False
         if callable(getattr(trainer.lr_scheduler, "get_lr", None)):
             log['lr'] = trainer.lr_scheduler.get_lr()[0]
 
         if self.lr_step_after_batch:
             return
 
-        log["lr_scheduler_converged"] = False
         if self.lr_step_with_time:
             log["lr_scheduler_converged"] = self.perform_scheduling(trainer, time.time() - trainer.fit_start_time, log['loss'])
         else:
