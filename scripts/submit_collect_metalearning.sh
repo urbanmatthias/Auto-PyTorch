@@ -8,7 +8,7 @@ export AUTONET_HOME=$PWD
 
 mkdir outputs
 cd outputs
-while [ $INSTANCE -le 499 ]
+while [ $INSTANCE -le 199 ]
 do
   export INSTANCE
   export CONFIG
