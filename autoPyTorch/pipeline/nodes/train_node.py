@@ -85,13 +85,16 @@ class TrainNode(PipelineNode):
                 for additional_log in trainer.log_functions:
                     log[additional_log.__name__] = additional_log(trainer.model, epoch)
 
+            # wrap up epoch
+            stop_training = stop_training or trainer.on_epoch_end(log=log, epoch=epoch)
+
             # handle logs
             logs.append(log)
             self.logger.debug("Epoch: " + str(epoch) + " : " + str(log))
             if 'use_tensorboard_logger' in pipeline_config and pipeline_config['use_tensorboard_logger']:
                 self.tensorboard_log(budget=budget, epoch=epoch, log=log)
 
-            if trainer.on_epoch_end(log=log, epoch=epoch) or stop_training:
+            if stop_training:
                 break
             
             epoch += 1
