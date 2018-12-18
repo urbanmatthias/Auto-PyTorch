@@ -86,7 +86,7 @@ class TrainNode(PipelineNode):
                     log[additional_log.__name__] = additional_log(trainer.model, epoch)
 
             # wrap up epoch
-            stop_training = stop_training or trainer.on_epoch_end(log=log, epoch=epoch)
+            stop_training = trainer.on_epoch_end(log=log, epoch=epoch) or stop_training
 
             # handle logs
             logs.append(log)
