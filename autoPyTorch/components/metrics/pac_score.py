@@ -5,7 +5,7 @@ from sklearn.metrics.classification import _check_targets, type_of_target
 
 
 def pac_metric(y_pred, y_true):
-    return _pac_score(y_true.cpu().detach().numpy(), y_pred.cpu().detach().numpy()) * 100
+    return _pac_score(y_true, y_pred) * 100
 
 
 def _pac_score(solution, prediction):

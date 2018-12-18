@@ -21,9 +21,6 @@ class Mixup(BaseBatchLossComputationTechnique):
 
     def criterion(self, y_a, y_b, lam):
         return lambda criterion, pred: lam * criterion(pred, y_a) + (1 - lam) * criterion(pred, y_b)
-        
-    def evaluate(self, metric, y_pred, y_a, y_b, lam):
-        return lam * metric(y_pred, y_a) + (1 - lam) * metric(y_pred, y_b)
 
     @staticmethod
     def get_hyperparameter_search_space(**pipeline_config):

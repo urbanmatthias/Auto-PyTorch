@@ -145,10 +145,6 @@ class BaseBatchLossComputationTechnique():
         return lambda criterion, pred: criterion(pred, y_batch)
     
     # VIRTUAL
-    def evaluate(self, metric, y_pred, y_batch):
-        return metric(y_pred, y_batch)
-    
-    # VIRTUAL
     @staticmethod
     def get_hyperparameter_search_space(**pipeline_config):
         """Get the hyperparameter config space for this technique.

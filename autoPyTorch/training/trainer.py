@@ -1,6 +1,7 @@
 import time
 import os
 import torch
+import numpy as np
 
 from torch.autograd import Variable
 from autoPyTorch.utils.configspace_wrapper import ConfigWrapper
@@ -103,8 +104,9 @@ class Trainer(object):
         loss_sum = 0.0
         N = 0
         self.model.train()
+        outputs_data = list()
+        targets_data = list()
 
-        metric_results = [0] * len(self.metrics)
         for step, (data, targets) in enumerate(train_loader):
    
             # prepare
@@ -126,46 +128,40 @@ class Trainer(object):
             loss.backward()
             self.optimizer.step()
 
-            # evaluate metrics
-            for i, metric in enumerate(self.metrics):
-                metric_results[i] += self.loss_computation.evaluate(metric, outputs, **criterion_kwargs) * batch_size
+            # save for metric evaluation
+            outputs_data.append(outputs.data.cpu().detach().numpy())
+            targets_data.append(targets.data.cpu().detach().numpy())
 
             loss_sum += loss.item() * batch_size
             N += batch_size
 
             if any([t.on_batch_end(batch_loss=loss.item(), trainer=self, epoch=epoch, step=step, num_steps=len(train_loader))
                     for t in self.training_techniques]):
-                return [res / N for res in metric_results], loss_sum / N, True
-
-        return [res / N for res in metric_results], loss_sum / N, False
+                return self.compute_metrics(outputs_data, targets_data), loss_sum / N, True
+        return self.compute_metrics(outputs_data, targets_data), loss_sum / N, False
 
 
     def evaluate(self, test_loader):
-
-        N = 0
-        metric_results = [0] * len(self.metrics)
-        
         self.model.eval()
+
+        outputs_data = list()
+        targets_data = list()
 
         with torch.no_grad():
             for _, (data, targets) in enumerate(test_loader):
     
                 data = data.to(self.device)
-                targets = targets.to(self.device)
-
                 data = Variable(data)
-                targets = Variable(targets)
-                
-                batch_size = data.size(0)
-
                 outputs = self.model(data)
-                
-                for i, metric in enumerate(self.metrics):
-                    metric_results[i] += metric(outputs.data, targets.data) * batch_size
 
-                N += batch_size
+                outputs_data.append(outputs.data.cpu().detach().numpy())
+                targets_data.append(targets.data.cpu().detach().numpy())
 
         self.model.train()
-            
-        return [res / N for res in metric_results]
+        return self.compute_metrics(outputs_data, targets_data)
+    
+    def compute_metrics(self, outputs_data, targets_data):
+        outputs_data = np.vstack(outputs_data)
+        targets_data = np.vstack(targets_data)
+        return [metric(outputs_data, targets_data) for metric in self.metrics]
     

@@ -108,7 +108,7 @@ class TrainNode(PipelineNode):
     def predict(self, pipeline_config, network, predict_loader):
         device = torch.device('cuda:0' if pipeline_config['cuda'] else 'cpu')
         
-        Y = predict(network, predict_loader, None, device)
+        Y = predict(network, predict_loader, device)
         return {'Y': Y.detach().cpu().numpy()}
     
     def add_training_technique(self, name, training_technique):
@@ -186,7 +186,7 @@ class TrainNode(PipelineNode):
         return loss, final_log
 
 
-def predict(network, test_loader, metrics, device, move_network=True):
+def predict(network, test_loader, device, move_network=True):
     """ predict batchwise """
     # Build DataLoader
     if move_network:
@@ -194,32 +194,14 @@ def predict(network, test_loader, metrics, device, move_network=True):
 
     # Batch prediction
     network.eval()
-    if metrics is not None:
-        metric_results = [0] * len(metrics)
+    Y_batch_preds = list()
     
-    N = 0.0
     for i, (X_batch, Y_batch) in enumerate(test_loader):
         # Predict on batch
         X_batch = Variable(X_batch).to(device)
         batch_size = X_batch.size(0)
 
         Y_batch_pred = network(X_batch).detach().cpu()
-
-        if metrics is None:
-            # Infer prediction shape
-            if i == 0:
-                Y_pred = Y_batch_pred
-            else:
-                # Add to prediction tensor
-                Y_pred = torch.cat((Y_pred, Y_batch_pred), 0)
-        else:
-            for i, metric in enumerate(metrics):
-                metric_results[i] += metric(Y_batch, Y_batch_pred) * batch_size
-
-        N += batch_size
+        Y_batch_preds.append(Y_batch_pred)
     
-    if metrics is None:
-        return Y_pred
-    else:
-        return [res / N for res in metric_results]
-
+    return torch.cat(Y_batch_preds, 0)
