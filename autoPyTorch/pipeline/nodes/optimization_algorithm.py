@@ -8,8 +8,7 @@ import traceback
 import logging
 
 from hpbandster.core.nameserver import NameServer, nic_name_to_host
-from hpbandster.core.result import (json_result_logger,
-                                    logged_results_to_HBS_result)
+from hpbandster.core.result import logged_results_to_HBS_result
 
 from autoPyTorch.pipeline.base.sub_pipeline_node import SubPipelineNode
 from autoPyTorch.pipeline.base.pipeline import Pipeline
@@ -60,7 +59,7 @@ class OptimizationAlgorithm(SubPipelineNode):
         
         self.logger = logging.getLogger('autonet')
 
-    def fit(self, pipeline_config, X_train, Y_train, X_valid, Y_valid, initial_design=None, warmstarted_model=None, refit=None):
+    def fit(self, pipeline_config, X_train, Y_train, X_valid, Y_valid, result_loggers, initial_design=None, warmstarted_model=None, refit=None):
         res = None
 
         run_id, task_id = pipeline_config['run_id'], pipeline_config['task_id']
@@ -76,7 +75,7 @@ class OptimizationAlgorithm(SubPipelineNode):
                                     hyperparameter_config=refit["hyperparameter_config"], pipeline_config=pipeline_config, 
                                     X_train=X_train, Y_train=Y_train, X_valid=X_valid, Y_valid=Y_valid, 
                                     budget=refit["budget"], budget_type=self.budget_types[pipeline_config['budget_type']],
-                                    optimize_start_time=time.time(), refit=True)
+                                    optimize_start_time=time.time(), refit=True, hyperparameter_config_id=None)
             
             return {'final_metric_score': res['loss'],
                     'optimized_hyperparamater_config': refit["hyperparameter_config"],
@@ -96,7 +95,7 @@ class OptimizationAlgorithm(SubPipelineNode):
 
             # start BOHB if not on cluster or on master node in cluster
             if task_id in [1, -1]:
-                self.run_optimization_algorithm(pipeline_config, run_id, ns_host, ns_port, NS, task_id,
+                self.run_optimization_algorithm(pipeline_config, run_id, ns_host, ns_port, NS, task_id, result_loggers,
                     initial_design=initial_design, warmstarted_model=warmstarted_model)
             
 
@@ -125,7 +124,6 @@ class OptimizationAlgorithm(SubPipelineNode):
             ConfigOption("budget_type", default="time", type=str, choices=list(self.budget_types.keys())),
             ConfigOption("min_budget", default=lambda c: self.budget_types[c["budget_type"]].default_min_budget, type=float, depends=True),
             ConfigOption("max_budget", default=lambda c: self.budget_types[c["budget_type"]].default_max_budget, type=float, depends=True),
-            ConfigOption("result_logger_dir", default=".", type="directory"),
             ConfigOption("max_runtime", 
                 default=lambda c: ((-int(np.log(c["min_budget"] / c["max_budget"]) / np.log(c["eta"])) + 1) * c["max_budget"])
                         if c["budget_type"] == "time" else float("inf"),
@@ -227,19 +225,19 @@ class OptimizationAlgorithm(SubPipelineNode):
         worker.run(background=(task_id <= 1))
 
 
-    def run_optimization_algorithm(self, pipeline_config, run_id, ns_host, ns_port, nameserver, task_id, initial_design, warmstarted_model):
+    def run_optimization_algorithm(self, pipeline_config, run_id, ns_host, ns_port, nameserver, task_id, result_loggers,
+            initial_design, warmstarted_model):
         config_space = self.pipeline.get_hyperparameter_search_space(**pipeline_config)
 
 
         self.logger.info("[AutoNet] Start " + pipeline_config["algorithm"])
 
         # initialize optimization algorithm
-        loggers = [json_result_logger(directory=pipeline_config["result_logger_dir"], overwrite=True)]
         if pipeline_config['use_tensorboard_logger']:
-            loggers.append(tensorboard_logger())
+            result_loggers.append(tensorboard_logger())
 
         HB = self.get_optimization_algorithm_instance(config_space=config_space, run_id=run_id,
-            pipeline_config=pipeline_config, ns_host=ns_host, ns_port=ns_port, loggers=loggers,
+            pipeline_config=pipeline_config, ns_host=ns_host, ns_port=ns_port, loggers=result_loggers,
             initial_design=initial_design, warmstarted_model=warmstarted_model)
 
         # start algorithm

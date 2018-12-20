@@ -50,7 +50,7 @@ class ModuleWorker(Worker):
                 time_limit = int(budget + 240)
 
             limit_train = pynisher.enforce_limits(mem_in_mb=self.pipeline_config['memory_limit_mb'], wall_time_in_s=time_limit)(self.optimize_pipeline)
-            result = limit_train(config, budget, start_time)
+            result = limit_train(config, config_id, budget, start_time)
 
             if (limit_train.exit_status == pynisher.TimeoutException):
                 raise Exception("Time limit reached. Took " + str((time.time()-start_time)) + " seconds with budget " + str(budget))
@@ -60,12 +60,10 @@ class ModuleWorker(Worker):
                 self.autonet_logger.info('Exception occurred using config:\n' + str(config))
                 raise Exception("Exception in train pipeline. Took " + str((time.time()-start_time)) + " seconds with budget " + str(budget))
         else:
-            result = self.optimize_pipeline(config, budget, start_time)
+            result = self.optimize_pipeline(config, config_id, budget, start_time)
 
         loss = result['loss']
         info = result['info']
-
-        info = {key: (value if not isinstance(value, np.ndarray) else value.tolist()) for key, value in info.items()}
         self.autonet_logger.debug("Result: " + str(loss) + " info: " + str(info))
 
         # that is not really elegant but we can want to achieve some kind of feedback
@@ -73,18 +71,15 @@ class ModuleWorker(Worker):
 
         self.autonet_logger.info("Training " + str(network_name) + " with budget " + str(budget) + " resulted in score: " + str(loss) + " took " + str((time.time()-start_time)) + " seconds")
 
-        return  {
-                    'loss': loss,
-                    'info': info
-                }
+        return  result
     
-    def optimize_pipeline(self, config, budget, optimize_start_time):
+    def optimize_pipeline(self, config, config_id, budget, optimize_start_time):
         try:
             self.autonet_logger.info("Fit optimization pipeline")
             return self.pipeline.fit_pipeline(hyperparameter_config=config, pipeline_config=self.pipeline_config, 
                                             X_train=self.X_train, Y_train=self.Y_train, X_valid=self.X_valid, Y_valid=self.Y_valid, 
                                             budget=budget, budget_type=self.budget_type, max_budget=self.max_budget, optimize_start_time=optimize_start_time,
-                                            refit=False)
+                                            refit=False, hyperparameter_config_id=config_id)
         except Exception as e:
             if 'use_tensorboard_logger' in self.pipeline_config and self.pipeline_config['use_tensorboard_logger']:            
                 import tensorboard_logger as tl

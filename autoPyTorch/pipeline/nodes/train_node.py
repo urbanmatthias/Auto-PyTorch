@@ -90,6 +90,7 @@ class TrainNode(PipelineNode):
 
             # handle logs
             logs.append(log)
+            log = {key: value for key, value in log.items() if not isinstance(value, np.ndarray)}
             self.logger.debug("Epoch: " + str(epoch) + " : " + str(log))
             if 'use_tensorboard_logger' in pipeline_config and pipeline_config['use_tensorboard_logger']:
                 self.tensorboard_log(budget=budget, epoch=epoch, log=log)

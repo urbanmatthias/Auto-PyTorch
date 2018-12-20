@@ -49,7 +49,8 @@ class CrossValidation(SubPipelineNode):
         self.logger = logging.getLogger('autonet')
 
 
-    def fit(self, hyperparameter_config, pipeline_config, X_train, Y_train, X_valid, Y_valid, budget, budget_type, optimize_start_time, refit, dataset_info):
+    def fit(self, hyperparameter_config, pipeline_config, hyperparameter_config_id,
+            X_train, Y_train, X_valid, Y_valid, budget, budget_type, optimize_start_time, refit, dataset_info):
         loss = 0
         infos = []
         X, Y, num_cv_splits, cv_splits, loss_penalty, budget = self.initialize_cross_validation(
@@ -62,26 +63,29 @@ class CrossValidation(SubPipelineNode):
 
         # start cross validation
         self.logger.debug("Took " + str(time.time() - optimize_start_time) + " s to initialize optimization.")
+        all_sub_pipeline_kwargs = dict()
+        additional_results = dict()
         for i, split_indices in enumerate(cv_splits):
             if num_cv_splits > 1:
                 self.logger.debug("[AutoNet] CV split " + str(i) + " of " + str(num_cv_splits))
 
             # fit training pipeline
             cur_budget = self.get_current_budget(cv_index=i, budget=budget, budget_type=budget_type, cv_start_time=cv_start_time, num_cv_splits=num_cv_splits)
-            result = self.sub_pipeline.fit_pipeline(
-                hyperparameter_config=hyperparameter_config, pipeline_config=pipeline_config, 
-                X=X, Y=Y, 
-                budget=cur_budget, training_techniques=[budget_type()],
-                fit_start_time=time.time(),
-                train_indices=split_indices[0],
-                valid_indices=split_indices[1],
-                original_split_indices=split_indices,
-                cv_index=i, dataset_info=deepcopy(dataset_info),
-                refit=refit)
+            sub_pipeline_kwargs = {
+                "hyperparameter_config": hyperparameter_config, "pipeline_config": pipeline_config,
+                "budget": cur_budget, "training_techniques": [budget_type()],
+                "fit_start_time": time.time(),
+                "train_indices": split_indices[0],
+                "valid_indices": split_indices[1],
+                "dataset_info": deepcopy(dataset_info),
+                "refit": refit}
+            all_sub_pipeline_kwargs[i] = deepcopy(sub_pipeline_kwargs)
+            result = self.sub_pipeline.fit_pipeline(X=X, Y=Y, **sub_pipeline_kwargs)
 
             if result is not None:
                 loss += result['loss']
                 infos.append(result['info'])
+                additional_results[i] = {key: value for key, value in result.items() if key not in ["loss", "info"]}
 
         if (len(infos) == 0):
             raise Exception("Could not finish a single cv split due to memory or time limitation")
@@ -89,8 +93,9 @@ class CrossValidation(SubPipelineNode):
         # aggregate logs
         df = pd.DataFrame(infos)
         info = dict(df.mean())
+        additional_results = self.process_additional_results(additional_results=additional_results, all_sub_pipeline_kwargs=all_sub_pipeline_kwargs, X=X, Y=Y)
         loss = loss / num_cv_splits + loss_penalty
-        return {'loss': loss, 'info': info}
+        return dict({'loss': loss, 'info': info}, **additional_results)
 
     def predict(self, pipeline_config, X):
        
@@ -194,6 +199,20 @@ class CrossValidation(SubPipelineNode):
         else:
             cur_budget = budget / num_cv_splits
         return cur_budget
+    
+    def process_additional_results(self, additional_results, all_sub_pipeline_kwargs, X, Y):
+        combinators = dict()
+        data = dict()
+        result = dict()
+        for split in additional_results.keys():
+            for name in additional_results[split].keys():
+                combinators[name] = additional_results[split][name]["combinator"]
+                if name not in data:
+                    data[name] = dict()
+                data[name][split] = additional_results[split][name]["data"]
+        for name in data.keys():
+            result[name] = combinators[name](data=data[name], pipeline_kwargs=all_sub_pipeline_kwargs, X=X, Y=Y)
+        return result
     
     @staticmethod
     def concat(upper, lower):

@@ -29,11 +29,13 @@ class AutoNetFeatureData(AutoNet):
         from autoPyTorch.pipeline.nodes.train_node import TrainNode
         from autoPyTorch.pipeline.nodes.create_dataloader import CreateDataLoader
         from autoPyTorch.pipeline.nodes.create_dataset_info import CreateDatasetInfo
+        from autoPyTorch.pipeline.nodes.ensemble import EnableComputePredictionsForEnsemble, SavePredictionsForEnsemble, BuildEnsemble, AddEnsembleLogger
         
         # build the pipeline
         pipeline = Pipeline([
             AutoNetSettings(),
             MetaLearning(),
+            AddEnsembleLogger(),
             OptimizationAlgorithm([
                 CreateDatasetInfo(),
                 CrossValidation([
@@ -48,11 +50,14 @@ class AutoNetFeatureData(AutoNet):
                     LearningrateSchedulerSelector(),
                     LogFunctionsSelector(),
                     MetricSelector(),
+                    EnableComputePredictionsForEnsemble(),
                     LossModuleSelector(),
                     CreateDataLoader(),
-                    TrainNode()
+                    TrainNode(),
+                    SavePredictionsForEnsemble()
                 ])
-            ])
+            ]),
+            BuildEnsemble()
         ])
 
         cls._apply_default_pipeline_settings(pipeline)
