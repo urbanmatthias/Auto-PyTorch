@@ -10,7 +10,7 @@ class SetAutoNetConfig(PipelineNode):
         config = parser.read(autonet_config_file)
 
         if ('additional_logs' not in config):
-            config['additional_logs'] = ['test_result']
+            config['additional_logs'] = ['test_result' if not pipeline_config['enable_ensemble'] else 'test_predictions_for_ensemble']
 
         if (pipeline_config['use_dataset_metric'] and data_manager.metric is not None):
             config['train_metric'] = data_manager.metric

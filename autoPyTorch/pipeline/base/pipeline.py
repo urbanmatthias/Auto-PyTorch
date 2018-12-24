@@ -153,6 +153,9 @@ class Pipeline():
                 input_str += " (" + edge.out_idx + ", " + edge.target.get_name() + ", " + edge.kw + ") "
             input_str += "]"
             print(name + " \t\t Input: " + input_str)
+    
+    def clean(self):
+        self.root.clean_fit_data()
 
     def clone(self):
         pipeline_nodes = []

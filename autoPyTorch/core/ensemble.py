@@ -31,10 +31,9 @@ class AutoNetEnsemble(AutoNet):
     
     def fit(self, X_train, Y_train, X_valid=None, Y_valid=None, refit=True, **autonet_config):
         self.autonet_config = self.pipeline.get_pipeline_config(**dict(self.base_config, **autonet_config))
-        autonet = self.autonet_type(pipeline=self.pipeline.clone(), **self.autonet_config)
-
-        autonet.fit(X_train=X_train, Y_train=Y_train, X_valid=X_valid, Y_valid=Y_valid, refit=False)
-        self.fit_result = autonet.fit_result
+        self.fit_result = self.pipeline.fit_pipeline(pipeline_config=self.autonet_config,
+                                                     X_train=X_train, Y_train=Y_train, X_valid=X_valid, Y_valid=Y_valid)
+        self.pipeline.clean()
         if refit:
             self.refit(X_train=X_train, Y_train=Y_train, X_valid=X_valid, Y_valid=Y_valid)
         return self.fit_result["ensemble_configs"], self.fit_result["ensemble_final_metric_score"], self.fit_result["ensemble"]
@@ -50,7 +49,6 @@ class AutoNetEnsemble(AutoNet):
             raise ValueError("You have to specify ensemble and autonet config in order to be able to refit")
         
         identifiers = ensemble.get_selected_model_identifiers()
-        print(identifiers)
         self.trained_autonets = dict()
         for identifier in identifiers:
             config_id = tuple(identifier[:3])

@@ -107,7 +107,7 @@ class AutoNet():
 
         self.fit_result = self.pipeline.fit_pipeline(pipeline_config=self.autonet_config,
                                                      X_train=X_train, Y_train=Y_train, X_valid=X_valid, Y_valid=Y_valid)
-        print(self.fit_result)
+        self.pipeline.clean()
         if (refit):
             self.refit(X_train, Y_train, X_valid, Y_valid)
         return self.fit_result["optimized_hyperparameter_config"], self.fit_result['final_metric_score']
@@ -159,8 +159,7 @@ class AutoNet():
         """
 
         # run predict pipeline
-        self.pipeline.predict_pipeline(pipeline_config=self.autonet_config, X=X)
-        Y_pred = self.pipeline[OptimizationAlgorithm.get_name()].predict_output['Y']
+        Y_pred = self.pipeline.predict_pipeline(pipeline_config=self.autonet_config, X=X)['Y']
 
         # reverse one hot encoding 
         OHE = self.pipeline[OneHotEncoding.get_name()]

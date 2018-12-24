@@ -14,24 +14,10 @@ from autoPyTorch.utils.config.config_option import ConfigOption
 from autoPyTorch.pipeline.nodes.metric_selector import MetricSelector
 from autoPyTorch.components.ensembles.ensemble_selection import EnsembleSelection
 from autoPyTorch.pipeline.nodes import OneHotEncoding
+from autoPyTorch.core.api import AutoNet
 
 from hpbandster.core.result import logged_results_to_HBS_result
 
-def predictions_for_ensemble(y_pred, y_true):
-    return y_pred
-
-def combine_predictions(data, pipeline_kwargs, X, Y):
-    all_indices = None
-    all_predictions = None
-    for split, d in data.items():
-        predictions = d["predictions"]
-        indices = pipeline_kwargs[split]["valid_indices"] if d["from_valid"] else pipeline_kwargs[split]["train_indices"]
-        all_indices = indices if all_indices is None else np.append(all_indices, indices)
-        all_predictions = predictions if all_predictions is None else np.vstack((all_predictions, predictions))
-    argsort = np.argsort(all_indices)
-    sorted_predictions = all_predictions[argsort]
-    sorted_indices = all_indices[argsort]
-    return sorted_predictions.tolist(), Y[sorted_indices].tolist()
 
 class EnableComputePredictionsForEnsemble(PipelineNode):
     """Put this Node in the training pipeline after the metric selector node"""
@@ -56,11 +42,20 @@ class SavePredictionsForEnsemble(PipelineNode):
             from_valid = False
         del info["train_predictions_for_ensemble"]
 
-        result = {
+        combinator = {
             "combinator": combine_predictions,
             "data": {"predictions": predictions, "from_valid": from_valid}
         }
-        return {"loss": loss, "info": info, "predictions_for_ensemble": result}
+
+        if not "test_predictions_for_ensemble" in info:
+            return {"loss": loss, "info": info, "predictions_for_ensemble": combinator}
+        
+        test_combinator = {
+            "combinator": combine_test_predictions,
+            "data": info["test_predictions_for_ensemble"]
+        }
+        del info["test_predictions_for_ensemble"]
+        return {"loss": loss, "info": info, "predictions_for_ensemble": combinator, "test_predictions_for_ensemble": test_combinator} 
 
     def predict(self, Y):
         return {"Y": Y}
@@ -123,6 +118,40 @@ class AddEnsembleLogger(PipelineNode):
         result_loggers = [ensemble_logger(directory=pipeline_config["result_logger_dir"], overwrite=True)] + result_loggers
         return {"result_loggers": result_loggers}
 
+
+def predictions_for_ensemble(y_pred, y_true):
+    return y_pred
+
+
+class test_predictions_for_ensemble():
+    def __init__(self, autonet, X_test, Y_test):
+        self.autonet = autonet
+        self.X_test = X_test
+        self.Y_test = Y_test
+    
+    def __call__(self, model, epochs):
+        if self.Y_test is None or self.X_test is None:
+            return float("nan")
+        
+        return AutoNet.predict(self.autonet, self.X_test, return_probabilities=True)[1]
+
+def combine_predictions(data, pipeline_kwargs, X, Y):
+    all_indices = None
+    all_predictions = None
+    for split, d in data.items():
+        predictions = d["predictions"]
+        indices = pipeline_kwargs[split]["valid_indices"] if d["from_valid"] else pipeline_kwargs[split]["train_indices"]
+        all_indices = indices if all_indices is None else np.append(all_indices, indices)
+        all_predictions = predictions if all_predictions is None else np.vstack((all_predictions, predictions))
+    argsort = np.argsort(all_indices)
+    sorted_predictions = all_predictions[argsort]
+    sorted_indices = all_indices[argsort]
+    return sorted_predictions.tolist(), Y[sorted_indices].tolist()
+
+def combine_test_predictions(data, pipeline_kwargs, X, Y):
+    return np.mean(np.stack(data.values()), axis=0).tolist()
+
+
 class ensemble_logger(object):
     def __init__(self, directory, overwrite):
         self.start_time = time.time()
@@ -130,6 +159,7 @@ class ensemble_logger(object):
         self.overwrite = overwrite
         
         self.file_name = os.path.join(directory, 'predictions_for_ensemble.json')
+        self.test_file_name = os.path.join(directory, 'test_predictions_for_ensemble.json')
 
         try:
             with open(self.file_name, 'x') as fh: pass
@@ -140,6 +170,9 @@ class ensemble_logger(object):
                 raise FileExistsError('The file %s already exists.'%self.file_name)
         except:
             raise
+        
+        if os.path.exists(self.test_file_name) and not overwrite:
+            raise FileExistsError('The file %s already exists.'%self.file_name)
 
     def new_config(self, *args, **kwargs):
         pass
@@ -150,3 +183,8 @@ class ensemble_logger(object):
         with open(self.file_name, "a") as f:
             print(json.dumps([job.id, job.kwargs['budget'], job.timestamps, job.result["predictions_for_ensemble"]]), file=f)
         del job.result["predictions_for_ensemble"]
+
+        if "test_predictions_for_ensemble" in job.result:
+            with open(self.test_file_name, "a") as f:
+                print(json.dumps([job.id, job.kwargs['budget'], job.timestamps, job.result["test_predictions_for_ensemble"]]), file=f)
+            del job.result["test_predictions_for_ensemble"]
