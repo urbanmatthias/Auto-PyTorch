@@ -8,7 +8,7 @@ from autoPyTorch.core.api import AutoNet
 class AutoNetFeatureData(AutoNet):
 
     @classmethod
-    def get_default_pipeline(cls):
+    def get_default_ensemble_pipeline(cls):
         from autoPyTorch.pipeline.base.pipeline import Pipeline
         from autoPyTorch.pipeline.nodes.autonet_settings import AutoNetSettings
         from autoPyTorch.pipeline.nodes.metalearning import MetaLearning
@@ -58,6 +58,57 @@ class AutoNetFeatureData(AutoNet):
                 ])
             ]),
             BuildEnsemble()
+        ])
+
+        cls._apply_default_pipeline_settings(pipeline)
+        return pipeline
+    
+    @classmethod
+    def get_default_pipeline(cls):
+        from autoPyTorch.pipeline.base.pipeline import Pipeline
+        from autoPyTorch.pipeline.nodes.autonet_settings import AutoNetSettings
+        from autoPyTorch.pipeline.nodes.metalearning import MetaLearning
+        from autoPyTorch.pipeline.nodes.optimization_algorithm import OptimizationAlgorithm
+        from autoPyTorch.pipeline.nodes.cross_validation import CrossValidation
+        from autoPyTorch.pipeline.nodes.imputation import Imputation
+        from autoPyTorch.pipeline.nodes.normalization_strategy_selector import NormalizationStrategySelector
+        from autoPyTorch.pipeline.nodes.one_hot_encoding import OneHotEncoding
+        from autoPyTorch.pipeline.nodes.preprocessor_selector import PreprocessorSelector
+        from autoPyTorch.pipeline.nodes.resampling_strategy_selector import ResamplingStrategySelector
+        from autoPyTorch.pipeline.nodes.embedding_selector import EmbeddingSelector
+        from autoPyTorch.pipeline.nodes.network_selector import NetworkSelector
+        from autoPyTorch.pipeline.nodes.optimizer_selector import OptimizerSelector
+        from autoPyTorch.pipeline.nodes.lr_scheduler_selector import LearningrateSchedulerSelector
+        from autoPyTorch.pipeline.nodes.log_functions_selector import LogFunctionsSelector
+        from autoPyTorch.pipeline.nodes.metric_selector import MetricSelector
+        from autoPyTorch.pipeline.nodes.loss_module_selector import LossModuleSelector
+        from autoPyTorch.pipeline.nodes.train_node import TrainNode
+        from autoPyTorch.pipeline.nodes.create_dataloader import CreateDataLoader
+        from autoPyTorch.pipeline.nodes.create_dataset_info import CreateDatasetInfo
+        
+        # build the pipeline
+        pipeline = Pipeline([
+            AutoNetSettings(),
+            MetaLearning(),
+            OptimizationAlgorithm([
+                CreateDatasetInfo(),
+                CrossValidation([
+                    Imputation(),
+                    NormalizationStrategySelector(),
+                    OneHotEncoding(),
+                    PreprocessorSelector(),
+                    ResamplingStrategySelector(),
+                    EmbeddingSelector(),
+                    NetworkSelector(),
+                    OptimizerSelector(),
+                    LearningrateSchedulerSelector(),
+                    LogFunctionsSelector(),
+                    MetricSelector(),
+                    LossModuleSelector(),
+                    CreateDataLoader(),
+                    TrainNode()
+                ])
+            ])
         ])
 
         cls._apply_default_pipeline_settings(pipeline)

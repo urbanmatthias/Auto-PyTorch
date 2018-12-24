@@ -43,6 +43,6 @@ class TestOptimizationAlgorithmMethods(unittest.TestCase):
         pipeline_config = pipeline.get_pipeline_config(num_iterations=1, budget_type='epochs')
         pipeline.fit_pipeline(pipeline_config=pipeline_config, X_train=torch.rand(15,10), Y_train=torch.rand(15, 5), X_valid=None, Y_valid=None, one_hot_encoder=None)
 
-        result_of_opt_pipeline = pipeline[OptimizationAlgorithm.get_name()].fit_output['optimized_hyperparamater_config']
+        result_of_opt_pipeline = pipeline[OptimizationAlgorithm.get_name()].fit_output['optimized_hyperparameter_config']
 
         self.assertIn(result_of_opt_pipeline[ResultNode.get_name() + ConfigWrapper.delimiter + 'hyper'], list(range(0, 31)))

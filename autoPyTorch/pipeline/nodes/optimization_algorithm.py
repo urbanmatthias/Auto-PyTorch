@@ -77,7 +77,7 @@ class OptimizationAlgorithm(SubPipelineNode):
                                     optimize_start_time=time.time(), refit=True, hyperparameter_config_id=None)
             
             return {'final_metric_score': res['loss'],
-                    'optimized_hyperparamater_config': refit["hyperparameter_config"],
+                    'optimized_hyperparameter_config': refit["hyperparameter_config"],
                     'budget': refit['budget']}
 
         try:
@@ -108,9 +108,9 @@ class OptimizationAlgorithm(SubPipelineNode):
             self.clean_up(pipeline_config, ns_credentials_dir, tmp_models_dir)
 
         if (res):
-            return {'final_metric_score': res[0], 'optimized_hyperparamater_config': res[1], 'budget': res[2]}
+            return {'final_metric_score': res[0], 'optimized_hyperparameter_config': res[1], 'budget': res[2]}
         else:
-            return {'final_metric_score': None, 'optimized_hyperparamater_config': dict(), 'budget': 0}
+            return {'final_metric_score': None, 'optimized_hyperparameter_config': dict(), 'budget': 0}
 
     def predict(self, pipeline_config, X):
         result = self.sub_pipeline.predict_pipeline(pipeline_config=pipeline_config, X=X)

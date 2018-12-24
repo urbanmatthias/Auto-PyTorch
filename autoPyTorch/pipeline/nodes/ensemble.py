@@ -68,9 +68,9 @@ class SavePredictionsForEnsemble(PipelineNode):
 
 class BuildEnsemble(PipelineNode):
     """Put this node after the optimization algorithm node"""
-    def fit(self, pipeline_config, final_metric_score, optimized_hyperparamater_config, budget, refit=None):
+    def fit(self, pipeline_config, final_metric_score, optimized_hyperparameter_config, budget, refit=None):
         if refit or pipeline_config["ensemble_size"] == 0:
-            return {"final_metric_score": final_metric_score, "optimized_hyperparameter_config": optimized_hyperparamater_config, "budget": budget}
+            return {"final_metric_score": final_metric_score, "optimized_hyperparameter_config": optimized_hyperparameter_config, "budget": budget}
         result = logged_results_to_HBS_result(pipeline_config["result_logger_dir"])
         id2config = result.get_id2config_mapping()
         filename = os.path.join(pipeline_config["result_logger_dir"], 'predictions_for_ensemble.json')
@@ -97,12 +97,11 @@ class BuildEnsemble(PipelineNode):
                 performance = train_metric(np.array(predictions[0]), labels)
                 run_performance = next(filter(lambda run: run.budget == budget, result.get_runs_by_id(tuple(job_id)))).loss
                 assert math.isclose(run_performance * minimize, performance), str(run_performance * minimize) + "!=" + str(performance)
-                print("Performance:", performance)
         ensemble_selection.fit(np.array(all_predictions), labels, model_identifiers)
         ensemble_configs = dict()
         for identifier in ensemble_selection.get_selected_model_identifiers():
             ensemble_configs[tuple(identifier[:3])] = id2config[tuple(identifier[:3])]["config"]
-        return {"final_metric_score": final_metric_score, "optimized_hyperparameter_config": optimized_hyperparamater_config, "budget": budget,
+        return {"final_metric_score": final_metric_score, "optimized_hyperparameter_config": optimized_hyperparameter_config, "budget": budget,
             "ensemble": ensemble_selection, "ensemble_final_metric_score": ensemble_selection.get_validation_performance(),
             "ensemble_configs": ensemble_configs
             }

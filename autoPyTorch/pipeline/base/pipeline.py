@@ -25,6 +25,14 @@ class Pipeline():
 
     def __getitem__(self, key):
         return self._pipeline_nodes[key]
+    
+    def __contains__(self, key):
+        if isinstance(key, str):
+            return key in self._pipeline_nodes
+        elif issubclass(key, PipelineNode):
+            return key.get_name() in self._pipeline_nodes
+        else:
+            raise ValueError("Cannot check if instance " + str(key) + " of type " + str(type(key)) + " is contained in pipeline")
 
     def set_parent_pipeline(self, pipeline):
         """Set this pipeline as a child pipeline of the given pipeline.
