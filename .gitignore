@@ -31,3 +31,6 @@ datasets/
 
 # Meta GPU
 *meta_logs/
+
+# ensemble data
+predictions_for_ensemble.json

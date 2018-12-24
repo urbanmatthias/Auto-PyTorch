@@ -12,6 +12,7 @@ from autoPyTorch.utils.configspace_wrapper import ConfigWrapper
 import torch
 import scipy.sparse
 from torch.utils.data import DataLoader, TensorDataset
+from torch.utils.data.dataset import Subset
 from torch.utils.data.sampler import SubsetRandomSampler
 
 
@@ -37,9 +38,8 @@ class CreateDataLoader(PipelineNode):
         valid_loader = None
         if valid_indices is not None:
             valid_loader = DataLoader(
-                dataset=train_dataset,
-                batch_size=hyperparameter_config['batch_size'], 
-                sampler=SubsetRandomSampler(valid_indices),
+                dataset=Subset(train_dataset, valid_indices),
+                batch_size=hyperparameter_config['batch_size'],
                 shuffle=False,
                 drop_last=False)
 

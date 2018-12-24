@@ -146,3 +146,12 @@ class Pipeline():
             input_str += "]"
             print(name + " \t\t Input: " + input_str)
 
+    def clone(self):
+        pipeline_nodes = []
+
+        current_node = self.root.child_node
+        while current_node is not None:
+            pipeline_nodes.append(current_node.clone())
+            current_node = current_node.child_node
+        
+        return type(self)(pipeline_nodes)

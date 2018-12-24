@@ -56,10 +56,9 @@ class OptimizationAlgorithm(SubPipelineNode):
         self.budget_types = dict()
         self.budget_types["time"] = BudgetTypeTime
         self.budget_types["epochs"] = BudgetTypeEpochs
-        
-        self.logger = logging.getLogger('autonet')
 
     def fit(self, pipeline_config, X_train, Y_train, X_valid, Y_valid, result_loggers, initial_design=None, warmstarted_model=None, refit=None):
+        logger = logging.getLogger('autonet')
         res = None
 
         run_id, task_id = pipeline_config['run_id'], pipeline_config['task_id']
@@ -95,8 +94,9 @@ class OptimizationAlgorithm(SubPipelineNode):
 
             # start BOHB if not on cluster or on master node in cluster
             if task_id in [1, -1]:
-                self.run_optimization_algorithm(pipeline_config, run_id, ns_host, ns_port, NS, task_id, result_loggers,
-                    initial_design=initial_design, warmstarted_model=warmstarted_model)
+                self.run_optimization_algorithm(pipeline_config=pipeline_config, run_id=run_id, ns_host=ns_host,
+                    ns_port=ns_port, nameserver=NS, task_id=task_id, result_loggers=result_loggers,
+                    initial_design=initial_design, warmstarted_model=warmstarted_model, logger=logger)
             
 
             res = self.parse_results(pipeline_config["result_logger_dir"])
@@ -226,11 +226,11 @@ class OptimizationAlgorithm(SubPipelineNode):
 
 
     def run_optimization_algorithm(self, pipeline_config, run_id, ns_host, ns_port, nameserver, task_id, result_loggers,
-            initial_design, warmstarted_model):
+            initial_design, warmstarted_model, logger):
         config_space = self.pipeline.get_hyperparameter_search_space(**pipeline_config)
 
 
-        self.logger.info("[AutoNet] Start " + pipeline_config["algorithm"])
+        logger.info("[AutoNet] Start " + pipeline_config["algorithm"])
 
         # initialize optimization algorithm
         if pipeline_config['use_tensorboard_logger']:

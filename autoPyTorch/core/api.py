@@ -29,8 +29,7 @@ class AutoNet():
         self.pipeline = pipeline or self.get_default_pipeline()
         self.base_config = autonet_config
         self.autonet_config = None
-        self.optimized_hyperparameter_config = None
-        self.optimized_hyperparameter_config_budget = None
+        self.fit_result = None
 
     def update_autonet_config(self, **autonet_config):
         """Update the configuration of AutoNet"""
@@ -106,17 +105,14 @@ class AutoNet():
         """
         self.autonet_config = self.pipeline.get_pipeline_config(**dict(self.base_config, **autonet_config))
 
-        self.pipeline.fit_pipeline(pipeline_config=self.autonet_config,
-                                   X_train=X_train, Y_train=Y_train, X_valid=X_valid, Y_valid=Y_valid)
+        self.fit_result = self.pipeline.fit_pipeline(pipeline_config=self.autonet_config,
+                                                     X_train=X_train, Y_train=Y_train, X_valid=X_valid, Y_valid=Y_valid)
 
-        output = self.pipeline[OptimizationAlgorithm.get_name()].fit_output
-        self.optimized_hyperparameter_config = output["optimized_hyperparamater_config"]
-        self.optimized_hyperparameter_config_budget = output["budget"]
         if (refit):
-            self.refit(X_train, Y_train, X_valid, Y_valid, self.optimized_hyperparameter_config, self.autonet_config)
-        return self.optimized_hyperparameter_config, output['final_metric_score']
+            self.refit(X_train, Y_train, X_valid, Y_valid)
+        return self.fit_result["optimized_hyperparameter_config"], self.fit_result['final_metric_score']
 
-    def refit(self, X_train, Y_train, X_valid=None, Y_valid=None, hyperparameter_config=None, autonet_config=None):
+    def refit(self, X_train, Y_train, X_valid=None, Y_valid=None, hyperparameter_config=None, autonet_config=None, budget=None):
         """Refit AutoNet to given hyperparameters. This will skip hyperparameter search.
         
         Arguments:
@@ -134,13 +130,17 @@ class AutoNet():
         """
         if (autonet_config is None):
             autonet_config = self.autonet_config
-        if (hyperparameter_config is None):
-            hyperparameter_config = self.optimized_hyperparameter_config
+        if (hyperparameter_config is None and self.fit_result):
+            hyperparameter_config = self.fit_result["optimized_hyperparameter_config"]
+        if (budget is None and self.fit_result):
+            budget = self.fit_result["budget"]
+        if (budget is None):
+            budget = self.autonet_config["max_budget"]
         if (autonet_config is None or hyperparameter_config is None):
             raise ValueError("You have to specify a hyperparameter and autonet config in order to be able to refit")
 
         refit_data = {'hyperparameter_config': hyperparameter_config,
-                      'budget': self.optimized_hyperparameter_config_budget}
+                      'budget': budget}
     
         self.pipeline.fit_pipeline(pipeline_config=autonet_config, refit=refit_data,
                                     X_train=X_train, Y_train=Y_train, X_valid=X_valid, Y_valid=Y_valid)

@@ -27,16 +27,7 @@ class OneHotEncoding(PipelineNode):
             encoder.categories_ = encoder.transformers_[0][1].categories_
 
         # Y to matrix
-        y_encoder = None
-        Y = Y.astype(np.float32)
-        if len(Y.shape) == 1:
-            Y = Y.reshape(-1, 1)
-
-        # encode Y
-        if self.encode_Y:
-            y_encoder = OneHotEncoder(sparse=False, categories="auto", handle_unknown='ignore')
-            y_encoder.categories_ = np.array([])
-            Y = y_encoder.fit_transform(Y)
+        Y, y_encoder = self.complete_y_tranformation(Y)
 
         dataset_info.categorical_features = None
         return {'X': X, 'one_hot_encoder': encoder, 'Y': Y, 'y_one_hot_encoder': y_encoder, 'dataset_info': dataset_info}
@@ -56,3 +47,17 @@ class OneHotEncoding(PipelineNode):
         if y_one_hot_encoder is None:
             return Y
         return y_one_hot_encoder.transform(Y.reshape(-1, 1))
+    
+    def complete_y_tranformation(self, Y):
+        # Y to matrix
+        y_encoder = None
+        Y = Y.astype(np.float32)
+        if len(Y.shape) == 1:
+            Y = Y.reshape(-1, 1)
+
+        # encode Y
+        if self.encode_Y:
+            y_encoder = OneHotEncoder(sparse=False, categories="auto", handle_unknown='ignore')
+            y_encoder.categories_ = np.array([])
+            Y = y_encoder.fit_transform(Y)
+        return Y, y_encoder

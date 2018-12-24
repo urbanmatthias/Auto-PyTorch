@@ -2,6 +2,7 @@ __author__ = "Max Dippel, Michael Burkart and Matthias Urban"
 __version__ = "0.0.1"
 __license__ = "BSD"
 
+from copy import deepcopy
 import ConfigSpace
 import inspect
 from autoPyTorch.utils.config.config_option import ConfigOption
@@ -31,6 +32,16 @@ class PipelineNode(Node):
     @classmethod
     def get_name(cls):
         return cls.__name__
+    
+    def clone(self, skip=("pipeline", "fit_output", "predict_output", "child_node")):
+        node_type = type(self)
+        new_node = node_type.__new__(node_type)
+        for key, value in self.__dict__.items():
+            if key not in skip:
+                setattr(new_node, key, deepcopy(value))
+            else:
+                setattr(new_node, key, None)
+        return new_node
 
     # VIRTUAL
     def fit(self, **kwargs):
