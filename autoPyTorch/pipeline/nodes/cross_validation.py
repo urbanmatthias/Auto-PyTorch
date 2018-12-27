@@ -80,7 +80,8 @@ class CrossValidation(SubPipelineNode):
                 "train_indices": split_indices[0],
                 "valid_indices": split_indices[1],
                 "dataset_info": deepcopy(dataset_info),
-                "refit": refit}
+                "refit": refit,
+                "loss_penalty": loss_penalty}
             all_sub_pipeline_kwargs[i] = deepcopy(sub_pipeline_kwargs)
             result = self.sub_pipeline.fit_pipeline(X=X, Y=Y, **sub_pipeline_kwargs)
 

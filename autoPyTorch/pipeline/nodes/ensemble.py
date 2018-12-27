@@ -15,16 +15,16 @@ from hpbandster.core.result import logged_results_to_HBS_result
 
 class EnableComputePredictionsForEnsemble(PipelineNode):
     """Put this Node in the training pipeline after the metric selector node"""
-    def fit(self, pipeline_config, additional_metrics, refit):
-        if refit or pipeline_config["ensemble_size"] == 0:
+    def fit(self, pipeline_config, additional_metrics, refit, loss_penalty):
+        if refit or pipeline_config["ensemble_size"] == 0 or loss_penalty > 0:
             return dict()
         return {'additional_metrics': additional_metrics + [predictions_for_ensemble]}
 
 
 class SavePredictionsForEnsemble(PipelineNode):
     """Put this Node in the training pipeline after the training node"""
-    def fit(self, pipeline_config, loss, info, refit):
-        if refit or pipeline_config["ensemble_size"] == 0:
+    def fit(self, pipeline_config, loss, info, refit, loss_penalty):
+        if refit or pipeline_config["ensemble_size"] == 0 or loss_penalty > 0:
             return {"loss": loss, "info": info}
 
         if "val_predictions_for_ensemble" in info:

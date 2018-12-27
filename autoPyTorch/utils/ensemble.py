@@ -114,24 +114,25 @@ class ensemble_logger(object):
     def __call__(self, job):
         if job.result is None:
             return
-        predictions, labels = job.result["predictions_for_ensemble"]
-        with open(self.file_name, "a") as f:
-            if self.labels is None:
-                self.labels = labels
-                print(json.dumps(labels), file=f)
-            else:
-                assert self.labels == labels
-            print(json.dumps([job.id, job.kwargs['budget'], job.timestamps, predictions]), file=f)
-        del job.result["predictions_for_ensemble"]
+        if "predictions_for_ensemble" in job.result:
+            predictions, labels = job.result["predictions_for_ensemble"]
+            with open(self.file_name, "a") as f:
+                if self.labels is None:
+                    self.labels = labels
+                    print(json.dumps(labels), file=f)
+                else:
+                    assert self.labels == labels
+                print(json.dumps([job.id, job.kwargs['budget'], job.timestamps, predictions]), file=f)
+            del job.result["predictions_for_ensemble"]
 
-        if "test_predictions_for_ensemble" in job.result:
-            if job.result["test_predictions_for_ensemble"] is not None:
-                test_predictions, test_labels = job.result["test_predictions_for_ensemble"]
-                with open(self.test_file_name, "a") as f:
-                    if self.test_labels is None:
-                        self.test_labels = test_labels
-                        print(json.dumps(test_labels), file=f)
-                    else:
-                        assert self.test_labels == test_labels
-                    print(json.dumps([job.id, job.kwargs['budget'], job.timestamps, test_predictions]), file=f)
-            del job.result["test_predictions_for_ensemble"]
+            if "test_predictions_for_ensemble" in job.result:
+                if job.result["test_predictions_for_ensemble"] is not None:
+                    test_predictions, test_labels = job.result["test_predictions_for_ensemble"]
+                    with open(self.test_file_name, "a") as f:
+                        if self.test_labels is None:
+                            self.test_labels = test_labels
+                            print(json.dumps(test_labels), file=f)
+                        else:
+                            assert self.test_labels == test_labels
+                        print(json.dumps([job.id, job.kwargs['budget'], job.timestamps, test_predictions]), file=f)
+                del job.result["test_predictions_for_ensemble"]
