@@ -13,7 +13,7 @@ class LossWeightStrategyWeighted():
         total_weight = Y.shape[0]
         weight_per_class = total_weight / Y.shape[1]
 
-        weights = (np.ones(Y.shape[1]) * weight_per_class) / counts
+        weights = (np.ones(Y.shape[1]) * weight_per_class) / np.maximum(counts, 1)
         return weights
 
 class LossWeightStrategyWeightedBinary():
@@ -21,6 +21,6 @@ class LossWeightStrategyWeightedBinary():
         
         counts_one = np.sum(Y, axis=0)
         counts_zero = counts_one + (-Y.shape[0])
-        weights = counts_zero / counts_one
+        weights = counts_zero / np.maximum(counts_one, 1)
 
         return weights
