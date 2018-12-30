@@ -33,8 +33,7 @@ class GetEnsembleTrajectories(PipelineNode):
         ensemble_plot_logs = {size: [l for l in plot_logs if int(l.split(":")[1]) == size] for size in sizes}
 
         # read the predictions
-        predictions, labels, model_identifiers, timestamps = read_ensemble_prediction_file(filename=filename,
-                y_transform=y_transform, result=result, train_metric=metrics[train_metric], minimize=autonet_config["minimize"])
+        predictions, labels, model_identifiers, timestamps = read_ensemble_prediction_file(filename=filename, y_transform=y_transform)
         test_data_available = False
         try:
             test_predictions, test_labels, test_model_identifiers, test_timestamps = read_ensemble_prediction_file(filename=test_filename, y_transform=y_transform)

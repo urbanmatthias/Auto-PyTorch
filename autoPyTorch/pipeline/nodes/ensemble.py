@@ -64,8 +64,7 @@ class BuildEnsemble(PipelineNode):
         y_transform = self.pipeline[OneHotEncoding.get_name()].complete_y_tranformation
         result = logged_results_to_HBS_result(pipeline_config["result_logger_dir"])
 
-        all_predictions, labels, model_identifiers, _ = read_ensemble_prediction_file(filename=filename,
-            y_transform=y_transform, result=result, train_metric=train_metric, minimize=pipeline_config["minimize"])
+        all_predictions, labels, model_identifiers, _ = read_ensemble_prediction_file(filename=filename, y_transform=y_transform)
         ensemble_selection, ensemble_configs = build_ensemble(result=result,
             train_metric=train_metric, y_transform=y_transform, minimize=pipeline_config["minimize"], ensemble_size=pipeline_config["ensemble_size"],
             all_predictions=all_predictions, labels=labels, model_identifiers=model_identifiers)

@@ -18,12 +18,11 @@ def build_ensemble(result, train_metric, y_transform, minimize, ensemble_size, a
     return ensemble_selection, ensemble_configs
 
 
-def read_ensemble_prediction_file(filename, y_transform, result=None, train_metric=None, minimize=None):
+def read_ensemble_prediction_file(filename, y_transform):
     all_predictions = list()
     all_timestamps = list()
     labels = None
     model_identifiers = list()
-    minimize = 1 if minimize else -1
     with open(filename, "r") as f:
         i = 0
         for line in f:
@@ -38,10 +37,10 @@ def read_ensemble_prediction_file(filename, y_transform, result=None, train_metr
             all_predictions.append(predictions)
             all_timestamps.append(timestamps)
 
-            if result is not None:
-                performance = train_metric(predictions, labels)
-                run_performance = next(filter(lambda run: run.budget == budget, result.get_runs_by_id(tuple(job_id)))).loss
-                assert math.isclose(run_performance * minimize, performance, rel_tol=0.002), str(run_performance * minimize) + "!=" + str(performance)
+            # the following assert statement only works with accuracy when using cv
+            # performance = train_metric(predictions, labels)
+            # run_performance = next(filter(lambda run: run.budget == budget, result.get_runs_by_id(tuple(job_id)))).loss
+            # assert math.isclose(run_performance * minimize, performance, rel_tol=0.002), str(run_performance * minimize) + "!=" + str(performance)
     return all_predictions, labels, model_identifiers, all_timestamps
 
 
