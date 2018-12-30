@@ -2,20 +2,23 @@ from autoPyTorch.pipeline.base.pipeline_node import PipelineNode
 from autoPyTorch.utils.config.config_option import ConfigOption
 import pickle
 import logging
+import os
 
 class MetaLearningFit(PipelineNode):    
     def fit(self, pipeline_config, initial_design_learner, warmstarted_model_builder):
         initial_design = initial_design_learner.learn()
         logger = logging.getLogger('metalearning')
-        with open(pipeline_config["save_filename_initial_design"], "wb") as f:
+        save_path = os.path.join(pipeline_config["save_path"], "initial_design.pkl")
+        with open(save_path, "wb") as f:
             pickle.dump(initial_design, f)
             logger.info('Success!')
         del initial_design_learner
         del initial_design
         
         warmstarted_model = warmstarted_model_builder.build()
+        save_path = os.path.join(pipeline_config["save_path"], "warmstarted_model.pkl")
         try:
-            with open(pipeline_config["save_filename_warmstarted_model"], "wb") as f:
+            with open(save_path, "wb") as f:
                 pickle.dump(warmstarted_model, f)
                 logger.info('Success!')
         except:
@@ -30,8 +33,7 @@ class MetaLearningFit(PipelineNode):
     
     def get_pipeline_config_options(self):
         options = [
-            ConfigOption("save_filename_initial_design", default="./initial_design.pkl", type="directory"),
-            ConfigOption("save_filename_warmstarted_model", default="./warmstarted_model.pkl", type="directory"),
+            ConfigOption("save_path", default=".", type="directory")
         ]
         return options
 
