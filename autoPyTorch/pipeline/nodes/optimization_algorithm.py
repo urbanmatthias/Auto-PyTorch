@@ -93,13 +93,14 @@ class OptimizationAlgorithm(SubPipelineNode):
                 network_interface_name=network_interface_name, X_train=X_train, Y_train=Y_train, X_valid=X_valid, Y_valid=Y_valid)
 
             # start BOHB if not on cluster or on master node in cluster
+            res = None
             if task_id in [1, -1]:
                 self.run_optimization_algorithm(pipeline_config=pipeline_config, run_id=run_id, ns_host=ns_host,
                     ns_port=ns_port, nameserver=NS, task_id=task_id, result_loggers=result_loggers,
                     initial_design=initial_design, warmstarted_model=warmstarted_model, logger=logger)
             
 
-            res = self.parse_results(pipeline_config["result_logger_dir"])
+                res = self.parse_results(pipeline_config["result_logger_dir"])
 
         except Exception as e:
             print(e)

@@ -233,9 +233,9 @@ class CrossValidation(SubPipelineNode):
     
     @staticmethod
     def get_validation_set_split_indices(pipeline_config, X_train, X_valid, Y_train, Y_valid, allow_shuffle=True):
-        train_indices = CrossValidation.shuffle_indices(list(range(X_train.shape[0])),
+        train_indices = CrossValidation.shuffle_indices(np.array(list(range(X_train.shape[0]))),
             pipeline_config['shuffle'] and allow_shuffle, pipeline_config['random_seed'])
-        valid_indices = CrossValidation.shuffle_indices(list(range(X_train.shape[0], X_train.shape[0] + X_valid.shape[0])),
+        valid_indices = CrossValidation.shuffle_indices(np.array(list(range(X_train.shape[0], X_train.shape[0] + X_valid.shape[0]))),
             pipeline_config['shuffle'] and allow_shuffle, pipeline_config['random_seed'])
 
         X = CrossValidation.concat(X_train, X_valid)

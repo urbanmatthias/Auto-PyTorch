@@ -55,7 +55,7 @@ class ResamplingStrategySelector(PipelineNode):
         logger.debug("Distribution after resample: " + str(np.unique(y_resampled, return_counts=True)[1]))
 
         if valid_indices is None:
-            return {"X": X_resampled, "Y": ohe.transform(y_resampled.reshape((-1, 1))), "train_indices": list(range(X_resampled.shape[0]))}
+            return {"X": X_resampled, "Y": ohe.transform(y_resampled.reshape((-1, 1))), "train_indices": np.array(list(range(X_resampled.shape[0])))}
 
         X, Y, split_indices = CrossValidation.get_validation_set_split_indices(pipeline_config,
                 X_train=X_resampled, X_valid=X[valid_indices],
