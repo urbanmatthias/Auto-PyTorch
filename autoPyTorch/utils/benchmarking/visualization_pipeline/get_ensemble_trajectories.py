@@ -70,7 +70,7 @@ class GetEnsembleTrajectories(PipelineNode):
                 # get the ensemble predictions
                 ensemble_prediction = ensemble.predict(subset_predictions)
                 if test_data_available:
-                    subset_test_predictions = [test_predictions[s] for s in test_predictions]
+                    subset_test_predictions = [test_predictions[s] for s in subset]
                     test_ensemble_prediction = ensemble.predict(subset_test_predictions)
 
                 # evaluate the metrics
