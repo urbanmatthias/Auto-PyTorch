@@ -164,8 +164,12 @@ class EnsembleSelection(AbstractEnsemble):
             self._fit(bag, labels)
 
     def predict(self, predictions):
-        non_null_weights = (weight for  weight in self.weights_ if weight > 0)
-        for i, weight in enumerate(non_null_weights):
+        if len(predictions) < len(self.weights_):
+            weights = (weight for  weight in self.weights_ if weight > 0)
+        else:
+            weights = self.weights_
+
+        for i, weight in enumerate(weights):
             predictions[i] *= weight
         return np.sum(predictions, axis=0)
 
