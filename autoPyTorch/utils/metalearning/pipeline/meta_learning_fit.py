@@ -24,7 +24,7 @@ class MetaLearningFit(PipelineNode):
         except:
             logger.warn('Error writing to disk. Try again!')
             fix_statsmodels_pickle()
-            with open(pipeline_config["save_filename_warmstarted_model"], "wb") as f:
+            with open(save_path, "wb") as f:
                 pickle.dump(warmstarted_model, f)
                 print('Success!')
         del warmstarted_model

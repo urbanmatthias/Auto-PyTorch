@@ -25,9 +25,9 @@ class MetaModelBuilder():
             ForInstance([  # [pipeline_config, run_id_range, instance, initial_design_learner]
                 ForAutoNetConfig([  # [pipeline_config, run_id_range, config_file, initial_design_learner]
                     ForRun([  # [pipeline_config, run_number, run_id, autonet_config_file, run_result_dir, initial_design_learner]
-                        # ReadInstanceInfo(), # pipeline_config, run_result_dir -> data_manager
-                        # CreateAutoNet(), # data_manager --> autonet
-                        # SetAutoNetConfig(),  # pipeline_config, autonet, data_manager, run_result_dir
+                        ReadInstanceInfo(), # pipeline_config, run_result_dir -> data_manager
+                        CreateAutoNet(), # data_manager --> autonet
+                        SetAutoNetConfig(),  # pipeline_config, autonet, data_manager, run_result_dir
                         Collect()  # pipeline_config, autonet --> initial_design_learner
                     ])
                 ])

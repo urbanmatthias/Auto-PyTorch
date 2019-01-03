@@ -130,6 +130,8 @@ class AutoNet():
         """
         if (autonet_config is None):
             autonet_config = self.autonet_config
+        if (autonet_config is None):
+            autonet_config = self.base_config
         if (hyperparameter_config is None and self.fit_result):
             hyperparameter_config = self.fit_result["optimized_hyperparameter_config"]
         if (budget is None and self.fit_result):
@@ -142,8 +144,9 @@ class AutoNet():
         refit_data = {'hyperparameter_config': hyperparameter_config,
                       'budget': budget}
     
-        self.pipeline.fit_pipeline(pipeline_config=autonet_config, refit=refit_data,
+        result = self.pipeline.fit_pipeline(pipeline_config=autonet_config, refit=refit_data,
                                     X_train=X_train, Y_train=Y_train, X_valid=X_valid, Y_valid=Y_valid)
+        return result["final_metric_score"]
 
     def predict(self, X, return_probabilities=False):
         """Predict the targets for a data matrix X.
@@ -159,7 +162,8 @@ class AutoNet():
         """
 
         # run predict pipeline
-        Y_pred = self.pipeline.predict_pipeline(pipeline_config=self.autonet_config, X=X)['Y']
+        autonet_config = self.autonet_config or self.base_config
+        Y_pred = self.pipeline.predict_pipeline(pipeline_config=autonet_config, X=X)['Y']
 
         # reverse one hot encoding 
         OHE = self.pipeline[OneHotEncoding.get_name()]
@@ -178,7 +182,8 @@ class AutoNet():
         """
 
         # run predict pipeline
-        self.pipeline.predict_pipeline(pipeline_config=self.autonet_config, X=X_test)
+        autonet_config = self.autonet_config or self.base_config
+        self.pipeline.predict_pipeline(pipeline_config=autonet_config, X=X_test)
         Y_pred = self.pipeline[OptimizationAlgorithm.get_name()].predict_output['Y']
         
         # one hot encode Y

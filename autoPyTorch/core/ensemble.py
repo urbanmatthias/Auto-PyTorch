@@ -41,6 +41,8 @@ class AutoNetEnsemble(AutoNet):
     def refit(self, X_train, Y_train, X_valid=None, Y_valid=None, ensemble_configs=None, ensemble=None, autonet_config=None):
         if (autonet_config is None):
             autonet_config = self.autonet_config
+        if (autonet_config is None):
+            autonet_config = self.base_config
         if (ensemble_configs is None and self.fit_result):
             ensemble_configs = self.fit_result["ensemble_configs"]
         if (ensemble is None and self.fit_result):
@@ -63,8 +65,9 @@ class AutoNetEnsemble(AutoNet):
         # run predict pipeline
         prediction = None
         models_with_weights = self.fit_result["ensemble"].get_models_with_weights(self.trained_autonets)
+        autonet_config = self.autonet_config or self.base_config
         for weight, autonet in models_with_weights:
-            current_prediction = autonet.pipeline.predict_pipeline(pipeline_config=self.autonet_config, X=X)["Y"]
+            current_prediction = autonet.pipeline.predict_pipeline(pipeline_config=autonet_config, X=X)["Y"]
             prediction = current_prediction if prediction is None else prediction + weight * current_prediction
             OHE = autonet.pipeline[OneHotEncoding.get_name()]
             metric = autonet.pipeline[MetricSelector.get_name()].fit_output['train_metric']
