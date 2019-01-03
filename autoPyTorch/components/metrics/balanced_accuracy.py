@@ -16,7 +16,12 @@ def _balanced_accuracy(solution, prediction):
 
     if y_type == 'binary':
         # Do not transform into any multiclass representation
-        pass
+        max_value = max(np.max(solution), np.max(prediction))
+        min_value = min(np.min(solution), np.min(prediction))
+        if max_value == min_value:
+            return 1.0
+        solution = (solution - min_value) / (max_value - min_value)
+        prediction = (prediction - min_value) / (max_value - min_value)
 
     elif y_type == 'multiclass':
         # Need to create a multiclass solution and a multiclass predictions
