@@ -23,6 +23,11 @@ class Imputation(PipelineNode):
         if dataset_info.is_sparse:
             return {'imputation_preprocessor': None}
 
+        # delete all nan columns
+        all_nan = np.all(np.isnan(X[train_indices]), axis=0)
+        X = X[:, ~all_nan]
+        dataset_info.categorical_features = [dataset_info.categorical_features[i] for i, is_nan in enumerate(all_nan) if not is_nan]
+
         strategy = hyperparameter_config['strategy']
         fill_value = int(np.nanmax(X[train_indices])) + 1 if not dataset_info.is_sparse else 0
         numerical_imputer = SimpleImputer(strategy=strategy, copy=False)
@@ -34,13 +39,15 @@ class Imputation(PipelineNode):
         X = transformer.transform(X)
         
         dataset_info.categorical_features = sorted(dataset_info.categorical_features)
-        return { 'X': X, 'imputation_preprocessor': transformer, 'dataset_info': dataset_info }
+        return { 'X': X, 'imputation_preprocessor': transformer, 'dataset_info': dataset_info , 'all_nan_columns': all_nan}
 
 
-    def predict(self, X, imputation_preprocessor):
+    def predict(self, X, imputation_preprocessor, all_nan_columns):
         if imputation_preprocessor is None:
             return dict()
-        return { 'X': imputation_preprocessor.transform(X) }
+        X = X[:, ~all_nan_columns]
+        X = imputation_preprocessor.transform(X)
+        return { 'X': X }
 
     @staticmethod
     def get_hyperparameter_search_space(**pipeline_config):
