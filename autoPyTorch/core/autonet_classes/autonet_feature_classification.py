@@ -53,5 +53,5 @@ class AutoNetClassification(AutoNetFeatureData):
 
         return pipeline
 
-def flatten(self, x):
+def flatten(x):
     return x.reshape((-1, ))
