@@ -183,7 +183,7 @@ class CrossValidation(SubPipelineNode):
 
     def add_cross_validator(self, name, cross_validator, adjust_y=None):
         self.cross_validators[name] = cross_validator
-        self.cross_validators_adjust_y[name] = adjust_y if adjust_y is not None else lambda x: x
+        self.cross_validators_adjust_y[name] = adjust_y if adjust_y is not None else identity
     
     def remove_cross_validator(self, name):
         del self.cross_validators[name]
@@ -240,3 +240,6 @@ class CrossValidation(SubPipelineNode):
         X = CrossValidation.concat(X_train, X_valid)
         Y = CrossValidation.concat(Y_train, Y_valid)
         return X, Y, (train_indices, valid_indices)
+
+def identity(x):
+    return x

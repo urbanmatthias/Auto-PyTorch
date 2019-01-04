@@ -46,9 +46,12 @@ class AutoNetClassification(AutoNetFeatureData):
         train_node.default_minimize_value = False
         
         cv = pipeline[CrossValidation.get_name()]
-        cv.add_cross_validator("stratified_k_fold", StratifiedKFold, lambda x: x.reshape((-1, )))
+        cv.add_cross_validator("stratified_k_fold", StratifiedKFold, flatten)
 
         one_hot_encoding_node = pipeline[OneHotEncoding.get_name()]
         one_hot_encoding_node.encode_Y = True
 
         return pipeline
+
+def flatten(self, x):
+    return x.reshape((-1, ))
