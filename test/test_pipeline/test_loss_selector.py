@@ -26,12 +26,12 @@ class TestLossSelectorMethods(unittest.TestCase):
         pipeline_hyperparameter_config = pipeline.get_hyperparameter_search_space(**pipeline_config).sample_configuration()
 
         pipeline_hyperparameter_config["LossModuleSelector:loss_module"] = "L1"
-        pipeline.fit_pipeline(hyperparameter_config=pipeline_hyperparameter_config, train_indices=np.array([0, 1, 2]), X=torch.rand(3,3), Y=torch.rand(3, 2), pipeline_config=pipeline_config, tmp=None)
+        pipeline.fit_pipeline(hyperparameter_config=pipeline_hyperparameter_config, train_indices=np.array([0, 1, 2]), X=np.random.rand(3,3), Y=np.random.rand(3, 2), pipeline_config=pipeline_config, tmp=None)
         selected_loss = pipeline[selector.get_name()].fit_output['loss_function']
         self.assertEqual(type(selected_loss.function), nn.L1Loss)
 
         pipeline_hyperparameter_config["LossModuleSelector:loss_module"] = "cross_entropy"
-        pipeline.fit_pipeline(hyperparameter_config=pipeline_hyperparameter_config, train_indices=np.array([0, 1, 2]), X=torch.rand(3,3), Y=torch.tensor([0, 1, 0]), pipeline_config=pipeline_config, tmp=None)
+        pipeline.fit_pipeline(hyperparameter_config=pipeline_hyperparameter_config, train_indices=np.array([0, 1, 2]), X=np.random.rand(3,3), Y=np.array([[1, 0], [0, 1], [1, 0]]), pipeline_config=pipeline_config, tmp=None)
         selected_loss = pipeline[selector.get_name()].fit_output['loss_function']
         self.assertEqual(type(selected_loss.function), nn.CrossEntropyLoss)
         self.assertEqual(selected_loss(torch.tensor([[0.0, 10000.0]]), torch.tensor([[0, 1]])), 0)

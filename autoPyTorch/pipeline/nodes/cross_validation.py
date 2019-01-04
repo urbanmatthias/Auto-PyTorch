@@ -48,8 +48,7 @@ class CrossValidation(SubPipelineNode):
         self.cross_validators_adjust_y = dict()
 
 
-    def fit(self, hyperparameter_config, pipeline_config, hyperparameter_config_id,
-            X_train, Y_train, X_valid, Y_valid, budget, budget_type, optimize_start_time, refit, dataset_info):
+    def fit(self, hyperparameter_config, pipeline_config, X_train, Y_train, X_valid, Y_valid, budget, budget_type, optimize_start_time, refit, dataset_info):
         logger = logging.getLogger('autonet')
         loss = 0
         infos = []

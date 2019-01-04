@@ -39,5 +39,5 @@ class TestImputation(unittest.TestCase):
 
         X_test = np.array([[np.nan, np.nan, np.nan]])
 
-        predict_result = imputation_node.predict(X=X_test, imputation_preprocessor=fit_result['imputation_preprocessor'])
+        predict_result = imputation_node.predict(X=X_test, imputation_preprocessor=fit_result['imputation_preprocessor'], all_nan_columns=np.array([False] * 3))
         assert_array_equal(predict_result['X'], np.array([[4, 4.5, 9]]))
