@@ -20,6 +20,7 @@ if __name__ == "__main__":
     parser.add_argument("--result_dir", default=None, help="Override result dir in benchmark config.")
     parser.add_argument("--save_path", default=".", help="Store the meta learning models in given filename")
     parser.add_argument("--num_processes", default=0, type=int, help="Number of available processes")
+    parser.add_argument("--calculate_exact_incumbent_scores", action="store_true", help="Number of available processes")
     parser.add_argument('benchmark', help='The benchmark to visualize')
 
     args = parser.parse_args()
@@ -44,5 +45,6 @@ if __name__ == "__main__":
     config['run_id_range'] = run_id_range
     config['save_path'] = args.save_path
     config['num_processes'] = args.num_processes
+    config['calculate_exact_incumbent_scores'] = args.calculate_exact_incumbent_scores
     builder = MetaModelBuilder()
     builder.run(**config)

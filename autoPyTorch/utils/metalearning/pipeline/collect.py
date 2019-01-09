@@ -23,24 +23,29 @@ class Collect(PipelineNode):
     def fit(self, pipeline_config, instance, initial_design_learner, warmstarted_model_builder, run_result_dir, data_manager, autonet):
         logger = logging.getLogger("metalearning")
         print("Collecting " + run_result_dir)
-        # if os.path.exists(os.path.join(run_result_dir, "configspace.pcs")):
-        #     with open(os.path.join(run_result_dir, "configspace.pcs"), "r") as f:
-        #         config_space = read_pcs(f.readlines())
+
         if os.path.exists(os.path.join(run_result_dir, "configspace.json")):
             with open(os.path.join(run_result_dir, "configspace.json"), "r") as f:
                 config_space = read_json("\n".join(f.readlines()))
         else:
             config_space = autonet.get_hyperparameter_search_space()
 
-        exact_cost_model = AutoNetExactCostModel(autonet, data_manager, {
-            "file_name": instance,
-            "is_classification": (pipeline_config["problem_type"] in ['feature_classification', 'feature_multilabel']),
-            "test_split": pipeline_config["test_split"]
-        })
+        exact_cost_model = None
+        if pipeline_config["calculate_exact_incumbent_scores"]:
+            exact_cost_model = AutoNetExactCostModel(autonet, data_manager, {
+                "file_name": instance,
+                "is_classification": (pipeline_config["problem_type"] in ['feature_classification', 'feature_multilabel']),
+                "test_split": pipeline_config["test_split"]
+            })
 
         initial_design_learner.add_result(run_result_dir, config_space, exact_cost_model=exact_cost_model, origin=instance)
         warmstarted_model_builder.add_result(run_result_dir, config_space, origin=instance)
         return dict()
+    
+    def get_pipeline_config_options(self):
+        return [
+            ConfigOption("calculate_exact_incumbent_scores", default=False, type=to_bool)
+        ]
 
 class AutoNetExactCostModel():
     def __init__(self, autonet, dm, dm_kwargs):

@@ -2,7 +2,7 @@ __author__ = "Max Dippel, Michael Burkart and Matthias Urban"
 __version__ = "0.0.1"
 __license__ = "BSD"
 
-
+import os
 from autoPyTorch.pipeline.base.pipeline_node import PipelineNode
 
 from autoPyTorch.components.lr_scheduler.lr_schedulers import AutoNetLearningRateSchedulerBase
@@ -15,13 +15,7 @@ from autoPyTorch.training.lr_scheduling import LrScheduling
 import pickle
 
 class MetaLearning(PipelineNode):
-    def __init__(self):
-        super(MetaLearning, self).__init__()
-
-        self.lr_scheduler = dict()
-        self.lr_scheduler_settings = dict()
-
-    def fit(self, pipeline_config):
+    def fit(self, pipeline_config, result_loggers):
         initial_design = pipeline_config["initial_design"]
         warmstarted_model = pipeline_config["warmstarted_model"]
 
@@ -32,7 +26,9 @@ class MetaLearning(PipelineNode):
         if warmstarted_model is not None:
             with open(warmstarted_model, "rb") as f:
                 warmstarted_model = pickle.load(f)
-        return {"warmstarted_model": warmstarted_model, "initial_design": initial_design}
+
+        result_loggers = [warmstarted_model_weights_logger(directory=pipeline_config["result_logger_dir"], warmstarted_model=warmstarted_model)] + result_loggers
+        return {"warmstarted_model": warmstarted_model, "initial_design": initial_design, "result_loggers": result_loggers}
 
     def get_pipeline_config_options(self):
         options = [
@@ -40,3 +36,20 @@ class MetaLearning(PipelineNode):
             ConfigOption(name="warmstarted_model", default=None, type="directory")
         ]
         return options
+
+class warmstarted_model_weights_logger(object):
+    def __init__(self, directory, warmstarted_model):
+        self.directory = directory
+        self.warmstarted_model = warmstarted_model
+        
+        self.file_name = os.path.join(directory, 'warmstarted_model_weights_history.txt')
+
+
+    def new_config(self, *args, **kwargs):
+        pass
+
+    def __call__(self, job):
+        if job.result is None:
+            return
+        with open(self.file_name, "w") as f:
+            self.warmstarted_model.print_weight_history(f)
