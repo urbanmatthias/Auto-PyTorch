@@ -38,8 +38,8 @@ class Collect(PipelineNode):
             "test_split": pipeline_config["test_split"]
         })
 
-        initial_design_learner.add_result(run_result_dir, config_space, exact_cost_model)
-        warmstarted_model_builder.add_result(run_result_dir, config_space)
+        initial_design_learner.add_result(run_result_dir, config_space, exact_cost_model=exact_cost_model, origin=instance)
+        warmstarted_model_builder.add_result(run_result_dir, config_space, origin=instance)
         return dict()
 
 class AutoNetExactCostModel():
