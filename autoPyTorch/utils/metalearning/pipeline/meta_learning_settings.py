@@ -22,7 +22,8 @@ class MetaLearningSettings(BenchmarkSettings):
                                                 distributed=pipeline_config["distributed"],
                                                 run_id=pipeline_config["distributed_id"],
                                                 working_dir=pipeline_config["distributed_dir"],
-                                                master=pipeline_config["master"]),
+                                                master=pipeline_config["master"],
+                                                host=pipeline_config['host']),
                 'warmstarted_model_builder': WarmstartedModelBuilder(distributed=pipeline_config["distributed"], master=pipeline_config["master"])}
 
     def get_pipeline_config_options(self):
@@ -33,6 +34,7 @@ class MetaLearningSettings(BenchmarkSettings):
             ConfigOption('num_processes', default=0, type=int),
             ConfigOption('distributed_id', default="0", type=str),
             ConfigOption('distributed', default=False, type=to_bool),
+            ConfigOption('host', default='localhost', type=str),
             ConfigOption('master', default=True, type=to_bool),
             ConfigOption('distributed_dir', default=".", type="directory")
         ]

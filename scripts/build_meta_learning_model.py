@@ -6,6 +6,7 @@ sys.path.append(os.path.abspath(os.path.join(__file__, "..", "..")))
 from autoPyTorch.utils.config.config_file_parser import ConfigFileParser
 from autoPyTorch.utils.metalearning.meta_model_builder import MetaModelBuilder
 from autoPyTorch.utils.benchmarking.benchmark import Benchmark
+from hpbandster.core.nameserver import nic_name_to_host
 
 import argparse
 
@@ -21,6 +22,7 @@ if __name__ == "__main__":
     parser.add_argument("--save_path", default=".", help="Store the meta learning models in given filename")
     parser.add_argument("--num_processes", default=0, type=int, help="Number of available processes")
     parser.add_argument("--calculate_exact_incumbent_scores", action="store_true", help="Number of available processes")
+    parser.add_argument("--network_interface_name", default="lo")
     parser.add_argument("--distributed", action="store_true")
     parser.add_argument("--distributed_id", default=0)
     parser.add_argument("--distributed_node", default=1)
@@ -53,7 +55,8 @@ if __name__ == "__main__":
     config['distributed'] = args.distributed
     config['distributed_id'] = args.distributed_id
     config['distributed_dir'] = args.distributed_dir
-    config['master'] = args.distributed_node == 1
+    config['host'] = nic_name_to_host(args.network_interface_name)
+    config['master'] = args.distributed_node == "1"
 
 
     builder = MetaModelBuilder()
