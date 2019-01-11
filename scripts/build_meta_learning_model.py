@@ -21,7 +21,11 @@ if __name__ == "__main__":
     parser.add_argument("--save_path", default=".", help="Store the meta learning models in given filename")
     parser.add_argument("--num_processes", default=0, type=int, help="Number of available processes")
     parser.add_argument("--calculate_exact_incumbent_scores", action="store_true", help="Number of available processes")
-    parser.add_argument('benchmark', help='The benchmark to visualize')
+    parser.add_argument("--distributed", action="store_true")
+    parser.add_argument("--distributed_id", default=0)
+    parser.add_argument("--distributed_node", default=1)
+    parser.add_argument("--distributed_dir", default=".")
+    parser.add_argument('benchmark', help='The benchmark to learn from')
 
     args = parser.parse_args()
 
@@ -46,5 +50,11 @@ if __name__ == "__main__":
     config['save_path'] = args.save_path
     config['num_processes'] = args.num_processes
     config['calculate_exact_incumbent_scores'] = args.calculate_exact_incumbent_scores
+    config['distributed'] = args.distributed
+    config['distributed_id'] = args.distributed_id
+    config['distributed_dir'] = args.distributed_dir
+    config['master'] = args.distributed_node == 1
+
+
     builder = MetaModelBuilder()
     builder.run(**config)

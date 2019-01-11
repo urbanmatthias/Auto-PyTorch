@@ -7,28 +7,30 @@ import os
 class MetaLearningFit(PipelineNode):    
     def fit(self, pipeline_config, initial_design_learner, warmstarted_model_builder):
         initial_design = initial_design_learner.learn()
-        logger = logging.getLogger('metalearning')
-        save_path = os.path.join(pipeline_config["save_path"], "initial_design.pkl")
-        with open(save_path, "wb") as f:
-            pickle.dump(initial_design, f)
-            logger.info('Success!')
-        del initial_design_learner
-        del initial_design
+        if initial_design is not None:
+            logger = logging.getLogger('metalearning')
+            save_path = os.path.join(pipeline_config["save_path"], "initial_design.pkl")
+            with open(save_path, "wb") as f:
+                pickle.dump(initial_design, f)
+                logger.info('Success!')
+            del initial_design_learner
+            del initial_design
         
         warmstarted_model = warmstarted_model_builder.build()
-        save_path = os.path.join(pipeline_config["save_path"], "warmstarted_model.pkl")
-        try:
-            with open(save_path, "wb") as f:
-                pickle.dump(warmstarted_model, f)
-                logger.info('Success!')
-        except:
-            logger.warn('Error writing to disk. Try again!')
-            fix_statsmodels_pickle()
-            with open(save_path, "wb") as f:
-                pickle.dump(warmstarted_model, f)
-                print('Success!')
-        del warmstarted_model
-        del warmstarted_model_builder
+        if warmstarted_model is not None:
+            save_path = os.path.join(pipeline_config["save_path"], "warmstarted_model.pkl")
+            try:
+                with open(save_path, "wb") as f:
+                    pickle.dump(warmstarted_model, f)
+                    logger.info('Success!')
+            except:
+                logger.warn('Error writing to disk. Try again!')
+                fix_statsmodels_pickle()
+                with open(save_path, "wb") as f:
+                    pickle.dump(warmstarted_model, f)
+                    print('Success!')
+            del warmstarted_model
+            del warmstarted_model_builder
         return dict()
     
     def get_pipeline_config_options(self):
