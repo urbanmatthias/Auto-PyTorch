@@ -27,6 +27,8 @@ if __name__ == "__main__":
     parser.add_argument("--distributed_id", default=0)
     parser.add_argument("--distributed_node", default=1)
     parser.add_argument("--distributed_dir", default=".")
+    parser.add_argument("--memory_limit_mb", default=None, type=int)
+    parser.add_argument("--time_limit_per_entry", default=None, type=int)
     parser.add_argument('benchmark', help='The benchmark to learn from')
 
     args = parser.parse_args()
@@ -57,6 +59,8 @@ if __name__ == "__main__":
     config['distributed_dir'] = args.distributed_dir
     config['host'] = nic_name_to_host(args.network_interface_name)
     config['master'] = args.distributed_node == "1"
+    config['memory_limit_mb'] = args.memory_limit_mb
+    config['time_limit_per_entry'] = args.time_limit_per_entry
 
 
     builder = MetaModelBuilder()
