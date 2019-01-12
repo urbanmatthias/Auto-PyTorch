@@ -1,0 +1,18 @@
+#!/bin/bash
+#MOAB -t 1-201
+#MOAB -N METAMODEL
+#MOAB -l nodes=1:ppn=1,walltime=90:00:00,pmem=8gb
+#MOAB -V
+#MOAB -E
+
+cd /home/fr/fr_fr/fr_mu37/Auto-PyTorch
+cp metalearning_data.tar.gz $TMPDIR
+tar -zxf $TMPDIR/metalearning_data.tar.gz -C $TMPDIR
+JOBID=(${MOAB_JOBID//[/ })
+COMMAND="python scripts/build_meta_learning_model.py configs/benchmark/collect_metalearning_data.txt --result_dir $TMPDIR/metalearning_data --save_path $TMPDIR --distributed --distributed_node $MOAB_JOBARRAYINDEX --distributed_dir /home/fr/fr_fr/fr_mu37/Auto-PyTorch --distributed_id $JOBID --calculate_exact_incumbent_scores --network_interface_name ib0"
+$COMMAND 1> $TMPDIR/stdout.txt 2> $TMPDIR/stderr.txt
+
+cp $TMPDIR/stdout.txt .
+cp $TMPDIR/stderr.txt .
+cp $TMPDIR/initial_design.pkl .
+cp $TMPDIR/warmstarted_model.pkl .
