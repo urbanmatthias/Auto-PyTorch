@@ -9,10 +9,16 @@ cd /home/fr/fr_fr/fr_mu37/Auto-PyTorch
 cp metalearning_data.tar.gz $TMPDIR
 tar -zxf $TMPDIR/metalearning_data.tar.gz -C $TMPDIR
 JOBID=(${MOAB_JOBID//[/ })
-COMMAND="python scripts/build_meta_learning_model.py configs/benchmark/collect_metalearning_data.txt --result_dir $TMPDIR/metalearning_data --save_path $TMPDIR --distributed --distributed_node $MOAB_JOBARRAYINDEX --distributed_dir /home/fr/fr_fr/fr_mu37/Auto-PyTorch --distributed_id $JOBID --calculate_exact_incumbent_scores --network_interface_name ib0"
+COMMAND="python scripts/build_meta_learning_model.py configs/benchmark/collect_metalearning_data.txt --result_dir $TMPDIR/benchmark_results --save_path $TMPDIR --distributed --distributed_node $MOAB_JOBARRAYINDEX --distributed_dir /home/fr/fr_fr/fr_mu37/Auto-PyTorch --distributed_id $JOBID --calculate_exact_incumbent_scores --network_interface_name ib0 --memory_limit_mb 7000 --time_limit 1500"
 $COMMAND 1> $TMPDIR/stdout.txt 2> $TMPDIR/stderr.txt
 
-cp $TMPDIR/stdout.txt .
-cp $TMPDIR/stderr.txt .
-cp $TMPDIR/initial_design.pkl .
-cp $TMPDIR/warmstarted_model.pkl .
+mkdir meta_outputs
+cp $TMPDIR/stdout.txt meta_outputs/stdout_${MOAB_JOBARRAYINDEX}.txt
+cp $TMPDIR/stderr.txt meta_outputs/stderr_${MOAB_JOBARRAYINDEX}.txt
+
+if [ $MOAB_JOBARRAYINDEX -eq 1 ]
+then
+    echo "Copy metamodels"
+    cp $TMPDIR/initial_design.pkl .
+    cp $TMPDIR/warmstarted_model.pkl .
+fi
