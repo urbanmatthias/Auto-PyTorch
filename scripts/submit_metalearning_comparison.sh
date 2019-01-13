@@ -15,7 +15,7 @@ do
   while [ $RUN -le 3 ]
   do
 
-    while [ $CONFIG -le 3]
+    while [ $CONFIG -le 3 ]
     do
 
       export INSTANCE
