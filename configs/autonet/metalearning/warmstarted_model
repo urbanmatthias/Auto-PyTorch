@@ -17,4 +17,4 @@ over_sampling_methods=[smote]
 preprocessors=[none,truncated_svd]
 target_size_strategies=[none,upsample,median]
 validation_split=0.3
-warmstarted_model=warmstarted_model2.pkl
+warmstarted_model=metamodels/warmstarted_model2.pkl
