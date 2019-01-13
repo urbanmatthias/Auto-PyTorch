@@ -18,3 +18,4 @@ preprocessors=[none,truncated_svd]
 target_size_strategies=[none,upsample,median]
 validation_split=0.3
 initial_design=metamodels/initial_design2.pkl
+max_initial_design_configs=30

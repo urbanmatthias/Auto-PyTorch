@@ -1,20 +1,20 @@
 #!/bin/bash
 
-RUN=0
-CONFIG=0
-INSTANCE=200
 RUN_SCRIPT=run_metalearning_comparison.moab
 export AUTONET_HOME=$PWD
 
 mkdir outputs
 cd outputs
 
+INSTANCE=200
 while [ $INSTANCE -le 229 ]
 do
 
+  RUN=0
   while [ $RUN -le 3 ]
   do
 
+    CONFIG=0
     while [ $CONFIG -le 3 ]
     do
 
