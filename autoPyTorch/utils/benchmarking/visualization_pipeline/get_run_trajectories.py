@@ -29,8 +29,12 @@ class GetRunTrajectories(PipelineNode):
 
 def build_run_trajectories(results_folder, autonet_config):
     # parse results
-    res = logged_results_to_HBS_result(results_folder)
-    incumbent_trajectory = res.get_incumbent_trajectory(bigger_is_better=False, non_decreasing_budget=False)
+    try:
+        res = logged_results_to_HBS_result(results_folder)
+        incumbent_trajectory = res.get_incumbent_trajectory(bigger_is_better=False, non_decreasing_budget=False)
+    except:
+        print("No incumbent trajectory found")
+        return dict()
 
     # prepare
     metric_name = autonet_config["train_metric"]

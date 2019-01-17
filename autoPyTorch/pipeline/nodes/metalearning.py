@@ -32,7 +32,7 @@ class MetaLearning(PipelineNode):
             with open(warmstarted_model, "rb") as f:
                 warmstarted_model = pickle.load(f)
 
-        result_loggers = [warmstarted_model_weights_logger(directory=pipeline_config["result_logger_dir"], warmstarted_model=warmstarted_model)] + result_loggers
+            result_loggers = [warmstarted_model_weights_logger(directory=pipeline_config["result_logger_dir"], warmstarted_model=warmstarted_model)] + result_loggers
         return {"warmstarted_model": warmstarted_model, "initial_design": initial_design, "result_loggers": result_loggers}
 
     def get_pipeline_config_options(self):
