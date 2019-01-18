@@ -49,9 +49,8 @@ class OptimizationAlgorithm(SubPipelineNode):
 
         super(OptimizationAlgorithm, self).__init__(optimization_pipeline_nodes)
 
-        self.algorithms = dict()
-        self.algorithms["bohb"] = BOHBExt
-        self.algorithms["hyperband"] = HyperBandExt
+        self.algorithms = {"bohb": BOHBExt,
+                           "hyperband": HyperBandExt}
 
         self.budget_types = dict()
         self.budget_types["time"] = BudgetTypeTime
@@ -183,15 +182,20 @@ class OptimizationAlgorithm(SubPipelineNode):
     def get_optimization_algorithm_instance(self, config_space, run_id, pipeline_config, ns_host, ns_port, loggers, previous_result=None,
             initial_design=None, warmstarted_model=None):
         optimization_algorithm = self.algorithms[pipeline_config["algorithm"]]
-        hb = optimization_algorithm(configspace=config_space, run_id = run_id,
-                                    eta=pipeline_config["eta"], min_budget=pipeline_config["min_budget"], max_budget=pipeline_config["max_budget"],
-                                    host=ns_host, nameserver=ns_host, nameserver_port=ns_port,
-                                    result_logger=combined_logger(*loggers),
-                                    ping_interval=10**6,
-                                    working_directory=pipeline_config["working_dir"],
-                                    previous_result=previous_result,
-                                    initial_design=initial_design,
-                                    warmstarted_model=warmstarted_model)
+        kwargs = {"configspace": config_space, "run_id": run_id,
+                  "eta": pipeline_config["eta"], "min_budget": pipeline_config["min_budget"], "max_budget": pipeline_config["max_budget"],
+                  "host": ns_host, "nameserver": ns_host, "nameserver_port": ns_port,
+                  "result_logger": combined_logger(*loggers),
+                  "ping_interval": 10**6,
+                  "working_directory": pipeline_config["working_dir"],
+                  "previous_result": previous_result,
+                  "initial_design": initial_design,
+                  "warmstarted_model": warmstarted_model}
+        try:
+            hb = optimization_algorithm(**kwargs)
+        except:
+            del kwargs["warmstarted_model"]
+            hb = optimization_algorithm(**kwargs)
         return hb
 
 
