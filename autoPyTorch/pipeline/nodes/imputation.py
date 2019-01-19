@@ -21,7 +21,7 @@ class Imputation(PipelineNode):
         hyperparameter_config = ConfigWrapper(self.get_name(), hyperparameter_config)
 
         if dataset_info.is_sparse:
-            return {'imputation_preprocessor': None}
+            return {'imputation_preprocessor': None, 'all_nan_columns': None}
 
         # delete all nan columns
         all_nan = np.all(np.isnan(X[train_indices]), axis=0)
