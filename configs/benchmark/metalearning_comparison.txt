@@ -1,6 +1,6 @@
 result_dir=benchmark_results_cluster
 instances=configs/datasets/metalearning.txt
-autonet_configs=[configs/autonet/metalearning/none.txt,configs/autonet/metalearning/initial_design.txt,configs/autonet/metalearning/warmstarted_model.txt,configs/autonet/metalearning/both.txt]
+autonet_configs=[configs/autonet/metalearning/none.txt,configs/autonet/metalearning/initial_design.txt]
 problem_type=feature_classification
 log_level=info
 num_runs=4

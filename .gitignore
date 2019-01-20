@@ -9,6 +9,9 @@
 *__pycache__/
 *.pyc
 
+# Zipped
+*.tar.gz
+
 # Temp
 *tmp_models/
 
@@ -18,6 +21,8 @@ benchmark_results_cluster/
 ns_credentials*/
 configs.json
 results.json
+outputs/
+jobs.txt
 
 # Build
 *build/
@@ -26,6 +31,9 @@ results.json
 # Metalearning data
 /metalearning_data/
 /metalearning_comparison_results/
+/meta_outputs/
+/metamodels/
+
 
 # Datasets
 /datasets/
