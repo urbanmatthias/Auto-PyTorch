@@ -3,5 +3,5 @@ instances=configs/datasets/all_openml.txt
 autonet_configs=[configs/autonet/metalearning/none.txt,configs/autonet/metalearning/initial_design.txt,configs/autonet/metalearning/warmstarted_model.txt,configs/autonet/metalearning/both.txt]
 problem_type=feature_classification
 log_level=info
-num_runs=1
+num_runs=4
 test_split=0.0

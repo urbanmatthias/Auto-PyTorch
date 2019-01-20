@@ -44,6 +44,7 @@ class CollectRunTrajectories(ForRun):
         run_number_range = self.parse_range(pipeline_config['run_number_range'], pipeline_config['num_runs'])
         instance_result_dir = os.path.abspath(os.path.join(get_run_result_dir(pipeline_config, instance, autonet_config_file, "0", "0"), ".."))
         if not os.path.exists(instance_result_dir):
+            logging.getLogger('benchmark').warn("Skipping %s because it no results exist" % instance_result_dir)
             return {"trajectories": result_trajectories, "train_metrics": train_metrics}
         run_result_dirs = next(os.walk(instance_result_dir))[1]
 
