@@ -24,10 +24,11 @@ results.json
 *autonet.egg-info
 
 # Metalearning data
-metalearning_data/
+/metalearning_data/
+/metalearning_comparison_results/
 
 # Datasets
-datasets/
+/datasets/
 
 # Meta GPU
 *meta_logs/
