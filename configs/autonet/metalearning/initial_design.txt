@@ -15,5 +15,5 @@ normalization_strategies=[maxabs, standardize]
 over_sampling_methods=[smote]
 preprocessors=[none,truncated_svd]
 target_size_strategies=[none,upsample,median]
-initial_design=metamodels/initial_design2.pkl
+initial_design=metamodels/initial_design.pkl
 max_initial_design_configs=30
