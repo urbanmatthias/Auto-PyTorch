@@ -23,6 +23,7 @@ configs.json
 results.json
 outputs/
 jobs.txt
+.pylintrc
 
 # Build
 *build/
