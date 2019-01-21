@@ -33,20 +33,18 @@ class Collect(PipelineNode):
             config_space = autonet.get_hyperparameter_search_space()
 
         exact_cost_model = None
-        if pipeline_config["calculate_exact_incumbent_scores"]:
-            exact_cost_model = AutoNetExactCostModel(autonet, data_manager, {
-                "file_name": instance,
-                "is_classification": (pipeline_config["problem_type"] in ['feature_classification', 'feature_multilabel']),
-                "test_split": pipeline_config["test_split"]
-            }, pipeline_config["memory_limit_mb"], pipeline_config["time_limit_per_entry"])
+        exact_cost_model = AutoNetExactCostModel(autonet, data_manager, {
+            "file_name": instance,
+            "is_classification": (pipeline_config["problem_type"] in ['feature_classification', 'feature_multilabel']),
+            "test_split": pipeline_config["test_split"]
+        }, pipeline_config["memory_limit_mb"], pipeline_config["time_limit_per_entry"])
 
-        initial_design_learner.add_result(run_result_dir, config_space, exact_cost_model=exact_cost_model, origin=instance)
+        initial_design_learner[1].add_result(run_result_dir, config_space, instance, exact_cost_model)
         warmstarted_model_builder.add_result(run_result_dir, config_space, origin=instance)
         return dict()
     
     def get_pipeline_config_options(self):
         return [
-            ConfigOption("calculate_exact_incumbent_scores", default=False, type=to_bool),
             ConfigOption("memory_limit_mb", default=None, type=int),
             ConfigOption("time_limit_per_entry", default=None, type=int)
         ]
