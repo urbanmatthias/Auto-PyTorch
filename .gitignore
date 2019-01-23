@@ -9,6 +9,9 @@
 *__pycache__/
 *.pyc
 
+# Zipped
+*.tar.gz
+
 # Temp
 *tmp_models/
 
@@ -18,16 +21,23 @@ benchmark_results_cluster/
 ns_credentials*/
 configs.json
 results.json
+outputs/
+jobs.txt
+.pylintrc
 
 # Build
 *build/
 *autonet.egg-info
 
 # Metalearning data
-metalearning_data/
+/metalearning_data/
+/metalearning_comparison_results/
+/meta_outputs/
+/metamodels/
+
 
 # Datasets
-datasets/
+/datasets/
 
 # Meta GPU
 *meta_logs/
