@@ -19,6 +19,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Run benchmarks for autonet.')
     parser.add_argument("--run_id_range", default=None, help="An id for the run. A range of run ids can be given: start-stop.")
     parser.add_argument("--result_dir", default=None, help="Override result dir in benchmark config.")
+    parser.add_argument("--only_finished_runs", action='store_true', help="Only consider finished runs")
     parser.add_argument("--save_path", default=".", help="Store the meta learning models in given filename")
     parser.add_argument("--learn_warmstarted_model", action='store_true', help="Learn a warmstarted model")
     parser.add_argument("--learn_initial_design", action='store_true', help="Learn an initial_design")
@@ -26,6 +27,8 @@ if __name__ == "__main__":
     parser.add_argument("--loss_matrix_path", default="./loss_matrix.txt", type=str, help="Path to file where losses for initial design will be stored/are stored.")
     parser.add_argument("--memory_limit_mb", default=None, type=int)
     parser.add_argument("--time_limit_per_entry", default=None, type=int)
+    parser.add_argument("--initial_design_max_total_budget", default=None, type=float)    
+    parser.add_argument("--initial_design_convergence_threshold", default=None, type=float)
     parser.add_argument('benchmark', help='The benchmark to learn from')
 
     args = parser.parse_args()
@@ -55,6 +58,9 @@ if __name__ == "__main__":
     config["learn_initial_design"] = args.learn_initial_design
     config["calculate_loss_matrix_entry"] = args.calculate_loss_matrix_entry 
     config["loss_matrix_path"] =  args.loss_matrix_path
+    config["only_finished_runs"] = args.only_finished_runs
+    config["initial_design_max_total_budget"] = args.initial_design_max_total_budget
+    config["initial_design_convergence_threshold"] = args.initial_design_convergence_threshold
 
     builder = MetaModelBuilder()
     builder.run(**config)

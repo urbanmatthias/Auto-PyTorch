@@ -24,6 +24,11 @@ class Collect(PipelineNode):
 
     def fit(self, pipeline_config, instance, initial_design_learner, warmstarted_model_builder, run_result_dir, data_manager, autonet):
         logger = logging.getLogger("metalearning")
+
+        if pipeline_config["only_finished_runs"] and not os.path.exists(os.path.join(run_result_dir, "summary.json")):
+            logger.info('Skipping ' + run_result_dir + ' because the run is not finished yet')
+            return dict()
+
         print("Collecting " + run_result_dir)
 
         if os.path.exists(os.path.join(run_result_dir, "configspace.json")):
@@ -46,7 +51,8 @@ class Collect(PipelineNode):
     def get_pipeline_config_options(self):
         return [
             ConfigOption("memory_limit_mb", default=None, type=int),
-            ConfigOption("time_limit_per_entry", default=None, type=int)
+            ConfigOption("time_limit_per_entry", default=None, type=int),
+            ConfigOption("only_finished_runs", default=False, type=to_bool)
         ]
 
 class AutoNetExactCostModel():

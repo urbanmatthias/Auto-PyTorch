@@ -11,9 +11,15 @@ class MetaLearningFit(PipelineNode):
             initial_design_learner[1].write_loss(pipeline_config["loss_matrix_path"], pipeline_config["calculate_loss_matrix_entry"])
 
         if pipeline_config["learn_initial_design"]:
+            assert pipeline_config["initial_design_max_total_budget"] is not None, "initial_design_max_total_budget needs to be specified"
+            assert pipeline_config["initial_design_convergence_threshold"] is not None, "initial_design_convergence_threshold needs to be specified"
+
             losses, incumbent_dict = initial_design_learner[1].read_loss(pipeline_config["loss_matrix_path"])
-            initial_design_learner[0].set_incumbent_losses(losses. incumbent_dict)
-            initial_design = initial_design_learner[0].learn()
+            initial_design_learner[0].set_incumbent_losses(losses, incumbent_dict)
+            initial_design, cost = initial_design_learner[0].learn(
+                max_total_budget = pipeline_config["initial_design_max_total_budget"],
+                convergence_threshold = pipeline_config["initial_design_convergence_threshold"]
+            )
             if initial_design is not None:
                 logger = logging.getLogger('metalearning')
                 save_path = os.path.join(pipeline_config["save_path"], "initial_design.pkl")
@@ -47,7 +53,9 @@ class MetaLearningFit(PipelineNode):
             ConfigOption("learn_warmstarted_model", default=False, type=to_bool),
             ConfigOption("learn_initial_design", default=False, type=to_bool),
             ConfigOption("calculate_loss_matrix_entry", default=-1, type=int),
-            ConfigOption("loss_matrix_path", default="./loss_matrix.txt", type=to_bool)
+            ConfigOption("loss_matrix_path", default="./loss_matrix.txt", type=to_bool),
+            ConfigOption("initial_design_max_total_budget", default=None, type=float),
+            ConfigOption("initial_design_convergence_threshold", default=None, type=float)
         ]
         return options
 
