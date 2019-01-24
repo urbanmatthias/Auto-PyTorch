@@ -15,3 +15,4 @@ normalization_strategies=[maxabs, standardize]
 over_sampling_methods=[smote]
 preprocessors=[none,truncated_svd]
 target_size_strategies=[none,upsample,median]
+min_budget_for_cv=250

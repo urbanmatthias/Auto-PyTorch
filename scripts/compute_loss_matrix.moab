@@ -1,7 +1,7 @@
 #!/bin/bash
 #MOAB -t 1-200000
 #MOAB -N METAMODEL
-#MOAB -l nodes=1:ppn=1,walltime=3:00:00,pmem=8gb
+#MOAB -l nodes=1:ppn=1,walltime=5:00:00,pmem=8gb
 #MOAB -V
 #MOAB -E
 
@@ -9,7 +9,7 @@ cd /home/fr/fr_fr/fr_mu37/Auto-PyTorch
 cp metalearning_data.tar.gz $TMPDIR
 tar -zxf $TMPDIR/metalearning_data.tar.gz -C $TMPDIR
 JOBID=(${MOAB_JOBID//[/ })
-COMMAND="python scripts/build_meta_learning_model.py configs/benchmark/collect_metalearning_data.txt --result_dir $TMPDIR/benchmark_results --only_finished_runs --calculate_loss_matrix_entry $MOAB_JOBARRAYINDEX --loss_matrix_path loss_matrix.txt --lock_dir . --save_path $TMPDIR --memory_limit_mb 7000 --time_limit_per_entry 2000"
+COMMAND="python scripts/build_meta_learning_model.py configs/benchmark/collect_metalearning_data.txt --result_dir $TMPDIR/benchmark_results --only_finished_runs --calculate_loss_matrix_entry $MOAB_JOBARRAYINDEX --loss_matrix_path loss_matrix.txt --lock_dir . --save_path $TMPDIR --memory_limit_mb 7000 --time_limit_per_entry 8000"
 $COMMAND 1> $TMPDIR/stdout.txt 2> $TMPDIR/stderr.txt
 
 mkdir meta_outputs

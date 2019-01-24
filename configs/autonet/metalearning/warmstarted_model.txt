@@ -1,5 +1,5 @@
 max_budget=6000
-min_budget=222
+min_budget=74
 min_workers=4
 max_runtime=92400
 budget_type=time
@@ -16,3 +16,4 @@ over_sampling_methods=[smote]
 preprocessors=[none,truncated_svd]
 target_size_strategies=[none,upsample,median]
 warmstarted_model=metamodels/warmstarted_model.pkl
+min_budget_for_cv=250

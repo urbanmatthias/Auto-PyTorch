@@ -24,10 +24,6 @@ class MetaLearning(PipelineNode):
             with open(initial_design, "rb") as f:
                 initial_design = pickle.load(f)
         
-            max_configs = pipeline_config["max_initial_design_configs"]
-            if max_configs > 0 and max_configs < len(initial_design):
-                initial_design = InitialDesign(initial_design.configs[:max_configs], initial_design.origins[:max_configs])
-        
         if warmstarted_model is not None:
             with open(warmstarted_model, "rb") as f:
                 warmstarted_model = pickle.load(f)
@@ -38,8 +34,7 @@ class MetaLearning(PipelineNode):
     def get_pipeline_config_options(self):
         options = [
             ConfigOption(name="initial_design", default=None, type="directory"),
-            ConfigOption(name="warmstarted_model", default=None, type="directory"),
-            ConfigOption(name="max_initial_design_configs", default=0, type=int)
+            ConfigOption(name="warmstarted_model", default=None, type="directory")
         ]
         return options
 
