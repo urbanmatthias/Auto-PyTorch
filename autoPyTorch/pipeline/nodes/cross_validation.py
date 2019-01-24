@@ -48,13 +48,14 @@ class CrossValidation(SubPipelineNode):
         self.cross_validators_adjust_y = dict()
 
 
-    def fit(self, hyperparameter_config, pipeline_config, X_train, Y_train, X_valid, Y_valid, budget, budget_type, optimize_start_time, refit, dataset_info):
+    def fit(self, hyperparameter_config, pipeline_config, X_train, Y_train, X_valid, Y_valid, budget, budget_type, optimize_start_time,
+            refit, rescore, dataset_info):
         logger = logging.getLogger('autonet')
         loss = 0
         infos = []
         X, Y, num_cv_splits, cv_splits, loss_penalty, budget = self.initialize_cross_validation(
             pipeline_config=pipeline_config, budget=budget, X_train=X_train, Y_train=Y_train, X_valid=X_valid, Y_valid=Y_valid,
-            dataset_info=dataset_info, refit=refit, logger=logger)
+            dataset_info=dataset_info, refit=(refit and not rescore), logger=logger)
         
         # adjust budget in case of budget type time
         cv_start_time = time.time()
@@ -109,6 +110,8 @@ class CrossValidation(SubPipelineNode):
         options = [
             ConfigOption("validation_split", default=0.0, type=float, choices=[0, 1],
                 info='In range [0, 1). Part of train dataset used for validation. Ignored in fit if cross validator or valid data given.'),
+            ConfigOption("refit_validation_split", default=0.0, type=float, choices=[0, 1],
+                info='In range [0, 1). Part of train dataset used for validation in refit.'),
             ConfigOption("cross_validator", default="none", type=str, choices=self.cross_validators.keys(),
                 info='Class inheriting from sklearn.model_selection.BaseCrossValidator. Ignored if validation data is given.'),
             ConfigOption("cross_validator_args", default=dict(), type=to_dict,
@@ -128,6 +131,8 @@ class CrossValidation(SubPipelineNode):
     def initialize_cross_validation(self, pipeline_config, budget, X_train, Y_train, X_valid, Y_valid, dataset_info, refit, logger):
         budget_too_low_for_cv = budget < pipeline_config['min_budget_for_cv']
         val_split = max(0, min(1, pipeline_config['validation_split']))
+        if refit:
+            val_split = max(0, min(1, pipeline_config['refit_validation_split']))
 
         # validation set given. cv ignored.
         if X_valid is not None and Y_valid is not None:

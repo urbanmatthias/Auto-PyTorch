@@ -18,13 +18,14 @@ class MetaLearningSettings(BenchmarkSettings):
         # log level for autonet is set in SetAutoNetConfig
 
         return {'run_id_range': pipeline_config['run_id_range'],
-                'initial_design_learner': (Hydra(bigger_is_better=False), LossMatrixComputation(bigger_is_better=False)) ,
+                'initial_design_learner': (Hydra(bigger_is_better=False), LossMatrixComputation(bigger_is_better=False, lock_dir=pipeline_config["lock_dir"])) ,
                 'warmstarted_model_builder': WarmstartedModelBuilder()}
 
     def get_pipeline_config_options(self):
         options = [
             ConfigOption("run_id_range", type=str, default=None),
             ConfigOption("log_level", default="info", type=str, choices=list(self.logger_settings.keys())),
-            ConfigOption('result_dir', default=None, type='directory', required=True)
+            ConfigOption('result_dir', default=None, type='directory', required=True),
+            ConfigOption('lock_dir', default=None, type='directory', required=True)
         ]
         return options

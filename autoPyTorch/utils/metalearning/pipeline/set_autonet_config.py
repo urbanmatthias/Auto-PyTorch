@@ -12,6 +12,8 @@ class SetAutoNetConfig(PipelineNode):
     def fit(self, pipeline_config, autonet, data_manager, run_result_dir):
         parser = autonet.get_autonet_config_file_parser()
         config = parser.read(os.path.join(run_result_dir, "autonet.config"))
+        parser.set_defaults(config)
+
         updates=None
         if os.path.exists(os.path.join(run_result_dir, "hyperparameter_search_space_updates")):
             updates = parse_hyperparameter_search_space_updates(

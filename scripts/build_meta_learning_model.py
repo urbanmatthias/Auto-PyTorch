@@ -29,6 +29,7 @@ if __name__ == "__main__":
     parser.add_argument("--time_limit_per_entry", default=None, type=int)
     parser.add_argument("--initial_design_max_total_budget", default=None, type=float)    
     parser.add_argument("--initial_design_convergence_threshold", default=None, type=float)
+    parser.add_argument("--lock_dir", default=None, type=str)
     parser.add_argument('benchmark', help='The benchmark to learn from')
 
     args = parser.parse_args()
@@ -61,6 +62,7 @@ if __name__ == "__main__":
     config["only_finished_runs"] = args.only_finished_runs
     config["initial_design_max_total_budget"] = args.initial_design_max_total_budget
     config["initial_design_convergence_threshold"] = args.initial_design_convergence_threshold
+    config["lock_dir"] = args.lock_dir
 
     builder = MetaModelBuilder()
     builder.run(**config)

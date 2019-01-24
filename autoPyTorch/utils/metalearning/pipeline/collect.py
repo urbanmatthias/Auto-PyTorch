@@ -89,7 +89,7 @@ class AutoNetExactCostModel():
     def _evaluate(self, config, budget):
         return self.autonet.refit(
             X_train=self.dm.X_train, Y_train=self.dm.Y_train, X_valid=self.dm.X_valid, Y_valid=self.dm.Y_valid,
-            hyperparameter_config=config.get_dictionary(), budget=budget)
+            hyperparameter_config=config.get_dictionary(), budget=budget, rescore=True)
     
     def __exit__(self, error_type, error_value, error_traceback):
         del self.dm

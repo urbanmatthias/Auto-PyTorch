@@ -72,7 +72,7 @@ class OptimizationAlgorithm(SubPipelineNode):
             res = self.sub_pipeline.fit_pipeline( 
                                     hyperparameter_config=refit["hyperparameter_config"], pipeline_config=pipeline_config, 
                                     X_train=X_train, Y_train=Y_train, X_valid=X_valid, Y_valid=Y_valid, 
-                                    budget=refit["budget"], budget_type=self.budget_types[pipeline_config['budget_type']],
+                                    budget=refit["budget"], rescore=refit["rescore"], budget_type=self.budget_types[pipeline_config['budget_type']],
                                     optimize_start_time=time.time(), refit=True, hyperparameter_config_id=None)
             
             return {'final_metric_score': res['loss'],

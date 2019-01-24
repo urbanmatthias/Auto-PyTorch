@@ -112,7 +112,7 @@ class AutoNet():
             self.refit(X_train, Y_train, X_valid, Y_valid)
         return self.fit_result["optimized_hyperparameter_config"], self.fit_result['final_metric_score']
 
-    def refit(self, X_train, Y_train, X_valid=None, Y_valid=None, hyperparameter_config=None, autonet_config=None, budget=None):
+    def refit(self, X_train, Y_train, X_valid=None, Y_valid=None, hyperparameter_config=None, autonet_config=None, budget=None, rescore=False):
         """Refit AutoNet to given hyperparameters. This will skip hyperparameter search.
         
         Arguments:
@@ -123,7 +123,9 @@ class AutoNet():
             X_valid {array} -- Validation  data. (default: {None})
             Y_valid {array} -- Validation targets (default: {None})
             hyperparameter_config {dict} -- The hyperparameter config that specifies architecture and hyperparameters (default: {None})
-            **autonet_config -- Configure AutoNet for your needs. Call print_help() for more info.
+            autonet_config -- Configure AutoNet for your needs. Call print_help() for more info.
+            budget -- The budget used for the refit.
+            rescore -- Use the same validation procedure as in fit (e.g. with cv).
         
         Raises:
             ValueError -- No hyperparameter config available
@@ -142,7 +144,8 @@ class AutoNet():
             raise ValueError("You have to specify a hyperparameter and autonet config in order to be able to refit")
 
         refit_data = {'hyperparameter_config': hyperparameter_config,
-                      'budget': budget}
+                      'budget': budget,
+                      'rescore': rescore}
     
         result = self.pipeline.fit_pipeline(pipeline_config=autonet_config, refit=refit_data,
                                     X_train=X_train, Y_train=Y_train, X_valid=X_valid, Y_valid=Y_valid)

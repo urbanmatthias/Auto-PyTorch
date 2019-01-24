@@ -79,7 +79,7 @@ class ModuleWorker(Worker):
             return self.pipeline.fit_pipeline(hyperparameter_config=config, pipeline_config=self.pipeline_config, 
                                             X_train=self.X_train, Y_train=self.Y_train, X_valid=self.X_valid, Y_valid=self.Y_valid, 
                                             budget=budget, budget_type=self.budget_type, max_budget=self.max_budget, optimize_start_time=optimize_start_time,
-                                            refit=False, hyperparameter_config_id=config_id)
+                                            refit=False, rescore=False, hyperparameter_config_id=config_id)
         except Exception as e:
             if 'use_tensorboard_logger' in self.pipeline_config and self.pipeline_config['use_tensorboard_logger']:            
                 import tensorboard_logger as tl
