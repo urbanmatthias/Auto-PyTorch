@@ -110,6 +110,9 @@ class TrainNode(PipelineNode):
 
 
     def predict(self, pipeline_config, network, predict_loader):
+        if not torch.cuda.is_available():
+            pipeline_config["cuda"] = False
+
         device = torch.device('cuda:0' if pipeline_config['cuda'] else 'cpu')
         
         Y = predict(network, predict_loader, device)
