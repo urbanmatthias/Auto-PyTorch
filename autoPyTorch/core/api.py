@@ -143,6 +143,8 @@ class AutoNet():
         if (autonet_config is None or hyperparameter_config is None):
             raise ValueError("You have to specify a hyperparameter and autonet config in order to be able to refit")
 
+        assert len(hyperparameter_config) > 0, "You have to specify a non-empty hyperparameter config for refit. Probably something went wrong in fit."
+
         refit_data = {'hyperparameter_config': hyperparameter_config,
                       'budget': budget,
                       'rescore': rescore}
