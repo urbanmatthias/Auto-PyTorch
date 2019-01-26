@@ -7,7 +7,8 @@ from autoPyTorch.utils.benchmarking.benchmark_pipeline import (BenchmarkSettings
                                                            PrepareResultFolder,
                                                            ReadInstanceData,
                                                            SaveResults,
-                                                           SetAutoNetConfig)
+                                                           SetAutoNetConfig,
+                                                           SaveEnsembleLogs)
 from autoPyTorch.utils.benchmarking.visualization_pipeline import (CollectAutoNetConfigTrajectories,
                                                                CollectRunTrajectories,
                                                                GetRunTrajectories,
@@ -45,7 +46,8 @@ class Benchmark():
                     ForRun([ #num_runs, run_ids
                         PrepareResultFolder(),
                         FitAutoNet(),
-                        SaveResults()
+                        SaveResults(),
+                        SaveEnsembleLogs()
                     ])
                 ])
             ])
