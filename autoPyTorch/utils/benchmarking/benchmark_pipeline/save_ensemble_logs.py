@@ -50,7 +50,7 @@ class SaveEnsembleLogs(PipelineNode):
             if len(subset) == 0:
                 continue
             times_finished = max(timestamps[s]["finished"] for s in subset)
-            subset_predictions = [predictions[s] for s in subset]
+            subset_predictions = [np.copy(predictions[s]) for s in subset]
             subset_model_identifiers = [model_identifiers[s] for s in subset]
 
             # build an ensemble with current subset and size
@@ -61,7 +61,7 @@ class SaveEnsembleLogs(PipelineNode):
             # get the ensemble predictions
             ensemble_prediction = ensemble.predict(subset_predictions)
             if test_data_available:
-                subset_test_predictions = [test_predictions[s] for s in subset]
+                subset_test_predictions = [np.copy(test_predictions[s]) for s in subset]
                 test_ensemble_prediction = ensemble.predict(subset_test_predictions)
 
             # evaluate the metrics
@@ -78,7 +78,9 @@ class SaveEnsembleLogs(PipelineNode):
                 print(json.dumps([
                     {"started": start_time, "finished": times_finished},
                     metric_performances,
-                    [(identifier, weight) for identifier, weight in zip(ensemble.identifiers_, ensemble.weights_) if weight > 0],
+                    sorted([(identifier, weight) for identifier, weight in zip(ensemble.identifiers_, ensemble.weights_) if weight > 0],
+                           key=lambda x: -x[1]),
+                    [ensemble.identifiers_[i] for i in ensemble.indices_],
                     {
                         "ensemble_size": ensemble.ensemble_size,
                         "metric": autonet_config["train_metric"],
@@ -95,7 +97,6 @@ class SaveEnsembleLogs(PipelineNode):
  
     def get_pipeline_config_options(self):
         options = [
-            ConfigOption('enable_ensemble', default=False, type=to_bool),
-            ConfigOption('num_ensemble_evaluations', default=100, type=int),
+            ConfigOption('num_ensemble_evaluations', default=100, type=int)
         ]
         return options
