@@ -92,5 +92,4 @@ class AutoNetExactCostModel():
             hyperparameter_config=config.get_dictionary(), budget=budget, rescore=True)
     
     def __exit__(self, error_type, error_value, error_traceback):
-        del self.dm
         return error_type is not None
