@@ -46,10 +46,15 @@ class SaveEnsembleLogs(PipelineNode):
         subset_indices = [np.array([i for i, t in enumerate(timestamps) if t["finished"] < s]) for s in steps]
 
         # iterate over the subset to compute performance over time
+        last_times_finished = 0
         for subset in subset_indices:
             if len(subset) == 0:
                 continue
+            
             times_finished = max(timestamps[s]["finished"] for s in subset)
+            if times_finished == last_times_finished:
+                continue
+            last_times_finished = times_finished
             subset_predictions = [np.copy(predictions[s]) for s in subset]
             subset_model_identifiers = [model_identifiers[s] for s in subset]
 
