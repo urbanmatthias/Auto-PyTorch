@@ -16,7 +16,10 @@ class GetRunTrajectories(PipelineNode):
             logging.getLogger('benchmark').info('Skipping ' + run_result_dir + ' because the run is not finished yet')
             return {"trajectories": dict(), "train_metric": None}
 
-        return {"trajectories": build_run_trajectories(run_result_dir, autonet_config),
+        trajectories = build_run_trajectories(run_result_dir, autonet_config)
+        if "test_result" in trajectories:
+            trajectories["test_%s" % autonet_config["train_metric"]] = trajectories["test_result"]
+        return {"trajectories": trajectories,
                 "train_metric": autonet_config["train_metric"]}
     
     def get_pipeline_config_options(self):

@@ -24,6 +24,7 @@ if __name__ == "__main__":
     parser.add_argument("--scale_uncertainty", default=1, type=float, help="Scale the uncertainty")
     parser.add_argument("--agglomeration", default="mean", help="Choose between mean and median.")
     parser.add_argument("--font_size", default=12, type=int, help="Set font size.")
+    parser.add_argument("--prefixes", default=[""], type=str, nargs="+", help="The prefixes to plot. Choices: none, train, val, test, ensemble, ensemble_test")
     parser.add_argument('benchmark', help='The benchmark to visualize')
 
     args = parser.parse_args()
@@ -54,5 +55,6 @@ if __name__ == "__main__":
     benchmark_config['scale_uncertainty'] = args.scale_uncertainty
     benchmark_config['agglomeration'] = args.agglomeration
     benchmark_config['font_size'] = args.font_size
+    benchmark_config['prefixes'] = [p if p != "none" else "" for p in args.prefixes]
     
     benchmark.visualize_benchmark(**benchmark_config)
