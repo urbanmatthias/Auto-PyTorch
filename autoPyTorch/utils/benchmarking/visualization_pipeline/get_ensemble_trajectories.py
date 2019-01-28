@@ -24,8 +24,8 @@ class GetEnsembleTrajectories(PipelineNode):
         metrics = autonet.pipeline[MetricSelector.get_name()].metrics
         y_transform = autonet.pipeline[OneHotEncoding.get_name()].complete_y_tranformation
         result = logged_results_to_HBS_result(run_result_dir)
-        filename = os.path.join(run_result_dir, "predictions_for_ensemble.json")
-        test_filename = os.path.join(run_result_dir, "test_predictions_for_ensemble.json")
+        filename = os.path.join(run_result_dir, "predictions_for_ensemble.npy")
+        test_filename = os.path.join(run_result_dir, "test_predictions_for_ensemble.npy")
 
         # compute which logs need to be evaluated with which ensemble size
         plot_logs = [l for l in pipeline_config['plot_logs'] if l.startswith("ensemble")]

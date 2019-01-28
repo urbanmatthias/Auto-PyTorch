@@ -43,4 +43,5 @@ jobs.txt
 *meta_logs/
 
 # ensemble data
-predictions_for_ensemble.json
+predictions_for_ensemble.npy
+test_predictions_for_ensemble.npy

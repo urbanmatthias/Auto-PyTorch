@@ -23,24 +23,20 @@ def read_ensemble_prediction_file(filename, y_transform):
     all_timestamps = list()
     labels = None
     model_identifiers = list()
-    with open(filename, "r") as f:
-        i = 0
-        for line in f:
-            if i == 0:
-                labels = np.array(json.loads(line))
-                labels, _ = y_transform(labels)
-                i += 1
-                continue
-            job_id, budget, timestamps, predictions = json.loads(line)
-            model_identifiers.append(tuple(job_id + [budget]))
-            predictions = np.array(predictions)
-            all_predictions.append(predictions)
-            all_timestamps.append(timestamps)
+    with open(filename, "rb") as f:
+        labels = np.load(f)
+        labels, _ = y_transform(labels)
 
-            # the following assert statement only works with accuracy when using cv
-            # performance = train_metric(predictions, labels)
-            # run_performance = next(filter(lambda run: run.budget == budget, result.get_runs_by_id(tuple(job_id)))).loss
-            # assert math.isclose(run_performance * minimize, performance, rel_tol=0.002), str(run_performance * minimize) + "!=" + str(performance)
+        while True:
+            try:
+                job_id, budget, timestamps = np.load(f)
+                predictions = np.load(f)
+                model_identifiers.append(job_id + (budget, ))
+                predictions = np.array(predictions)
+                all_predictions.append(predictions)
+                all_timestamps.append(timestamps)
+            except (EOFError, OSError):
+                break
     return all_predictions, labels, model_identifiers, all_timestamps
 
 
@@ -91,8 +87,8 @@ class ensemble_logger(object):
         self.labels = None
         self.test_labels = None
         
-        self.file_name = os.path.join(directory, 'predictions_for_ensemble.json')
-        self.test_file_name = os.path.join(directory, 'test_predictions_for_ensemble.json')
+        self.file_name = os.path.join(directory, 'predictions_for_ensemble.npy')
+        self.test_file_name = os.path.join(directory, 'test_predictions_for_ensemble.npy')
 
         try:
             with open(self.file_name, 'x') as fh: pass
@@ -115,23 +111,25 @@ class ensemble_logger(object):
             return
         if "predictions_for_ensemble" in job.result:
             predictions, labels = job.result["predictions_for_ensemble"]
-            with open(self.file_name, "a") as f:
+            with open(self.file_name, "ab") as f:
                 if self.labels is None:
                     self.labels = labels
-                    print(json.dumps(labels), file=f)
+                    np.save(f, labels)
                 else:
                     assert self.labels == labels
-                print(json.dumps([job.id, job.kwargs['budget'], job.timestamps, predictions]), file=f)
+                np.save(f, np.array([job.id, job.kwargs['budget'], job.timestamps], dtype=object))
+                np.save(f, predictions)
             del job.result["predictions_for_ensemble"]
 
             if "test_predictions_for_ensemble" in job.result:
                 if job.result["test_predictions_for_ensemble"] is not None:
                     test_predictions, test_labels = job.result["test_predictions_for_ensemble"]
-                    with open(self.test_file_name, "a") as f:
+                    with open(self.test_file_name, "ab") as f:
                         if self.test_labels is None:
                             self.test_labels = test_labels
-                            print(json.dumps(test_labels), file=f)
+                            np.save(f, test_labels)
                         else:
                             assert self.test_labels == test_labels
-                        print(json.dumps([job.id, job.kwargs['budget'], job.timestamps, test_predictions]), file=f)
+                        np.save(f, np.array([job.id, job.kwargs['budget'], job.timestamps], dtype=object))
+                        np.save(f, test_predictions)
                 del job.result["test_predictions_for_ensemble"]

@@ -59,7 +59,7 @@ class BuildEnsemble(PipelineNode):
         if refit or pipeline_config["ensemble_size"] == 0 or pipeline_config["task_id"] not in [-1, 1]:
             return {"final_metric_score": final_metric_score, "optimized_hyperparameter_config": optimized_hyperparameter_config, "budget": budget}
         
-        filename = os.path.join(pipeline_config["result_logger_dir"], 'predictions_for_ensemble.json')
+        filename = os.path.join(pipeline_config["result_logger_dir"], 'predictions_for_ensemble.npy')
         train_metric = self.pipeline[MetricSelector.get_name()].metrics[pipeline_config["train_metric"]]
         y_transform = self.pipeline[OneHotEncoding.get_name()].complete_y_tranformation
         result = logged_results_to_HBS_result(pipeline_config["result_logger_dir"])

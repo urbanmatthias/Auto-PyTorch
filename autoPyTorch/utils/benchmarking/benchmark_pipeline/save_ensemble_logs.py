@@ -24,8 +24,8 @@ class SaveEnsembleLogs(PipelineNode):
         train_metric = metrics[autonet_config["train_metric"]]
         y_transform = autonet.pipeline[OneHotEncoding.get_name()].complete_y_tranformation
         result = logged_results_to_HBS_result(result_dir)
-        filename = os.path.join(result_dir, "predictions_for_ensemble.json")
-        test_filename = os.path.join(result_dir, "test_predictions_for_ensemble.json")
+        filename = os.path.join(result_dir, "predictions_for_ensemble.npy")
+        test_filename = os.path.join(result_dir, "test_predictions_for_ensemble.npy")
         ensemble_log_filename = os.path.join(result_dir, "ensemble_log.json")
 
         # read the predictions
