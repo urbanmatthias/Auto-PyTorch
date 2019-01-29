@@ -126,6 +126,8 @@ class Trainer(object):
             self.optimizer.step()
 
             # save for metric evaluation
+            if self.model.final_activation is not None:
+                outputs = self.model.final_activation(outputs)
             outputs_data.append(outputs.data.cpu().detach().numpy())
             targets_data.append(targets.data.cpu().detach().numpy())
 
