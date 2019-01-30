@@ -66,8 +66,10 @@ class BuildEnsemble(PipelineNode):
 
         all_predictions, labels, model_identifiers, _ = read_ensemble_prediction_file(filename=filename, y_transform=y_transform)
         ensemble_selection, ensemble_configs = build_ensemble(result=result,
-            train_metric=train_metric, y_transform=y_transform, minimize=pipeline_config["minimize"], ensemble_size=pipeline_config["ensemble_size"],
-            all_predictions=all_predictions, labels=labels, model_identifiers=model_identifiers)
+            train_metric=train_metric, minimize=pipeline_config["minimize"], ensemble_size=pipeline_config["ensemble_size"],
+            all_predictions=all_predictions, labels=labels, model_identifiers=model_identifiers,
+            only_consider_n_best=pipeline_config["ensemble_only_consider_n_best"],
+            sorted_initialization_n_best=pipeline_config["ensemble_sorted_initialization_n_best"])
 
         return {"final_metric_score": final_metric_score, "optimized_hyperparameter_config": optimized_hyperparameter_config, "budget": budget,
             "ensemble": ensemble_selection, "ensemble_final_metric_score": ensemble_selection.get_validation_performance(),
@@ -79,7 +81,9 @@ class BuildEnsemble(PipelineNode):
     
     def get_pipeline_config_options(self):
         options = [
-            ConfigOption("ensemble_size", default=3, type=int, info="Build a ensemble of well performing autonet configurations. 0 to disable.")
+            ConfigOption("ensemble_size", default=3, type=int, info="Build a ensemble of well performing autonet configurations. 0 to disable."),
+            ConfigOption("ensemble_only_consider_n_best", default=0, type=int, info="Only consider the n best models for ensemble building."),
+            ConfigOption("ensemble_sorted_initialization_n_best", default=0, type=int, info="Initialize ensemble with n best models.")
         ]
         return options
 

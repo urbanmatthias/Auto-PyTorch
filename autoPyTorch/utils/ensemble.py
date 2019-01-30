@@ -6,9 +6,12 @@ import math
 from autoPyTorch.components.ensembles.ensemble_selection import EnsembleSelection
 from autoPyTorch.core.api import AutoNet
 
-def build_ensemble(result, train_metric, y_transform, minimize, ensemble_size, all_predictions, labels, model_identifiers):
+def build_ensemble(result, train_metric, minimize,
+        ensemble_size, all_predictions, labels, model_identifiers,
+        only_consider_n_best=0, sorted_initialization_n_best=0):
     id2config = result.get_id2config_mapping()
-    ensemble_selection = EnsembleSelection(ensemble_size, train_metric, minimize)
+    ensemble_selection = EnsembleSelection(ensemble_size, train_metric, minimize,
+        only_consider_n_best=only_consider_n_best, sorted_initialization_n_best=sorted_initialization_n_best)
 
     # fit ensemble
     ensemble_selection.fit(np.array(all_predictions), labels, model_identifiers)

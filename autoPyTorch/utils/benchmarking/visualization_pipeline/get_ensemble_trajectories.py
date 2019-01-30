@@ -4,7 +4,7 @@ from autoPyTorch.utils.config.config_option import ConfigOption, to_bool, to_lis
 from autoPyTorch.utils.benchmarking.benchmark_pipeline.prepare_result_folder import get_run_result_dir
 from autoPyTorch.pipeline.nodes.metric_selector import MetricSelector
 from autoPyTorch.pipeline.nodes import OneHotEncoding
-from autoPyTorch.pipeline.nodes.ensemble import build_ensemble, read_ensemble_prediction_file
+from autoPyTorch.pipeline.nodes.ensemble import read_ensemble_prediction_file
 from hpbandster.core.result import logged_results_to_HBS_result
 from copy import copy
 import os

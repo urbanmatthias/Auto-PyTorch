@@ -60,8 +60,10 @@ class SaveEnsembleLogs(PipelineNode):
 
             # build an ensemble with current subset and size
             ensemble, _ = build_ensemble(result=result,
-                train_metric=train_metric, y_transform=y_transform, minimize=autonet_config["minimize"], ensemble_size=autonet_config["ensemble_size"],
-                all_predictions=subset_predictions, labels=labels, model_identifiers=subset_model_identifiers)
+                train_metric=train_metric, minimize=autonet_config["minimize"], ensemble_size=autonet_config["ensemble_size"],
+                all_predictions=subset_predictions, labels=labels, model_identifiers=subset_model_identifiers,
+                only_consider_n_best=autonet_config["ensemble_only_consider_n_best"],
+                sorted_initialization_n_best=autonet_config["ensemble_sorted_initialization_n_best"])
 
             # get the ensemble predictions
             ensemble_prediction = ensemble.predict(subset_predictions)

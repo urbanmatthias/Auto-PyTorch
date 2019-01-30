@@ -8,11 +8,13 @@ from autoPyTorch.components.ensembles.abstract_ensemble import AbstractEnsemble
 
 class EnsembleSelection(AbstractEnsemble):
     def __init__(self, ensemble_size, metric, minimize,
-                 sorted_initialization=False, bagging=False, mode='fast'):
+                 sorted_initialization_n_best=0, only_consider_n_best=0,
+                 bagging=False, mode='fast'):
         self.ensemble_size = ensemble_size
         self.metric = metric
         self.minimize = 1 if minimize else -1
-        self.sorted_initialization = sorted_initialization
+        self.sorted_initialization_n_best = sorted_initialization_n_best
+        self.only_consider_n_best = only_consider_n_best
         self.bagging = bagging
         self.mode = mode
 
@@ -48,16 +50,19 @@ class EnsembleSelection(AbstractEnsemble):
 
         ensemble_size = self.ensemble_size
 
-        if self.sorted_initialization:
-            n_best = 20
-            indices = self._sorted_initialization(predictions, labels, n_best)
+        if self.sorted_initialization_n_best > 0:
+            indices = self._sorted_initialization(predictions, labels, self.sorted_initialization_n_best)
             for idx in indices:
                 ensemble.append(predictions[idx])
                 order.append(idx)
                 ensemble_ = np.array(ensemble).mean(axis=0)
                 ensemble_performance = self.metric(ensemble_, labels) * self.minimize
                 trajectory.append(ensemble_performance)
-            ensemble_size -= n_best
+            ensemble_size -= self.sorted_initialization_n_best
+        
+        only_consider_indices = None
+        if self.only_consider_n_best > 0:
+            only_consider_indices = set(self._sorted_initialization(predictions, labels, self.only_consider_n_best))
 
         for i in range(ensemble_size):
             scores = np.zeros((len(predictions)))
@@ -72,6 +77,9 @@ class EnsembleSelection(AbstractEnsemble):
             for j, pred in enumerate(predictions):
                 # TODO: this could potentially be vectorized! - let's profile
                 # the script first!
+                if only_consider_indices and j not in only_consider_indices:
+                    scores[j] = float("inf")
+                    continue
                 fant_ensemble_prediction[:,:] = weighted_ensemble_prediction + \
                                              (1. / float(s + 1)) * pred
                 scores[j] = self.metric(fant_ensemble_prediction, labels) * self.minimize
@@ -99,20 +107,26 @@ class EnsembleSelection(AbstractEnsemble):
 
         ensemble_size = self.ensemble_size
 
-        if self.sorted_initialization:
-            n_best = 20
-            indices = self._sorted_initialization(predictions, labels, n_best)
+        if self.sorted_initialization_n_best > 0:
+            indices = self._sorted_initialization(predictions, labels, self.sorted_initialization_n_best)
             for idx in indices:
                 ensemble.append(predictions[idx])
                 order.append(idx)
                 ensemble_ = np.array(ensemble).mean(axis=0)
                 ensemble_performance = self.metric(ensemble_, labels) * self.minimize
                 trajectory.append(ensemble_performance)
-            ensemble_size -= n_best
+            ensemble_size -= self.sorted_initialization_n_best
+        
+        only_consider_indices = None
+        if self.only_consider_n_best > 0:
+            only_consider_indices = set(self._sorted_initialization(predictions, labels, self.only_consider_n_best))
 
         for i in range(ensemble_size):
             scores = np.zeros([predictions.shape[0]])
             for j, pred in enumerate(predictions):
+                if only_consider_indices and j not in only_consider_indices:
+                    scores[j] = float("inf")
+                    continue
                 ensemble.append(pred)
                 ensemble_prediction = np.mean(np.array(ensemble), axis=0)
                 scores[j] = self.metric(ensemble_prediction, labels) * self.minimize
@@ -148,7 +162,7 @@ class EnsembleSelection(AbstractEnsemble):
         for idx, prediction in enumerate(predictions):
             perf[idx] = self.metric(prediction, labels) * self.minimize
 
-        indices = np.argsort(perf)[perf.shape[0] - n_best:]
+        indices = np.argsort(perf)[:n_best]
         return indices
 
     def _bagging(self, predictions, labels, fraction=0.5, n_bags=20):
