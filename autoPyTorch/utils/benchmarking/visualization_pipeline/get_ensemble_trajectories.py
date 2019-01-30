@@ -19,11 +19,18 @@ class GetEnsembleTrajectories(PipelineNode):
         ensemble_log_file = os.path.join(run_result_dir, "ensemble_log.json")
         if not pipeline_config["enable_ensemble"] or train_metric is None or not os.path.exists(os.path.join(run_result_dir, "ensemble_log.json")):
             return {"trajectories": trajectories, "train_metric": train_metric}
+
+        try:
+            res = logged_results_to_HBS_result(results_folder)
+            started = min(x.time_stamps["submitted"] for x in res.get_all_runs())
+        except:
+            return {"trajectories": trajectories, "train_metric": train_metric}
         
         ensemble_trajectories = dict()
         with open(ensemble_log_file) as f:
             for line in f:
-                timestamps, metric_values, _, _, _ = json.loads(line)
+                finished, metric_values, _, _, _ = json.loads(line)
+                finished = finished["finished"] if isinstance(finished, dict) else finished
 
                 for metric_name, metric_value in metric_values.items():
                     trajectory_name = "ensemble_%s" % metric_name
@@ -31,7 +38,7 @@ class GetEnsembleTrajectories(PipelineNode):
                     # save in trajectory
                     if trajectory_name not in ensemble_trajectories:
                         ensemble_trajectories[trajectory_name] = {"times_finished": [], "losses": [], "flipped": False}
-                    ensemble_trajectories[trajectory_name]["times_finished"].append(timestamps["finished"] - timestamps["started"])
+                    ensemble_trajectories[trajectory_name]["times_finished"].append(finished - started)
                     ensemble_trajectories[trajectory_name]["losses"].append(metric_value)
         return {"trajectories": dict(trajectories, **ensemble_trajectories), "train_metric": train_metric}
     

@@ -46,15 +46,15 @@ class SaveEnsembleLogs(PipelineNode):
         subset_indices = [np.array([i for i, t in enumerate(timestamps) if t["finished"] < s]) for s in steps]
 
         # iterate over the subset to compute performance over time
-        last_times_finished = 0
+        last_finished = 0
         for subset in subset_indices:
             if len(subset) == 0:
                 continue
             
-            times_finished = max(timestamps[s]["finished"] for s in subset)
-            if times_finished == last_times_finished:
+            finished = max(timestamps[s]["finished"] for s in subset)
+            if finished == last_finished:
                 continue
-            last_times_finished = times_finished
+            last_finished = finished
             subset_predictions = [np.copy(predictions[s]) for s in subset]
             subset_model_identifiers = [model_identifiers[s] for s in subset]
 
@@ -83,7 +83,7 @@ class SaveEnsembleLogs(PipelineNode):
             # write to log
             with open(ensemble_log_filename, "a") as f:
                 print(json.dumps([
-                    {"started": start_time, "finished": times_finished},
+                    finished,
                     metric_performances,
                     sorted([(identifier, weight) for identifier, weight in zip(ensemble.identifiers_, ensemble.weights_) if weight > 0],
                            key=lambda x: -x[1]),
@@ -92,7 +92,8 @@ class SaveEnsembleLogs(PipelineNode):
                         "ensemble_size": ensemble.ensemble_size,
                         "metric": autonet_config["train_metric"],
                         "minimize": ensemble.minimize,
-                        "sorted_initialization": ensemble.sorted_initialization,
+                        "sorted_initialization_n_best": ensemble.sorted_initialization_n_best,
+                        "only_consider_n_best": ensemble.only_consider_n_best,
                         "bagging": ensemble.bagging,
                         "mode": ensemble.mode,
                         "num_input_models": ensemble.num_input_models_,
