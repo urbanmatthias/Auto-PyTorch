@@ -5,7 +5,7 @@
 #MOAB -V
 #MOAB -E
 
-cd /home/fr/fr_fr/fr_mu37/Auto-PyTorch
+cd /work/ws/nemo/fr_mu37-autonet-0/Auto-PyTorch
 cp metalearning_data.tar.gz $TMPDIR
 cp Auto-PyTorch.simg $TMPDIR
 tar -zxf $TMPDIR/metalearning_data.tar.gz -C $TMPDIR
