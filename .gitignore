@@ -28,6 +28,7 @@ jobs.txt
 # Build
 *build/
 *autonet.egg-info
+*.simg
 
 # Metalearning data
 /metalearning_data/

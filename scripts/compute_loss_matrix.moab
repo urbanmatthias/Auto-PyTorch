@@ -7,14 +7,22 @@
 
 cd /home/fr/fr_fr/fr_mu37/Auto-PyTorch
 cp metalearning_data.tar.gz $TMPDIR
+cp Auto-PyTorch.simg $TMPDIR
 tar -zxf $TMPDIR/metalearning_data.tar.gz -C $TMPDIR
 JOBID=(${MOAB_JOBID//[/ })
-COMMAND="python scripts/build_meta_learning_model.py configs/benchmark/collect_metalearning_data.txt --result_dir $TMPDIR/benchmark_results --only_finished_runs --calculate_loss_matrix_entry $MOAB_JOBARRAYINDEX --loss_matrix_path ./loss_matrix/ --loss_matrix_num_files 1000 --lock_dir ./loss_matrix/ --save_path $TMPDIR --memory_limit_mb 7000 --time_limit_per_entry 8000"
-timeout -k 9.2h 9h $COMMAND 1> $TMPDIR/stdout.txt 2> $TMPDIR/stderr.txt
+
+S_TMP="/data/tmp"
+S_WORKSPACE="/data/workspace"
+S_AUTONET="/data/Auto-PyTorch"
+
+COMMAND="python $S_AUTONET/scripts/build_meta_learning_model.py $S_AUTONET/configs/benchmark/collect_metalearning_data.txt --result_dir $S_TMP/benchmark_results --only_finished_runs --calculate_loss_matrix_entry $MOAB_JOBARRAYINDEX --loss_matrix_dir $S_WORKSPACE/loss_matrix/ --loss_matrix_num_files 100 --lock_dir $S_WORKSPACE/loss_matrix/ --save_path $S_TMP --memory_limit_mb 7000 --time_limit_per_entry 8000"
+COMMAND="singularity exec -B $TMPDIR:$S_TMP -B $PWD:$S_WORKSPACE $TMPDIR/Auto-PyTorch.simg $COMMAND"
+COMMAND="timeout -k 9.2h 9h $COMMAND 1> $TMPDIR/stdout.txt 2> $TMPDIR/stderr.txt"
+echo $COMMAND
+$COMMAND
 
 EXIT_CODE=$?
 
 mkdir meta_outputs
 cp $TMPDIR/stdout.txt meta_outputs/stdout_${EXIT_CODE}_${MOAB_JOBARRAYINDEX}.txt
 cp $TMPDIR/stderr.txt meta_outputs/stderr_${EXIT_CODE}_${MOAB_JOBARRAYINDEX}.txt
-
