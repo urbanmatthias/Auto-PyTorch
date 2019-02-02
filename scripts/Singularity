@@ -22,6 +22,7 @@ Singularity container for Auto-PyTorch.
     git clone https://github.com/urbanmatthias/Auto-PyTorch.git
     cd Auto-PyTorch
     cat requirements.txt | xargs -n 1 -L 1 pip install
+    cat optional-requirements.txt | xargs -n 1 -L 1 pip install
     git submodule update --init --recursive
     cd /data/Auto-PyTorch/submodules/HpBandSter
     python setup.py install
