@@ -68,6 +68,7 @@ class AutoNetExactCostModel():
         return self
     
     def evaluate(self, config, budget):
+        print("Start evaluation at %s using %s with budget %s" % (time.time(), config, budget))
         if self.memory_limit_mb is None and self.time_limit is None:
             return self._evaluate(config, budget)
 

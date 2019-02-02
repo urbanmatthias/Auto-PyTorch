@@ -10,9 +10,11 @@ cp metalearning_data.tar.gz $TMPDIR
 tar -zxf $TMPDIR/metalearning_data.tar.gz -C $TMPDIR
 JOBID=(${MOAB_JOBID//[/ })
 COMMAND="python scripts/build_meta_learning_model.py configs/benchmark/collect_metalearning_data.txt --result_dir $TMPDIR/benchmark_results --only_finished_runs --calculate_loss_matrix_entry $MOAB_JOBARRAYINDEX --loss_matrix_path ./loss_matrix/ --loss_matrix_num_files 1000 --lock_dir ./loss_matrix/ --save_path $TMPDIR --memory_limit_mb 7000 --time_limit_per_entry 8000"
-$COMMAND 1> $TMPDIR/stdout.txt 2> $TMPDIR/stderr.txt
+timeout -k 9.2h 9h $COMMAND 1> $TMPDIR/stdout.txt 2> $TMPDIR/stderr.txt
+
+EXIT_CODE=$?
 
 mkdir meta_outputs
-cp $TMPDIR/stdout.txt meta_outputs/stdout_${MOAB_JOBARRAYINDEX}.txt
-cp $TMPDIR/stderr.txt meta_outputs/stderr_${MOAB_JOBARRAYINDEX}.txt
+cp $TMPDIR/stdout.txt meta_outputs/stdout_${EXIT_CODE}_${MOAB_JOBARRAYINDEX}.txt
+cp $TMPDIR/stderr.txt meta_outputs/stderr_${EXIT_CODE}_${MOAB_JOBARRAYINDEX}.txt
 
