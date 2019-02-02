@@ -11,6 +11,8 @@ cp Auto-PyTorch.simg $TMPDIR
 tar -zxf $TMPDIR/metalearning_data.tar.gz -C $TMPDIR
 JOBID=(${MOAB_JOBID//[/ })
 
+module load tools/singularity/2.6
+
 S_TMP="/data/tmp"
 S_WORKSPACE="/data/workspace"
 S_AUTONET="/data/Auto-PyTorch"
