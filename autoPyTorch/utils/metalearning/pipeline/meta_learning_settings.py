@@ -1,4 +1,5 @@
 import logging
+import time
 
 from autoPyTorch.pipeline.base.pipeline_node import PipelineNode
 from autoPyTorch.utils.benchmarking.benchmark_pipeline.benchmark_settings import \
@@ -14,6 +15,7 @@ class MetaLearningSettings(BenchmarkSettings):
         logger = logging.getLogger('metalearning')
         logger.setLevel(self.logger_settings[pipeline_config['log_level']])
         logger.info("Start building Meta Learning Models")
+        print("Start building Meta Learning Models", time.time())
 
         # log level for autonet is set in SetAutoNetConfig
 

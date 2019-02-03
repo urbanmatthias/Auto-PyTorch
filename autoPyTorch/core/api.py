@@ -151,6 +151,7 @@ class AutoNet():
     
         result = self.pipeline.fit_pipeline(pipeline_config=autonet_config, refit=refit_data,
                                     X_train=X_train, Y_train=Y_train, X_valid=X_valid, Y_valid=Y_valid)
+        print("Done")
         return result["final_metric_score"]
 
     def predict(self, X, return_probabilities=False):

@@ -67,8 +67,7 @@ class CrossValidation(SubPipelineNode):
         all_sub_pipeline_kwargs = dict()
         additional_results = dict()
         for i, split_indices in enumerate(cv_splits):
-            if num_cv_splits > 1:
-                logger.debug("[AutoNet] CV split " + str(i) + " of " + str(num_cv_splits))
+            logger.info("[AutoNet] CV split " + str(i) + " of " + str(num_cv_splits))
 
             # fit training pipeline
             cur_budget = self.get_current_budget(cv_index=i, budget=budget, budget_type=budget_type,
@@ -84,6 +83,7 @@ class CrossValidation(SubPipelineNode):
                 "loss_penalty": loss_penalty}
             all_sub_pipeline_kwargs[i] = deepcopy(sub_pipeline_kwargs)
             result = self.sub_pipeline.fit_pipeline(X=X, Y=Y, **sub_pipeline_kwargs)
+            logger.info("[AutoNet] Done with current split!")
 
             if result is not None:
                 loss += result['loss']
@@ -94,9 +94,11 @@ class CrossValidation(SubPipelineNode):
             raise Exception("Could not finish a single cv split due to memory or time limitation")
 
         # aggregate logs
+        logger.info("Aggregate the results across the splits")
         df = pd.DataFrame(infos)
         info = dict(df.mean())
-        additional_results = self.process_additional_results(additional_results=additional_results, all_sub_pipeline_kwargs=all_sub_pipeline_kwargs, X=X, Y=Y)
+        additional_results = self.process_additional_results(additional_results=additional_results, all_sub_pipeline_kwargs=all_sub_pipeline_kwargs,
+            X=X, Y=Y, logger=logger)
         loss = loss / num_cv_splits + loss_penalty
         return dict({'loss': loss, 'info': info}, **additional_results)
 
@@ -207,10 +209,11 @@ class CrossValidation(SubPipelineNode):
             cur_budget = budget / num_cv_splits
         return cur_budget
     
-    def process_additional_results(self, additional_results, all_sub_pipeline_kwargs, X, Y):
+    def process_additional_results(self, additional_results, all_sub_pipeline_kwargs, X, Y, logger):
         combinators = dict()
         data = dict()
         result = dict()
+        logger.info("Process %s additional result(s)" % len(additional_results))
         for split in additional_results.keys():
             for name in additional_results[split].keys():
                 combinators[name] = additional_results[split][name]["combinator"]
