@@ -134,7 +134,7 @@ class TrainNode(PipelineNode):
     def remove_batch_loss_computation_technique(self, name, batch_loss_computation_technique):
         del self.batch_loss_computation_techniques[name]
 
-    def get_hyperparameter_search_space(self, **pipeline_config):
+    def get_hyperparameter_search_space(self, dataset_info=None, **pipeline_config):
         pipeline_config = self.pipeline.get_pipeline_config(**pipeline_config)
         cs = ConfigSpace.ConfigurationSpace()
 

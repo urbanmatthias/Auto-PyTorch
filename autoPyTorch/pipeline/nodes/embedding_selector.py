@@ -64,7 +64,7 @@ class EmbeddingSelector(PipelineNode):
         ]
         return options
 
-    def get_hyperparameter_search_space(self, **pipeline_config):
+    def get_hyperparameter_search_space(self, dataset_info=None, **pipeline_config):
         pipeline_config = self.pipeline.get_pipeline_config(**pipeline_config)
         cs = ConfigSpace.ConfigurationSpace()
 
@@ -84,7 +84,7 @@ class EmbeddingSelector(PipelineNode):
 
         return self._apply_user_updates(cs)
     
-    def insert_inter_node_hyperparameter_dependencies(self, config_space, **pipeline_config):
+    def insert_inter_node_hyperparameter_dependencies(self, config_space, dataset_info=None, **pipeline_config):
         if pipeline_config['categorical_features'] is None or not any(pipeline_config['categorical_features']) or 'none' not in pipeline_config['preprocessors']:
             # no categorical features -> no embedding
             return config_space

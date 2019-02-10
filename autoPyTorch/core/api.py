@@ -58,14 +58,14 @@ class AutoNet():
             return self.autonet_config
         return self.pipeline.get_pipeline_config(**self.base_config)
     
-    def get_hyperparameter_search_space(self):
+    def get_hyperparameter_search_space(self, dataset_info=None):
         """Return the hyperparameter search space of AutoNet
         
         Returns:
             ConfigurationSpace -- The ConfigurationSpace that should be optimized
         """
 
-        return self.pipeline.get_hyperparameter_search_space(**self.get_current_autonet_config())
+        return self.pipeline.get_hyperparameter_search_space(dataset_info=dataset_info, **self.get_current_autonet_config())
 
     @classmethod
     def get_default_pipeline(cls):

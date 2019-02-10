@@ -34,10 +34,10 @@ class AutoNetFeatureData(AutoNet):
         # build the pipeline
         pipeline = Pipeline([
             AutoNetSettings(),
+            CreateDatasetInfo(),
             MetaLearning(),
             AddEnsembleLogger(),
             OptimizationAlgorithm([
-                CreateDatasetInfo(),
                 CrossValidation([
                     Imputation(),
                     NormalizationStrategySelector(),
@@ -89,9 +89,9 @@ class AutoNetFeatureData(AutoNet):
         # build the pipeline
         pipeline = Pipeline([
             AutoNetSettings(),
+            CreateDatasetInfo(),
             MetaLearning(),
             OptimizationAlgorithm([
-                CreateDatasetInfo(),
                 CrossValidation([
                     Imputation(),
                     NormalizationStrategySelector(),
