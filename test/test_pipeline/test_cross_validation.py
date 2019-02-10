@@ -51,7 +51,7 @@ class TestCrossValidationMethods(unittest.TestCase):
         cv_result = pipeline.fit_pipeline(hyperparameter_config=pipeline_config_space, pipeline_config=pipeline_config, 
                                           X_train=x_train, Y_train=y_train, X_valid=None, Y_valid=None, 
                                           budget=5, budget_type=BudgetTypeEpochs, one_hot_encoder=None,
-                                          optimize_start_time=time.time(), refit=False, dataset_info=dataset_info)
+                                          optimize_start_time=time.time(), refit=False, dataset_info=dataset_info, rescore=False)
 
         self.assertEqual(cv_result['loss'], 15)
         self.assertDictEqual(cv_result['info'], {'a': 30, 'b': 15})
@@ -69,7 +69,7 @@ class TestCrossValidationMethods(unittest.TestCase):
         cv_result = pipeline.fit_pipeline(hyperparameter_config=pipeline_config_space, pipeline_config=pipeline_config, 
                                           X_train=x_train, Y_train=y_train, X_valid=None, Y_valid=None, 
                                           budget=5, budget_type=BudgetTypeEpochs, one_hot_encoder=None,
-                                          optimize_start_time=time.time(), refit=False, dataset_info=dataset_info)
+                                          optimize_start_time=time.time(), refit=False, dataset_info=dataset_info, rescore=False)
 
         self.assertEqual(cv_result['loss'], 24)
         self.assertDictEqual(cv_result['info'], {'a': 21, 'b': 24})
@@ -92,7 +92,7 @@ class TestCrossValidationMethods(unittest.TestCase):
         cv_result = pipeline.fit_pipeline(hyperparameter_config=pipeline_config_space, pipeline_config=pipeline_config, 
                                           X_train=x_train, Y_train=y_train, X_valid=None, Y_valid=None, 
                                           budget=5, budget_type=BudgetTypeEpochs, one_hot_encoder=None,
-                                          optimize_start_time=time.time(), refit=False, dataset_info=dataset_info)
+                                          optimize_start_time=time.time(), refit=False, dataset_info=dataset_info, rescore=False)
 
         self.assertEqual(cv_result['loss'], 57)
         self.assertDictEqual(cv_result['info'], {'a': 114, 'b': 57})
@@ -108,7 +108,7 @@ class TestCrossValidationMethods(unittest.TestCase):
         cv_result = pipeline.fit_pipeline(hyperparameter_config=pipeline_config_space, pipeline_config=pipeline_config, 
                                           X_train=x_train, Y_train=y_train, X_valid=x_valid, Y_valid=y_valid, 
                                           budget=5, budget_type=BudgetTypeEpochs, one_hot_encoder=None,
-                                          optimize_start_time=time.time(), refit=False, dataset_info=dataset_info)
+                                          optimize_start_time=time.time(), refit=False, dataset_info=dataset_info, rescore=False)
 
         self.assertEqual(cv_result['loss'], 45)
         self.assertDictEqual(cv_result['info'], {'a': 171, 'b': 45})
