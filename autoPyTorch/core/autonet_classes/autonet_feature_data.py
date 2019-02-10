@@ -137,13 +137,14 @@ class AutoNetFeatureData(AutoNet):
         from sklearn.model_selection import KFold
 
         from autoPyTorch.components.preprocessing.feature_preprocessing import \
-                TruncatedSVD, FastICA, RandomKitchenSinks, KernelPCA, Nystroem
+                TruncatedSVD, FastICA, RandomKitchenSinks, KernelPCA, Nystroem, PowerTransformer
 
         from autoPyTorch.training.early_stopping import EarlyStopping
         from autoPyTorch.training.mixup import Mixup
 
         pre_selector = pipeline[PreprocessorSelector.get_name()]
         pre_selector.add_preprocessor('truncated_svd', TruncatedSVD)
+        pre_selector.add_preprocessor('power_transformer', PowerTransformer)
         pre_selector.add_preprocessor('fast_ica', FastICA)
         pre_selector.add_preprocessor('kitchen_sinks', RandomKitchenSinks)
         pre_selector.add_preprocessor('kernel_pca', KernelPCA)
