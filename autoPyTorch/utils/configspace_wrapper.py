@@ -32,3 +32,10 @@ class ConfigWrapper(object):
 
     def update(self, update_dict):
         self.config.update({"%s%s" % (self.config_prefix, key) : value for key, value in update_dict.items()})
+    
+    def to_dict(self):
+        result = dict()
+        for key, value in self.config.items():
+            if key.startswith(self.config_prefix):
+                result[key[len(self.config_prefix):]] = value
+        return result
