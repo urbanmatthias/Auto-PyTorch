@@ -21,8 +21,7 @@ class GetEnsembleTrajectories(PipelineNode):
             return {"trajectories": trajectories, "train_metric": train_metric}
 
         try:
-            res = logged_results_to_HBS_result(results_folder)
-            started = min(x.time_stamps["submitted"] for x in res.get_all_runs())
+            started = logged_results_to_HBS_result(run_result_dir).HB_config["time_ref"]
         except:
             return {"trajectories": trajectories, "train_metric": train_metric}
         

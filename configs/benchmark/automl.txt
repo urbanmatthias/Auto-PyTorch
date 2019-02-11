@@ -6,3 +6,4 @@ problem_type=feature_classification
 log_level=info
 num_runs=10
 test_split=0.0
+enable_ensemble=True
