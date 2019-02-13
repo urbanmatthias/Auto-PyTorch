@@ -10,6 +10,9 @@ class MetaLearningFit(PipelineNode):
             assert not pipeline_config["learn_initial_design"] and not pipeline_config["learn_warmstarted_model"]
             initial_design_learner[1].write_loss(pipeline_config["loss_matrix_dir"], pipeline_config["calculate_loss_matrix_entry"],
                 num_files=pipeline_config["loss_matrix_num_files"])
+        
+        if pipeline_config["print_missing_loss_matrix_entries"]:
+            print("\n".join(map(str, initial_design_learner[1].missing_loss_matrix_entries(pipeline_config["loss_matrix_dir"]))))
 
         if pipeline_config["learn_initial_design"]:
             assert pipeline_config["initial_design_max_total_budget"] is not None, "initial_design_max_total_budget needs to be specified"
@@ -53,6 +56,7 @@ class MetaLearningFit(PipelineNode):
             ConfigOption("save_path", default=".", type="directory"),
             ConfigOption("learn_warmstarted_model", default=False, type=to_bool),
             ConfigOption("learn_initial_design", default=False, type=to_bool),
+            ConfigOption("print_missing_loss_matrix_entries", default=False, type=to_bool),
             ConfigOption("calculate_loss_matrix_entry", default=-1, type=int),
             ConfigOption("loss_matrix_dir", default="./loss_matrix.txt", type=to_bool),
             ConfigOption("loss_matrix_num_files", default=1, type=int),

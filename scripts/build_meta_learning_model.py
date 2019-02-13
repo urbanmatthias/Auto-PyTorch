@@ -24,6 +24,7 @@ if __name__ == "__main__":
     parser.add_argument("--learn_warmstarted_model", action='store_true', help="Learn a warmstarted model")
     parser.add_argument("--learn_initial_design", action='store_true', help="Learn an initial_design")
     parser.add_argument("--calculate_loss_matrix_entry", default=-1, type=int, help="Calculate an entry of the cost matrix used for initial design")
+    parser.add_argument("--print_missing_loss_matrix_entries", action='store_true', help='Which loss matrix entries are not yet computed.')
     parser.add_argument("--loss_matrix_dir", default="./loss_matrix/", type=str, help="Path to directory where losses for initial design will be stored/are stored.")
     parser.add_argument("--loss_matrix_num_files", default=1, type=int, help="Number of files in which the loss matrix data will be split up")
     parser.add_argument("--memory_limit_mb", default=None, type=int)
@@ -64,6 +65,7 @@ if __name__ == "__main__":
     config["only_finished_runs"] = args.only_finished_runs
     config["initial_design_max_total_budget"] = args.initial_design_max_total_budget
     config["initial_design_convergence_threshold"] = args.initial_design_convergence_threshold
+    config["print_missing_loss_matrix_entries"] = args.print_missing_loss_matrix_entries
     config["lock_dir"] = args.lock_dir
 
     builder = MetaModelBuilder()
