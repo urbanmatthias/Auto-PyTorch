@@ -47,6 +47,9 @@ class TrainNode(PipelineNode):
         logger = logging.getLogger('autonet')
         logger.debug("Start train. Budget: " + str(budget))
 
+        if pipeline_config["torch_num_threads"] > 0:
+            torch.set_num_threads(pipeline_config["torch_num_threads"])
+
         trainer = Trainer(
             model=network,
             loss_computation=self.batch_loss_computation_techniques[hyperparameter_config["batch_loss_computation_technique"]](),
@@ -110,10 +113,10 @@ class TrainNode(PipelineNode):
 
 
     def predict(self, pipeline_config, network, predict_loader):
-        if not torch.cuda.is_available():
-            pipeline_config["cuda"] = False
+        if pipeline_config["torch_num_threads"] > 0:
+            torch.set_num_threads(pipeline_config["torch_num_threads"])
 
-        device = torch.device('cuda:0' if pipeline_config['cuda'] else 'cpu')
+        device = Trainer.get_device(pipeline_config)
         
         Y = predict(network, predict_loader, device)
         return {'Y': Y.detach().cpu().numpy()}
@@ -155,6 +158,7 @@ class TrainNode(PipelineNode):
                 type=str, list=True, choices=list(self.batch_loss_computation_techniques.keys())),
             ConfigOption("minimize", default=self.default_minimize_value, type=to_bool, choices=[True, False]),
             ConfigOption("cuda", default=True, type=to_bool, choices=[True, False]),
+            ConfigOption("torch_num_threads", default=1, type=int),
             ConfigOption("full_eval_each_epoch", default=False, type=to_bool, choices=[True, False],
                 info="Whether to evaluate everything every epoch. Results in more useful output"),
             ConfigOption("best_over_epochs", default=False, type=to_bool, choices=[True, False],
