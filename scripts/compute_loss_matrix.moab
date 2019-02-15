@@ -1,29 +1,36 @@
 #!/bin/bash
-#MOAB -t 1-10000
-#MOAB -N METAMODEL
-#MOAB -l nodes=1:ppn=1,walltime=10:00:00,pmem=8gb
+#MOAB -t 30001-40000
+#MOAB -N LOSSMATRIX
+#MOAB -l nodes=1:ppn=2,walltime=10:00:00,pmem=9gb
 #MOAB -V
 #MOAB -E
+#MOAB -o /dev/null
+#MOAB -e /dev/null
 
-cd /work/ws/nemo/fr_mu37-autonet-0/Auto-PyTorch
+
+cd $HOME/Auto-PyTorch
 cp metalearning_data.tar.gz $TMPDIR
 cp Auto-PyTorch.simg $TMPDIR
-tar -zxf $TMPDIR/metalearning_data.tar.gz -C $TMPDIR
+
+WORKSPACE=$PWD
+cd $TMPDIR
+
+tar -zxf metalearning_data.tar.gz
 JOBID=(${MOAB_JOBID//[/ })
 
 module load tools/singularity/2.6
 
-S_TMP="/data/tmp"
-S_WORKSPACE="/data/workspace"
-S_AUTONET="/data/Auto-PyTorch"
-
-COMMAND="python $S_AUTONET/scripts/build_meta_learning_model.py $S_AUTONET/configs/benchmark/collect_metalearning_data.txt --result_dir $S_TMP/benchmark_results --only_finished_runs --calculate_loss_matrix_entry $MOAB_JOBARRAYINDEX --loss_matrix_dir $S_WORKSPACE/loss_matrix/ --loss_matrix_num_files 100 --lock_dir $S_WORKSPACE/loss_matrix/ --save_path $S_TMP --memory_limit_mb 7000 --time_limit_per_entry 8000"
-COMMAND="singularity exec -B $TMPDIR:$S_TMP -B $PWD:$S_WORKSPACE $TMPDIR/Auto-PyTorch.simg $COMMAND"
+COMMAND="python /data/Auto-PyTorch/scripts/build_meta_learning_model.py /data/Auto-PyTorch/configs/benchmark/collect_metalearning_data.txt --result_dir $TMPDIR/benchmark_results --only_finished_runs --calculate_loss_matrix_entry $MOAB_JOBARRAYINDEX --loss_matrix_dir $WORKSPACE/loss_matrix/ --loss_matrix_num_files 100 --lock_dir $WORKSPACE/loss_matrix/ --save_path $TMPDIR --memory_limit_mb 7000 --time_limit_per_entry 8000"
+COMMAND="singularity exec Auto-PyTorch.simg $COMMAND"
 echo $COMMAND
-timeout -k 9.2h 9h $COMMAND  1> $TMPDIR/stdout.txt 2> $TMPDIR/stderr.txt
+timeout -k 9.2h 9h $COMMAND  1> stdout.txt 2> stderr.txt
 
 EXIT_CODE=$?
 
-mkdir meta_outputs
-cp $TMPDIR/stdout.txt meta_outputs/stdout_${EXIT_CODE}_${MOAB_JOBARRAYINDEX}.txt
-cp $TMPDIR/stderr.txt meta_outputs/stderr_${EXIT_CODE}_${MOAB_JOBARRAYINDEX}.txt
+if [ $EXIT_CODE -ne 0 ]
+then
+    cd $WORKSPACE
+    mkdir meta_outputs
+    cp $TMPDIR/stdout.txt meta_outputs/stdout_${EXIT_CODE}_${MOAB_JOBARRAYINDEX}.txt
+    cp $TMPDIR/stderr.txt meta_outputs/stderr_${EXIT_CODE}_${MOAB_JOBARRAYINDEX}.txt
+fi
