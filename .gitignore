@@ -35,6 +35,10 @@ jobs.txt
 /metalearning_comparison_results/
 /meta_outputs/
 /metamodels/
+loss_matrix/
+mongo_db.conf
+scripts/start_mongod.sh
+
 
 
 # Datasets
