@@ -14,7 +14,7 @@ class AutoNetFeatureData(AutoNet):
             CrossValidation, Imputation, NormalizationStrategySelector, OneHotEncoding, PreprocessorSelector, ResamplingStrategySelector, \
             EmbeddingSelector, NetworkSelector, OptimizerSelector, LearningrateSchedulerSelector, LogFunctionsSelector, MetricSelector, \
             LossModuleSelector, TrainNode, CreateDataLoader, CreateDatasetInfo, EnableComputePredictionsForEnsemble, SavePredictionsForEnsemble, \
-            BuildEnsemble, AddEnsembleLogger
+            BuildEnsemble, AddEnsembleLogger, InitializationSelector
         
         # build the pipeline
         pipeline = Pipeline([
@@ -31,6 +31,7 @@ class AutoNetFeatureData(AutoNet):
                     ResamplingStrategySelector(),
                     EmbeddingSelector(),
                     NetworkSelector(),
+                    InitializationSelector(),
                     OptimizerSelector(),
                     LearningrateSchedulerSelector(),
                     LogFunctionsSelector(),
@@ -54,7 +55,7 @@ class AutoNetFeatureData(AutoNet):
         from autoPyTorch.pipeline.nodes import AutoNetSettings, MetaLearning, OptimizationAlgorithm, \
             CrossValidation, Imputation, NormalizationStrategySelector, OneHotEncoding, PreprocessorSelector, ResamplingStrategySelector, \
             EmbeddingSelector, NetworkSelector, OptimizerSelector, LearningrateSchedulerSelector, LogFunctionsSelector, MetricSelector, \
-            LossModuleSelector, TrainNode, CreateDataLoader, CreateDatasetInfo
+            LossModuleSelector, TrainNode, CreateDataLoader, CreateDatasetInfo, InitializationSelector
         
         # build the pipeline
         pipeline = Pipeline([
@@ -70,6 +71,7 @@ class AutoNetFeatureData(AutoNet):
                     ResamplingStrategySelector(),
                     EmbeddingSelector(),
                     NetworkSelector(),
+                    InitializationSelector(),
                     OptimizerSelector(),
                     LearningrateSchedulerSelector(),
                     LogFunctionsSelector(),
@@ -128,6 +130,10 @@ class AutoNetFeatureData(AutoNet):
         net_selector.add_network('shapedmlpnet', ShapedMlpNet)
         net_selector.add_network('resnet',       ResNet)
         net_selector.add_network('shapedresnet', ShapedResNet)
+
+        init_selector = pipeline[InitializationSelector.get_name()]
+        init_selector.add_initialization_method("sparse", SparseInitialization)
+        init_selector.add_initializer("simple_initializer", SimpleInitializer)
 
         opt_selector = pipeline[OptimizerSelector.get_name()]
         opt_selector.add_optimizer('adam', AdamOptimizer)
