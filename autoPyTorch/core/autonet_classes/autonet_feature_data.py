@@ -54,7 +54,7 @@ class AutoNetFeatureData(AutoNet):
         from autoPyTorch.pipeline.nodes import AutoNetSettings, MetaLearning, OptimizationAlgorithm, \
             CrossValidation, Imputation, NormalizationStrategySelector, OneHotEncoding, PreprocessorSelector, ResamplingStrategySelector, \
             EmbeddingSelector, NetworkSelector, OptimizerSelector, LearningrateSchedulerSelector, LogFunctionsSelector, MetricSelector, \
-            LossModuleSelector, TrainNode, CreateDataLoader, CreateDatasetInfo,
+            LossModuleSelector, TrainNode, CreateDataLoader, CreateDatasetInfo
         
         # build the pipeline
         pipeline = Pipeline([
