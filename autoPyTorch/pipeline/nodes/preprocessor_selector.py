@@ -48,7 +48,7 @@ class PreprocessorSelector(PipelineNode):
     def remove_preprocessor(self, name):
         del self.preprocessors[name]
 
-    def get_hyperparameter_search_space(self, **pipeline_config):
+    def get_hyperparameter_search_space(self, dataset_info=None, **pipeline_config):
         pipeline_config = self.pipeline.get_pipeline_config(**pipeline_config)
         cs = ConfigSpace.ConfigurationSpace()
 
@@ -58,7 +58,7 @@ class PreprocessorSelector(PipelineNode):
         for preprocessor_name, preprocessor_type in self.preprocessors.items():
             if (preprocessor_name not in possible_preprocessors):
                 continue
-            preprocessor_cs = preprocessor_type.get_hyperparameter_search_space()
+            preprocessor_cs = preprocessor_type.get_hyperparameter_search_space(dataset_info=dataset_info)
             cs.add_configuration_space( prefix=preprocessor_name, configuration_space=preprocessor_cs, delimiter=ConfigWrapper.delimiter, 
                                         parent_hyperparameter={'parent': selector, 'value': preprocessor_name})
 

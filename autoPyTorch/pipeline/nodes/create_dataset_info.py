@@ -18,6 +18,8 @@ class DataSetInfo():
         self.categorical_features = []
         self.x_shape = []
         self.y_shape = []
+        self.x_min_value = None
+        self.x_max_value = None
         self.is_sparse = False
 
 class CreateDatasetInfo(PipelineNode):
@@ -28,6 +30,9 @@ class CreateDatasetInfo(PipelineNode):
 
         info.x_shape = X_train.shape
         info.y_shape = Y_train.shape
+
+        info.x_min_value = X_train.min()
+        info.x_max_value = X_train.max()
 
         if 'categorical_features' in pipeline_config and pipeline_config['categorical_features']:
             info.categorical_features = pipeline_config['categorical_features']

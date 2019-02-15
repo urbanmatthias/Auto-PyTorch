@@ -54,7 +54,7 @@ class CreateDataLoader(PipelineNode):
 
         return {'predict_loader': predict_loader}
 
-    def get_hyperparameter_search_space(self, **pipeline_config):
+    def get_hyperparameter_search_space(self, dataset_info=None, **pipeline_config):
         import ConfigSpace
         import ConfigSpace.hyperparameters as CSH
 

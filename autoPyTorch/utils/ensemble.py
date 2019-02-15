@@ -4,7 +4,6 @@ import numpy as np
 import json
 import math
 from autoPyTorch.components.ensembles.ensemble_selection import EnsembleSelection
-from autoPyTorch.core.api import AutoNet
 
 def build_ensemble(result, train_metric, minimize,
         ensemble_size, all_predictions, labels, model_identifiers,
@@ -52,12 +51,15 @@ class test_predictions_for_ensemble():
         self.autonet = autonet
         self.X_test = X_test
         self.Y_test = Y_test
+        from autoPyTorch.core.api import AutoNet
+        self.predict = AutoNet.predict
+
     
     def __call__(self, model, epochs):
         if self.Y_test is None or self.X_test is None:
             return float("nan")
         
-        return AutoNet.predict(self.autonet, self.X_test, return_probabilities=True)[1], self.Y_test
+        return self.predict(self.autonet, self.X_test, return_probabilities=True)[1], self.Y_test
 
 def combine_predictions(data, pipeline_kwargs, X, Y):
     all_indices = None

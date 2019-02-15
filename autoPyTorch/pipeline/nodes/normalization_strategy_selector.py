@@ -67,7 +67,7 @@ class NormalizationStrategySelector(PipelineNode):
         ]
         return options
     
-    def get_hyperparameter_search_space(self, **pipeline_config):
+    def get_hyperparameter_search_space(self, dataset_info=None, **pipeline_config):
         pipeline_config = self.pipeline.get_pipeline_config(**pipeline_config)
         cs = ConfigSpace.ConfigurationSpace()
 

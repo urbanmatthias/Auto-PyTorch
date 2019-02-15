@@ -54,7 +54,7 @@ class LossModuleSelector(PipelineNode):
     def remove_loss_module(self, name):
         del self.loss_modules[name]
 
-    def get_hyperparameter_search_space(self, **pipeline_config):
+    def get_hyperparameter_search_space(self, dataset_info=None, **pipeline_config):
         pipeline_config = self.pipeline.get_pipeline_config(**pipeline_config)
         cs = ConfigSpace.ConfigurationSpace()
 

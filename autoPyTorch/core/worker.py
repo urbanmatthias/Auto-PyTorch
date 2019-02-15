@@ -12,11 +12,12 @@ __license__ = "BSD"
 
 class ModuleWorker(Worker):
     def __init__(self, pipeline, pipeline_config,
-            X_train, Y_train, X_valid, Y_valid, budget_type, max_budget, *args, **kwargs):
+            X_train, Y_train, X_valid, Y_valid, dataset_info, budget_type, max_budget, *args, **kwargs):
         self.X_train = X_train #torch.from_numpy(X_train).float()
         self.Y_train = Y_train #torch.from_numpy(Y_train).long()
         self.X_valid = X_valid
         self.Y_valid = Y_valid
+        self.dataset_info = dataset_info
 
         self.max_budget = max_budget
         self.budget_type = budget_type
@@ -79,7 +80,7 @@ class ModuleWorker(Worker):
             return self.pipeline.fit_pipeline(hyperparameter_config=config, pipeline_config=self.pipeline_config, 
                                             X_train=self.X_train, Y_train=self.Y_train, X_valid=self.X_valid, Y_valid=self.Y_valid, 
                                             budget=budget, budget_type=self.budget_type, max_budget=self.max_budget, optimize_start_time=optimize_start_time,
-                                            refit=False, rescore=False, hyperparameter_config_id=config_id)
+                                            refit=False, rescore=False, hyperparameter_config_id=config_id, dataset_info=self.dataset_info)
         except Exception as e:
             if 'use_tensorboard_logger' in self.pipeline_config and self.pipeline_config['use_tensorboard_logger']:            
                 import tensorboard_logger as tl

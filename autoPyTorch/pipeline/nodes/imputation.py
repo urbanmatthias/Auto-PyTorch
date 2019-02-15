@@ -50,7 +50,7 @@ class Imputation(PipelineNode):
         return { 'X': X }
 
     @staticmethod
-    def get_hyperparameter_search_space(**pipeline_config):
+    def get_hyperparameter_search_space(dataset_info=None, **pipeline_config):
 
         possible_strategies = set(Imputation.strategies).intersection(pipeline_config['imputation_strategies'])
 

@@ -57,7 +57,7 @@ class OptimizationAlgorithm(SubPipelineNode):
         self.budget_types["time"] = BudgetTypeTime
         self.budget_types["epochs"] = BudgetTypeEpochs
 
-    def fit(self, pipeline_config, X_train, Y_train, X_valid, Y_valid, result_loggers, initial_design=None, warmstarted_model=None, refit=None):
+    def fit(self, pipeline_config, X_train, Y_train, X_valid, Y_valid, result_loggers, dataset_info, initial_design=None, warmstarted_model=None, refit=None):
         logger = logging.getLogger('autonet')
         res = None
 
@@ -75,7 +75,7 @@ class OptimizationAlgorithm(SubPipelineNode):
                                     hyperparameter_config=refit["hyperparameter_config"], pipeline_config=pipeline_config, 
                                     X_train=X_train, Y_train=Y_train, X_valid=X_valid, Y_valid=Y_valid, 
                                     budget=refit["budget"], rescore=refit["rescore"], budget_type=self.budget_types[pipeline_config['budget_type']],
-                                    optimize_start_time=time.time(), refit=True, hyperparameter_config_id=None)
+                                    optimize_start_time=time.time(), refit=True, hyperparameter_config_id=None, dataset_info=dataset_info)
             logger.info("Done Refitting")
             
             return {'final_metric_score': res['loss'],
@@ -92,14 +92,14 @@ class OptimizationAlgorithm(SubPipelineNode):
                 
 
             self.run_worker(pipeline_config=pipeline_config, run_id=run_id, task_id=task_id, ns_credentials_dir=ns_credentials_dir,
-                network_interface_name=network_interface_name, X_train=X_train, Y_train=Y_train, X_valid=X_valid, Y_valid=Y_valid)
+                network_interface_name=network_interface_name, X_train=X_train, Y_train=Y_train, X_valid=X_valid, Y_valid=Y_valid, dataset_info=dataset_info)
 
             # start BOHB if not on cluster or on master node in cluster
             res = None
             if task_id in [1, -1]:
                 self.run_optimization_algorithm(pipeline_config=pipeline_config, run_id=run_id, ns_host=ns_host,
                     ns_port=ns_port, nameserver=NS, task_id=task_id, result_loggers=result_loggers,
-                    initial_design=initial_design, warmstarted_model=warmstarted_model, logger=logger)
+                    dataset_info=dataset_info, initial_design=initial_design, warmstarted_model=warmstarted_model, logger=logger)
             
 
                 res = self.parse_results(pipeline_config["result_logger_dir"])
@@ -228,7 +228,7 @@ class OptimizationAlgorithm(SubPipelineNode):
 
 
     def run_worker(self, pipeline_config, run_id, task_id, ns_credentials_dir, network_interface_name,
-            X_train, Y_train, X_valid, Y_valid):
+            X_train, Y_train, X_valid, Y_valid, dataset_info):
         if not task_id == -1:
             time.sleep(5)
         while not os.path.isdir(ns_credentials_dir):
@@ -236,7 +236,7 @@ class OptimizationAlgorithm(SubPipelineNode):
         host = nic_name_to_host(network_interface_name)
         
         worker = ModuleWorker(pipeline=self.sub_pipeline, pipeline_config=pipeline_config,
-                              X_train=X_train, Y_train=Y_train, X_valid=X_valid, Y_valid=Y_valid, 
+                              X_train=X_train, Y_train=Y_train, X_valid=X_valid, Y_valid=Y_valid, dataset_info=dataset_info,
                               budget_type=self.budget_types[pipeline_config['budget_type']],
                               max_budget=pipeline_config["max_budget"],
                               host=host, run_id=run_id,
@@ -247,8 +247,8 @@ class OptimizationAlgorithm(SubPipelineNode):
 
 
     def run_optimization_algorithm(self, pipeline_config, run_id, ns_host, ns_port, nameserver, task_id, result_loggers,
-            initial_design, warmstarted_model, logger):
-        config_space = self.pipeline.get_hyperparameter_search_space(**pipeline_config)
+            dataset_info, initial_design, warmstarted_model, logger):
+        config_space = self.pipeline.get_hyperparameter_search_space(dataset_info=dataset_info, **pipeline_config)
 
 
         logger.info("[AutoNet] Start " + pipeline_config["algorithm"])

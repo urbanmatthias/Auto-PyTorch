@@ -79,7 +79,7 @@ class Pipeline():
 
         return pipeline_node
 
-    def get_hyperparameter_search_space(self, **pipeline_config):
+    def get_hyperparameter_search_space(self, dataset_info=None, **pipeline_config):
         pipeline_config = self.get_pipeline_config(**pipeline_config)
 
         if "hyperparameter_search_space_updates" in pipeline_config and pipeline_config["hyperparameter_search_space_updates"] is not None:
@@ -92,11 +92,11 @@ class Pipeline():
             cs = ConfigSpace.ConfigurationSpace()
 
         for name, node in self._pipeline_nodes.items():
-            config_space = node.get_hyperparameter_search_space(**pipeline_config)
+            config_space = node.get_hyperparameter_search_space(dataset_info=dataset_info, **pipeline_config)
             cs.add_configuration_space(prefix=name, configuration_space=config_space, delimiter=ConfigWrapper.delimiter)
         
         for name, node in self._pipeline_nodes.items():
-            cs = node.insert_inter_node_hyperparameter_dependencies(cs, **pipeline_config)
+            cs = node.insert_inter_node_hyperparameter_dependencies(cs, dataset_info=dataset_info, **pipeline_config)
 
         return cs
 

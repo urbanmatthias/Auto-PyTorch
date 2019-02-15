@@ -9,6 +9,7 @@ from autoPyTorch.utils.benchmarking.benchmark import Benchmark
 from hpbandster.core.nameserver import nic_name_to_host
 
 import argparse
+import json
 
 __author__ = "Max Dippel, Michael Burkart and Matthias Urban"
 __version__ = "0.0.1"
@@ -24,13 +25,13 @@ if __name__ == "__main__":
     parser.add_argument("--learn_warmstarted_model", action='store_true', help="Learn a warmstarted model")
     parser.add_argument("--learn_initial_design", action='store_true', help="Learn an initial_design")
     parser.add_argument("--calculate_loss_matrix_entry", default=-1, type=int, help="Calculate an entry of the cost matrix used for initial design")
-    parser.add_argument("--loss_matrix_dir", default="./loss_matrix/", type=str, help="Path to directory where losses for initial design will be stored/are stored.")
-    parser.add_argument("--loss_matrix_num_files", default=1, type=int, help="Number of files in which the loss matrix data will be split up")
+    parser.add_argument("--print_missing_loss_matrix_entries", action='store_true', help='Which loss matrix entries are not yet computed.')
     parser.add_argument("--memory_limit_mb", default=None, type=int)
     parser.add_argument("--time_limit_per_entry", default=None, type=int)
     parser.add_argument("--initial_design_max_total_budget", default=None, type=float)    
     parser.add_argument("--initial_design_convergence_threshold", default=None, type=float)
-    parser.add_argument("--lock_dir", default=None, type=str)
+    parser.add_argument("--loss_matrix_db_config_file", default=None, type=str)
+    parser.add_argument("--loss_matrix_name", default="loss_matrix_collection", type=str)
     parser.add_argument('benchmark', help='The benchmark to learn from')
 
     args = parser.parse_args()
@@ -59,12 +60,16 @@ if __name__ == "__main__":
     config["learn_warmstarted_model"] = args.learn_warmstarted_model
     config["learn_initial_design"] = args.learn_initial_design
     config["calculate_loss_matrix_entry"] = args.calculate_loss_matrix_entry 
-    config["loss_matrix_dir"] =  args.loss_matrix_dir
-    config["loss_matrix_num_files"] =  args.loss_matrix_num_files
     config["only_finished_runs"] = args.only_finished_runs
     config["initial_design_max_total_budget"] = args.initial_design_max_total_budget
     config["initial_design_convergence_threshold"] = args.initial_design_convergence_threshold
-    config["lock_dir"] = args.lock_dir
+    config["print_missing_loss_matrix_entries"] = args.print_missing_loss_matrix_entries
+    config["loss_matrix_db_config"] = dict()
+    config["loss_matrix_name"] = args.loss_matrix_name
+
+    if args.loss_matrix_db_config_file is not None:
+        with open(args.loss_matrix_db_config_file) as f:
+            config["loss_matrix_db_config"] = json.load(f)
 
     builder = MetaModelBuilder()
     builder.run(**config)

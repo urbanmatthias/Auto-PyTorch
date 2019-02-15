@@ -101,7 +101,7 @@ class OpenMlReader(DataReader):
 
     def read(self, **kwargs):
         """
-        Read the data from given openml datset file.
+        Read the data from given openml dataset file.
         
         Arguments:
             auto_convert: Automatically convert data after reading.

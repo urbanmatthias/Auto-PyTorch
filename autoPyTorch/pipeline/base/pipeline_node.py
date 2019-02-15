@@ -93,7 +93,7 @@ class PipelineNode(Node):
 
 
     # VIRTUAL
-    def get_hyperparameter_search_space(self, **pipeline_config):
+    def get_hyperparameter_search_space(self, dataset_info=None, **pipeline_config):
         """Get hyperparameter that should be optimized.
         
         Returns:
@@ -104,7 +104,7 @@ class PipelineNode(Node):
         return self._apply_user_updates(ConfigSpace.ConfigurationSpace())
     
     # VIRTUAL
-    def insert_inter_node_hyperparameter_dependencies(self, config_space, **pipeline_config):
+    def insert_inter_node_hyperparameter_dependencies(self, config_space, dataset_info=None, **pipeline_config):
         """Insert Conditions and Forbiddens of hyperparameters of different nodes
 
         Returns:
