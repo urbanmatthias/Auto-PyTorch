@@ -6,19 +6,15 @@
 
 cd /home/fr/fr_fr/fr_mu37/Auto-PyTorch
 cp metalearning_data.tar.gz $TMPDIR
-cp loss_matrix.txt $TMPDIR
+
 tar -zxf $TMPDIR/metalearning_data.tar.gz -C $TMPDIR
-JOBID=(${MOAB_JOBID//[/ })
-COMMAND="python scripts/build_meta_learning_model.py configs/benchmark/collect_metalearning_data.txt --result_dir $TMPDIR/benchmark_results --only_finished_runs --save_path $TMPDIR --learn_warmstarted_model --learn_initial_design --loss_matrix_path $TMPDIR/loss_matrix.txt --initial_design_max_total_budget 90000 --initial_design_convergence_threshold 0.01"
+
+COMMAND="python scripts/build_meta_learning_model.py configs/benchmark/collect_metalearning_data.txt --result_dir $TMPDIR/benchmark_results --only_finished_runs --save_path $TMPDIR --learn_warmstarted_model --learn_initial_design --initial_design_max_total_budget 90000 --initial_design_convergence_threshold 0.0001 --loss_matrix_name collect_metalearning_data --loss_matrix_db_config_file mongo_db.conf"
 $COMMAND 1> $TMPDIR/stdout.txt 2> $TMPDIR/stderr.txt
 
 mkdir meta_outputs
-cp $TMPDIR/stdout.txt meta_outputs/stdout_${MOAB_JOBARRAYINDEX}.txt
-cp $TMPDIR/stderr.txt meta_outputs/stderr_${MOAB_JOBARRAYINDEX}.txt
+cp $TMPDIR/stdout.txt meta_outputs/stdout_build_meta_model.txt
+cp $TMPDIR/stderr.txt meta_outputs/stderr_build_meta_model.txt
 
-if [ $MOAB_JOBARRAYINDEX -eq 1 ]
-then
-    echo "Copy metamodels"
-    cp $TMPDIR/initial_design.pkl .
-    cp $TMPDIR/warmstarted_model.pkl .
-fi
+cp $TMPDIR/initial_design.pkl .
+cp $TMPDIR/warmstarted_model.pkl .
