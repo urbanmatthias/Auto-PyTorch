@@ -35,7 +35,7 @@ if __name__ == "__main__":
     benchmark_config.update(config_parser.read(host_config_file))
 
     if (args.result_dir is not None):
-        benchmark_config['result_dir'] = os.path.join(ConfigFileParser.get_autonet_home(), args.result_dir)
+        benchmark_config['result_dir'] = os.path.abspath(args.result_dir)
 
     if (args.partial_benchmark is not None):
         split = args.partial_benchmark.split(',')
