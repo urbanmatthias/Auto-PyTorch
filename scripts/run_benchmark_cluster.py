@@ -74,8 +74,8 @@ if __name__ == "__main__":
         "AUTONET_HOME": autonet_home,
         "BENCHMARK": benchmark,
         "HOST_CONFIG": host_config_file,
-        "HOST_CONFIG_ORIG": host_config_orig,
-        "BENCHMARK_ORIG": args.benchmark,
+        "ORIG_HOST_CONFIG": host_config_orig,
+        "ORIG_BENCHMARK": args.benchmark,
         "RESULT_DIR": result_dir
     }
 
@@ -133,7 +133,10 @@ if __name__ == "__main__":
                 # submit job
                 os.chdir(output_dir)
                 print("Calling %s in %s" % (command, os.getcwd()))
-                command_output = subprocess.check_output(command, shell=True)
+                try:
+                    command_output = subprocess.check_output(command, shell=True)
+                except subprocess.CalledProcessError as e:
+                    print("Warning: %s" % e)
                 os.chdir(base_dir)
 
                 # save output and info data

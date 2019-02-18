@@ -10,7 +10,7 @@ module load tools/singularity/2.6
 
 cd $TMPDIR
 JOBID=(${MOAB_JOBID//[/ })
-COMMAND="python /data/Auto-PyTorch/scripts/run_benchmark.py /data/Auto-PyTorch/$$BENCHMARK_ORIG --partial_benchmark $$INSTANCE_ID,$$CONFIG_ID,$$RUN_NUMBER --host_config /data/Auto-PyTorch/$$HOST_CONFIG_ORIG --result_dir $TMPDIR/benchmark_results --run_id $JOBID --task_id $MOAB_JOBARRAYINDEX"
+COMMAND="python /data/Auto-PyTorch/scripts/run_benchmark.py /data/Auto-PyTorch/$$ORIG_BENCHMARK --partial_benchmark $$INSTANCE_ID,$$CONFIG_ID,$$RUN_NUMBER --host_config /data/Auto-PyTorch/$$ORIG_HOST_CONFIG --result_dir $TMPDIR/benchmark_results --run_id $JOBID --task_id $MOAB_JOBARRAYINDEX"
 COMMAND="singularity exec -B $$AUTONET_HOME:/external_autonet_home/ Auto-PyTorch.simg $COMMAND"
 echo "Run benchmark: $COMMAND"
 timeout -k $$TIME_LIMIT[1] $$TIME_LIMIT[0] $COMMAND 1> $TMPDIR/stdout.txt 2> $TMPDIR/stderr.txt
