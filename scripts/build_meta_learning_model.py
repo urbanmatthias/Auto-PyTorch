@@ -21,7 +21,7 @@ if __name__ == "__main__":
     parser.add_argument("--run_id_range", default=None, help="An id for the run. A range of run ids can be given: start-stop.")
     parser.add_argument("--result_dir", default=None, help="Override result dir in benchmark config.")
     parser.add_argument("--only_finished_runs", action='store_true', help="Only consider finished runs")
-    parser.add_argument("--save_path", default=".", help="Store the meta learning models in given filename")
+    parser.add_argument("--save_path", default="metamodels", help="Store the meta learning models in given filename")
     parser.add_argument("--learn_warmstarted_model", action='store_true', help="Learn a warmstarted model")
     parser.add_argument("--learn_initial_design", action='store_true', help="Learn an initial_design")
     parser.add_argument("--calculate_loss_matrix_entry", default=-1, type=int, help="Calculate an entry of the cost matrix used for initial design")

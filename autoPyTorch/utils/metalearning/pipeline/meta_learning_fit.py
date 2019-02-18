@@ -17,6 +17,9 @@ class MetaLearningFit(PipelineNode):
                 collection_name=pipeline_config["loss_matrix_name"],
                 db_config=pipeline_config["loss_matrix_db_config"]))))
 
+        if not os.path.exists(pipeline_config["save_path"]):
+            os.mkdir(pipeline_config["save_path"])
+
         if pipeline_config["learn_initial_design"]:
             assert pipeline_config["initial_design_max_total_budget"] is not None, "initial_design_max_total_budget needs to be specified"
             assert pipeline_config["initial_design_convergence_threshold"] is not None, "initial_design_convergence_threshold needs to be specified"
