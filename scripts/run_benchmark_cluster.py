@@ -20,7 +20,6 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Run benchmarks for autonet.')
     parser.add_argument("--partial_benchmark", default=None, help="Only run a part of the benchmark. Run other parts later. 3-tuple: instance_slice, autonet_config_slice, run_number_range.")
     parser.add_argument("--time_bonus", default=[7200, 8200, 10800], nargs="+", help="Give the job some more time.")
-    parser.add_argument("--time_limit", default=345600, help="The maximum time the job is allowed to take")
     parser.add_argument("--memory_bonus", default=1000, help="Give the job some more memory. Unit: MB.")
     parser.add_argument("--result_dir", default=None, help="The dir to save the results")
     parser.add_argument("--output_dir", default=None, help="The dir to save the outputs")
@@ -106,7 +105,7 @@ if __name__ == "__main__":
             # add autonet config specific stuff to replacement dict
             replacement_dict["NUM_WORKERS"] = autonet_config["min_workers"]
             replacement_dict["MEMORY_LIMIT_MB"] = autonet_config["memory_limit_mb"] + args.memory_bonus
-            time_limit_base = autonet_config["max_runtime"] if autonet_config["max_runtime"] < float("inf") else (args.time_limit - max(args.time_bonus))
+            time_limit_base = autonet_config["max_runtime"] if autonet_config["max_runtime"] < float("inf") else (benchmark_config["time_limit"] - max(args.time_bonus))
             replacement_dict.update({("TIME_LIMIT[%s]" % i): int(t + time_limit_base) for i, t in enumerate(args.time_bonus)})
             replacement_dict["NUM_PROCESSES"] = max(autonet_config["torch_num_threads"], int(ceil(replacement_dict["MEMORY_LIMIT_MB"] / benchmark_config["memory_per_core"])))
 
