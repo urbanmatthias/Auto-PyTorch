@@ -16,7 +16,7 @@ from hpbandster.metalearning.initial_design import InitialDesign
 import pickle
 
 class MetaLearning(PipelineNode):
-    def fit(self, pipeline_config, result_loggers):
+    def fit(self, pipeline_config):
         initial_design = pipeline_config["initial_design"]
         warmstarted_model = pipeline_config["warmstarted_model"]
 
@@ -28,8 +28,7 @@ class MetaLearning(PipelineNode):
             with open(warmstarted_model, "rb") as f:
                 warmstarted_model = pickle.load(f)
 
-            result_loggers = [warmstarted_model_weights_logger(directory=pipeline_config["result_logger_dir"], warmstarted_model=warmstarted_model)] + result_loggers
-        return {"warmstarted_model": warmstarted_model, "initial_design": initial_design, "result_loggers": result_loggers}
+        return {"warmstarted_model": warmstarted_model, "initial_design": initial_design}
 
     def get_pipeline_config_options(self):
         options = [
@@ -38,19 +37,11 @@ class MetaLearning(PipelineNode):
         ]
         return options
 
-class warmstarted_model_weights_logger(object):
-    def __init__(self, directory, warmstarted_model):
-        self.directory = directory
-        self.warmstarted_model = warmstarted_model
-        
-        self.file_name = os.path.join(directory, 'warmstarted_model_weights_history.txt')
-
-
-    def new_config(self, *args, **kwargs):
-        pass
-
-    def __call__(self, job):
-        if job.result is None:
-            return
-        with open(self.file_name, "w") as f:
-            self.warmstarted_model.print_weight_history(f)
+class MetaLearningSaveModelWeights(PipelineNode):
+    def fit(self, pipeline_config, warmstarted_model, final_metric_score, optimized_hyperparameter_config, budget):        
+        file_name = os.path.join(pipeline_config["result_logger_dir"], 'warmstarted_model_weights_history.txt')
+        with open(file_name, "w") as f:
+            warmstarted_model.print_weight_history(f)
+        return {'final_metric_score': final_metric_score,
+                'optimized_hyperparameter_config': optimized_hyperparameter_config,
+                'budget': budget}

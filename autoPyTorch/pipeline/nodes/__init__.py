@@ -18,4 +18,4 @@ from autoPyTorch.pipeline.nodes.initialization_selector import InitializationSel
 from autoPyTorch.pipeline.nodes.ensemble import EnableComputePredictionsForEnsemble, SavePredictionsForEnsemble, BuildEnsemble, AddEnsembleLogger
 from autoPyTorch.pipeline.nodes.create_dataloader import CreateDataLoader
 from autoPyTorch.pipeline.nodes.create_dataset_info import CreateDatasetInfo
-from autoPyTorch.pipeline.nodes.metalearning import MetaLearning
+from autoPyTorch.pipeline.nodes.metalearning import MetaLearning, MetaLearningSaveModelWeights

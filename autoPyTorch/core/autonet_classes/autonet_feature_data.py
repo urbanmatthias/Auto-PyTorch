@@ -14,7 +14,7 @@ class AutoNetFeatureData(AutoNet):
             CrossValidation, Imputation, NormalizationStrategySelector, OneHotEncoding, PreprocessorSelector, ResamplingStrategySelector, \
             EmbeddingSelector, NetworkSelector, OptimizerSelector, LearningrateSchedulerSelector, LogFunctionsSelector, MetricSelector, \
             LossModuleSelector, TrainNode, CreateDataLoader, CreateDatasetInfo, EnableComputePredictionsForEnsemble, SavePredictionsForEnsemble, \
-            BuildEnsemble, AddEnsembleLogger, InitializationSelector
+            BuildEnsemble, AddEnsembleLogger, InitializationSelector, MetaLearningSaveModelWeights
         
         # build the pipeline
         pipeline = Pipeline([
@@ -43,6 +43,7 @@ class AutoNetFeatureData(AutoNet):
                     SavePredictionsForEnsemble()
                 ])
             ]),
+            MetaLearningSaveModelWeights(),
             BuildEnsemble()
         ])
 
@@ -55,7 +56,7 @@ class AutoNetFeatureData(AutoNet):
         from autoPyTorch.pipeline.nodes import AutoNetSettings, MetaLearning, OptimizationAlgorithm, \
             CrossValidation, Imputation, NormalizationStrategySelector, OneHotEncoding, PreprocessorSelector, ResamplingStrategySelector, \
             EmbeddingSelector, NetworkSelector, OptimizerSelector, LearningrateSchedulerSelector, LogFunctionsSelector, MetricSelector, \
-            LossModuleSelector, TrainNode, CreateDataLoader, CreateDatasetInfo, InitializationSelector
+            LossModuleSelector, TrainNode, CreateDataLoader, CreateDatasetInfo, InitializationSelector, MetaLearningSaveModelWeights
         
         # build the pipeline
         pipeline = Pipeline([
@@ -78,9 +79,11 @@ class AutoNetFeatureData(AutoNet):
                     MetricSelector(),
                     LossModuleSelector(),
                     CreateDataLoader(),
-                    TrainNode()
+                    TrainNode(),
+                    MetaLearningSaveModelWeights()
                 ])
-            ])
+            ]),
+            MetaLearningSaveModelWeights()
         ])
 
         cls._apply_default_pipeline_settings(pipeline)
