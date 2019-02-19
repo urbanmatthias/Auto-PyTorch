@@ -11,7 +11,7 @@
 # Array Job with 4 subjobs
 #$ -t 1-$$NUM_WORKERS
 
-ulimit -m $$MEMORY_LIMIT_MB000
+ulimit -v $$MEMORY_LIMIT_MB000
 source activate AutoPyTorch
 cd $$AUTONET_HOME
 python3 scripts/run_benchmark.py $$BENCHMARK --run_id $JOB_ID --task_id $SGE_TASK_ID --partial_benchmark $$INSTANCE_ID,$$CONFIG_ID,$$RUN_NUMBER --host_config $$HOST_CONFIG --result_dir $$RESULT_DIR
