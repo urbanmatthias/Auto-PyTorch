@@ -12,15 +12,13 @@ Singularity container for Auto-PyTorch.
 
 %setup
     mkdir ${SINGULARITY_ROOTFS}/data
-    mkdir ${SINGULARITY_ROOTFS}/metamodels
 
 %files
-    metamodels/warmstarted_model.pkl /metamodels
-    metamodels/initial_design.pkl /metamodels
+    move_into_container.tar.gz
 
 %post
     apt-get update
-    apt-get -y install wget git gcc
+    apt-get -y install wget git gcc tar
     cd /data
     wget https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh
     bash Miniconda3-latest-Linux-x86_64.sh -b -p /data/miniconda
@@ -28,7 +26,11 @@ Singularity container for Auto-PyTorch.
     conda install -y pytorch-cpu torchvision-cpu -c pytorch
     git clone https://github.com/urbanmatthias/Auto-PyTorch.git
     cd Auto-PyTorch
-    mv /metamodels .
+    if [ -f /move_into_container.tar.gz ]
+      then
+        tar -xzvf /move_into_container.tar.gz --overwrite
+        rm -f /move_into_container.tar.gz
+    fi
     cat requirements.txt | xargs -n 1 -L 1 pip install
     cat optional-requirements.txt | xargs -n 1 -L 1 pip install
     git submodule update --init --recursive
