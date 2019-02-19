@@ -65,10 +65,12 @@ if __name__ == "__main__":
     # set up dict used used to make replacements in runscript
     base_dir = os.getcwd()
     result_dir = os.path.abspath(args.result_dir) if args.result_dir is not None else benchmark_config["result_dir"]
-    output_base_dir = os.path.abspath(args.output_dir) if args.output_dir is not None else os.path.join(base_dir, "outputs")
+    outputs_folder = os.path.abspath(args.output_dir) if args.output_dir is not None else os.path.join(base_dir, "outputs")
     benchmark = args.benchmark if os.path.isabs(args.benchmark) else os.path.join(base_dir, args.benchmark)
+    output_base_dir = os.path.join(outputs_folder, os.path.basename(benchmark).split(".")[0])
     replacement_dict = {
         "BASE_DIR": base_dir,
+        "OUTPUTS_FOLDER": outputs_folder,
         "OUTPUT_BASE_DIR": output_base_dir,
         "AUTONET_HOME": autonet_home,
         "BENCHMARK": benchmark,
@@ -79,6 +81,8 @@ if __name__ == "__main__":
     }
 
     # create output directory
+    if not os.path.exists(outputs_folder):
+        os.mkdir(outputs_folder)
     if not os.path.exists(output_base_dir):
         os.mkdir(output_base_dir)
 
