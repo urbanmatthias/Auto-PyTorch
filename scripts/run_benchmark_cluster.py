@@ -19,8 +19,8 @@ __license__ = "BSD"
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Run benchmarks for autonet.')
     parser.add_argument("--partial_benchmark", default=None, help="Only run a part of the benchmark. Run other parts later. 3-tuple: instance_slice, autonet_config_slice, run_number_range.")
-    parser.add_argument("--time_bonus", default=[7200, 8200, 10800], nargs="+", help="Give the job some more time.")
-    parser.add_argument("--memory_bonus", default=1000, help="Give the job some more memory. Unit: MB.")
+    parser.add_argument("--time_bonus", default=[7200, 8200, 10800], type=int, nargs="+", help="Give the job some more time.")
+    parser.add_argument("--memory_bonus", default=1000, type=int, help="Give the job some more memory. Unit: MB.")
     parser.add_argument("--result_dir", default=None, help="The dir to save the results")
     parser.add_argument("--output_dir", default=None, help="The dir to save the outputs")
     parser.add_argument("runscript", help="The script template used to submit job on cluster.")
