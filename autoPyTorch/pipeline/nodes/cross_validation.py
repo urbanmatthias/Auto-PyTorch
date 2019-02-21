@@ -11,6 +11,7 @@ import signal
 import time
 import math
 import inspect
+import sys
 from copy import deepcopy
 
 from sklearn.model_selection import BaseCrossValidator
@@ -100,6 +101,7 @@ class CrossValidation(SubPipelineNode):
         additional_results = self.process_additional_results(additional_results=additional_results, all_sub_pipeline_kwargs=all_sub_pipeline_kwargs,
             X=X, Y=Y, logger=logger)
         loss = loss / num_cv_splits + loss_penalty
+        logger.info("Send additional data of size %s to master" % sys.getsizeof(additional_results, None))
         return dict({'loss': loss, 'info': info}, **additional_results)
 
     def predict(self, pipeline_config, X):

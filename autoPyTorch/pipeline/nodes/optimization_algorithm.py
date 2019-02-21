@@ -90,9 +90,9 @@ class OptimizationAlgorithm(SubPipelineNode):
                 NS = self.get_nameserver(run_id, task_id, ns_credentials_dir, network_interface_name)
                 ns_host, ns_port = NS.start()
                 
-
-            self.run_worker(pipeline_config=pipeline_config, run_id=run_id, task_id=task_id, ns_credentials_dir=ns_credentials_dir,
-                network_interface_name=network_interface_name, X_train=X_train, Y_train=Y_train, X_valid=X_valid, Y_valid=Y_valid, dataset_info=dataset_info)
+            if task_id != 1 or pipeline_config["run_worker_on_master_node"]:
+                self.run_worker(pipeline_config=pipeline_config, run_id=run_id, task_id=task_id, ns_credentials_dir=ns_credentials_dir,
+                    network_interface_name=network_interface_name, X_train=X_train, Y_train=Y_train, X_valid=X_valid, Y_valid=Y_valid, dataset_info=dataset_info)
 
             # start BOHB if not on cluster or on master node in cluster
             res = None
@@ -141,6 +141,7 @@ class OptimizationAlgorithm(SubPipelineNode):
             ConfigOption("network_interface_name", default=self.get_default_network_interface_name(), type=str),
             ConfigOption("memory_limit_mb", default=1000000, type=int),
             ConfigOption("use_tensorboard_logger", default=False, type=to_bool),
+            ConfigOption("run_worker_on_master_node", default=True, type=to_bool)
         ]
         return options
 

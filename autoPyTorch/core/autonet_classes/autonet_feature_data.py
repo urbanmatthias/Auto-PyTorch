@@ -79,8 +79,7 @@ class AutoNetFeatureData(AutoNet):
                     MetricSelector(),
                     LossModuleSelector(),
                     CreateDataLoader(),
-                    TrainNode(),
-                    MetaLearningSaveModelWeights()
+                    TrainNode()
                 ])
             ]),
             MetaLearningSaveModelWeights()
