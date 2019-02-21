@@ -24,7 +24,7 @@ cp $TMPDIR/stderr.txt $$OUTPUT_DIR/stderr_${MOAB_JOBARRAYINDEX}.txt
 if [ $MOAB_JOBARRAYINDEX -eq 1 ]
 then
     echo "Copy benchmark results"
-    cp -r -t $$RESULT_DIR $TMPDIR/benchmark_results/
+    cp -r -t $$RESULT_DIR $TMPDIR/benchmark_results/*
 fi
 
 #COMMAND msub run_nemo_singularity.moab
