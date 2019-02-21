@@ -14,7 +14,7 @@ class AutoNetFeatureData(AutoNet):
             CrossValidation, Imputation, NormalizationStrategySelector, OneHotEncoding, PreprocessorSelector, ResamplingStrategySelector, \
             EmbeddingSelector, NetworkSelector, OptimizerSelector, LearningrateSchedulerSelector, LogFunctionsSelector, MetricSelector, \
             LossModuleSelector, TrainNode, CreateDataLoader, CreateDatasetInfo, EnableComputePredictionsForEnsemble, SavePredictionsForEnsemble, \
-            BuildEnsemble, AddEnsembleLogger, InitializationSelector, MetaLearningSaveModelWeights
+            BuildEnsemble, AddEnsembleLogger, InitializationSelector
         
         # build the pipeline
         pipeline = Pipeline([
@@ -43,7 +43,6 @@ class AutoNetFeatureData(AutoNet):
                     SavePredictionsForEnsemble()
                 ])
             ]),
-            MetaLearningSaveModelWeights(),
             BuildEnsemble()
         ])
 
@@ -56,7 +55,7 @@ class AutoNetFeatureData(AutoNet):
         from autoPyTorch.pipeline.nodes import AutoNetSettings, MetaLearning, OptimizationAlgorithm, \
             CrossValidation, Imputation, NormalizationStrategySelector, OneHotEncoding, PreprocessorSelector, ResamplingStrategySelector, \
             EmbeddingSelector, NetworkSelector, OptimizerSelector, LearningrateSchedulerSelector, LogFunctionsSelector, MetricSelector, \
-            LossModuleSelector, TrainNode, CreateDataLoader, CreateDatasetInfo, InitializationSelector, MetaLearningSaveModelWeights
+            LossModuleSelector, TrainNode, CreateDataLoader, CreateDatasetInfo, InitializationSelector
         
         # build the pipeline
         pipeline = Pipeline([
@@ -82,7 +81,6 @@ class AutoNetFeatureData(AutoNet):
                     TrainNode()
                 ])
             ]),
-            MetaLearningSaveModelWeights()
         ])
 
         cls._apply_default_pipeline_settings(pipeline)

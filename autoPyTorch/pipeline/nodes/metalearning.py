@@ -36,13 +36,3 @@ class MetaLearning(PipelineNode):
             ConfigOption(name="warmstarted_model", default=None, type="directory")
         ]
         return options
-
-class MetaLearningSaveModelWeights(PipelineNode):
-    def fit(self, pipeline_config, final_metric_score, optimized_hyperparameter_config, budget, warmstarted_model):
-        if warmstarted_model is not None:    
-            file_name = os.path.join(pipeline_config["result_logger_dir"], 'warmstarted_model_weights_history.txt')
-            with open(file_name, "w") as f:
-                warmstarted_model.print_weight_history(f)
-        return {'final_metric_score': final_metric_score,
-                'optimized_hyperparameter_config': optimized_hyperparameter_config,
-                'budget': budget}

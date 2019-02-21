@@ -4,7 +4,7 @@
 #$ -o $$OUTPUT_DIR/stdout_$TASK_ID.txt -e $$OUTPUT_DIR/stderr_$TASK_ID.txt
 #$ -cwd
 #$ -m n
-#$ -t 1-$$NUM_WORKERS
+#$ -t 1-$$NUM_NODES
 
 ulimit -v $$MEMORY_LIMIT_MB000
 source activate AutoPyTorch

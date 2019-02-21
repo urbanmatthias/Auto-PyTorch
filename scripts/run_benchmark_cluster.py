@@ -108,6 +108,7 @@ if __name__ == "__main__":
 
             # add autonet config specific stuff to replacement dict
             replacement_dict["NUM_WORKERS"] = autonet_config["min_workers"]
+            replacement_dict["NUM_NODES"] = autonet_config["min_workers"] + (0 if autonet_config["run_worker_on_master_node"] else 1)
             replacement_dict["MEMORY_LIMIT_MB"] = autonet_config["memory_limit_mb"] + args.memory_bonus
             time_limit_base = autonet_config["max_runtime"] if autonet_config["max_runtime"] < float("inf") else (benchmark_config["time_limit"] - max(args.time_bonus))
             replacement_dict.update({("TIME_LIMIT[%s]" % i): int(t + time_limit_base) for i, t in enumerate(args.time_bonus)})

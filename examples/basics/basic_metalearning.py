@@ -12,9 +12,10 @@ dm = DataManager()
 dm.generate_classification(num_classes=3, num_features=21, num_samples=1500)
 
 # Note: every parameter has a default value, you do not have to specify anything. The given parameter allow a fast test.
-autonet = AutoNetClassification(budget_type='epochs', min_budget=1, max_budget=9, num_iterations=1, log_level='debug')
+autonet = AutoNetClassification(budget_type='epochs', min_budget=1, max_budget=9, num_iterations=2, log_level='debug')
 
-res = autonet.fit(X_train=dm.X, Y_train=dm.Y, validation_split=0.3, initial_design="initial_design.pkl", warmstarted_model="warmstarted_model.pkl")
+res = autonet.fit(X_train=dm.X, Y_train=dm.Y, validation_split=0.3,
+    initial_design="metamodels/initial_design.pkl", warmstarted_model="metamodels/warmstarted_model.pkl")
 
 print(res)
 print("Score:", autonet.score(X_test=dm.X_train, Y_test=dm.Y_train))

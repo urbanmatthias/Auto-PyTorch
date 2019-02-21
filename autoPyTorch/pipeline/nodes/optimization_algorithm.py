@@ -100,8 +100,8 @@ class OptimizationAlgorithm(SubPipelineNode):
                 self.run_optimization_algorithm(pipeline_config=pipeline_config, run_id=run_id, ns_host=ns_host,
                     ns_port=ns_port, nameserver=NS, task_id=task_id, result_loggers=result_loggers,
                     dataset_info=dataset_info, initial_design=initial_design, warmstarted_model=warmstarted_model, logger=logger)
+   
             
-
                 res = self.parse_results(pipeline_config["result_logger_dir"])
 
         except Exception as e:
@@ -272,6 +272,13 @@ class OptimizationAlgorithm(SubPipelineNode):
 
         HB.shutdown(shutdown_workers=True)
         nameserver.shutdown()
+        save_warmstarted_model_weights(pipeline_config, warmstarted_model)
+
+def save_warmstarted_model_weights(pipeline_config, warmstarted_model):
+    if warmstarted_model is not None:    
+        file_name = os.path.join(pipeline_config["result_logger_dir"], 'warmstarted_model_weights_history.txt')
+        with open(file_name, "w") as f:
+            warmstarted_model.print_weight_history(f)
 
     
     def clean_fit_data(self):

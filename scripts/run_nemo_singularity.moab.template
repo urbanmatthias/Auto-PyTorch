@@ -1,5 +1,5 @@
 #!/bin/bash
-#MOAB -t 1-$$NUM_WORKERS
+#MOAB -t 1-$$NUM_NODES
 #MOAB -N AUTONET
 #MOAB -l nodes=1:ppn=$$NUM_PROCESSES,walltime=$$TIME_LIMIT[2],pmem=$$MEMORY_LIMIT_MBMB
 #MOAB -E
