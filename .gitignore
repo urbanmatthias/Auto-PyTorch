@@ -38,8 +38,7 @@ jobs.txt
 loss_matrix/
 mongo_db.conf
 scripts/start_mongod.sh
-
-
+warmstarted_model_weights_history.txt
 
 # Datasets
 /datasets/
