@@ -1,14 +1,9 @@
 #!/bin/bash
 
-# BASH Shell
 #$ -S /bin/bash 
-# Output files (stdout and stderr)
 #$ -o $$OUTPUT_DIR/stdout_$TASK_ID.txt -e $$OUTPUT_DIR/stderr_$TASK_ID.txt
-# Execute  the  job  from  the  current  working  directory 
 #$ -cwd
-# send no mail for events (e.g., start or end of job)
 #$ -m n
-# Array Job with 4 subjobs
 #$ -t 1-$$NUM_WORKERS
 
 ulimit -v $$MEMORY_LIMIT_MB000
