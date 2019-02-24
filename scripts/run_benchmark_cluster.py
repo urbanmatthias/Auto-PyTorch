@@ -80,11 +80,13 @@ if __name__ == "__main__":
         "RESULT_DIR": result_dir
     }
 
-    # create output directory
+    # create directories
     if not os.path.exists(outputs_folder):
         os.mkdir(outputs_folder)
     if not os.path.exists(output_base_dir):
         os.mkdir(output_base_dir)
+    if not os.path.exists(result_dir):
+        os.mkdir(result_dir)
 
     # iterate over all runs
     for run_number in runs_range:
