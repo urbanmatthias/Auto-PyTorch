@@ -128,7 +128,8 @@ async def _start_server(host, queue):
         await server.serve_forever()
 
 def start_server_process(host, queue):
-    asyncio.run(_start_server(host, queue))
+    loop = asyncio.get_event_loop()
+    loop.run_until_complete(_start_server(host, queue))
 
 def start_server(host):
     queue = multiprocessing.Queue()
@@ -175,22 +176,24 @@ class ensemble_logger(object):
     def __call__(self, job):
         if job.result is None:
             return
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
         if "predictions_for_ensemble" in job.result:
             host, port, unique = job.result["predictions_for_ensemble"]
             with open(self.file_name, "ab") as f:
                 if not self.labels_written:
-                    asyncio.run(self.save_remote_data(host, port, "labels", unique, f))
+                    loop.run_until_complete(self.save_remote_data(host, port, "labels", unique, f))
                     self.labels_written = True
                 np.save(f, np.array([job.id, job.kwargs['budget'], job.timestamps], dtype=object))
-                asyncio.run(self.save_remote_data(host, port, "predictions", unique, f))
+                loop.run_until_complete(self.save_remote_data(host, port, "predictions", unique, f))
             del job.result["predictions_for_ensemble"]
 
             if "test_predictions_for_ensemble" in job.result and job.result["test_predictions_for_ensemble"] is not None:
                 host, port, unique =  job.result["test_predictions_for_ensemble"]
                 with open(self.test_file_name, "ab") as f:
                     if not self.test_labels_written:
-                         asyncio.run(self.save_remote_data(host, port, "labels", unique, f))
+                         loop.run_until_complete(self.save_remote_data(host, port, "labels", unique, f))
                          self.test_labels_written = True
                     np.save(f, np.array([job.id, job.kwargs['budget'], job.timestamps], dtype=object))
-                    asyncio.run(self.save_remote_data(host, port, "predictions", unique, f))
+                    loop.run_until_complete(self.save_remote_data(host, port, "predictions", unique, f))
                 del job.result["test_predictions_for_ensemble"]
