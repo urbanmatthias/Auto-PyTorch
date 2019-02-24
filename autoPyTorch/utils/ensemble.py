@@ -197,3 +197,4 @@ class ensemble_logger(object):
                     np.save(f, np.array([job.id, job.kwargs['budget'], job.timestamps], dtype=object))
                     loop.run_until_complete(self.save_remote_data(host, port, "predictions", unique, f))
                 del job.result["test_predictions_for_ensemble"]
+        loop.close()
