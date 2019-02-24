@@ -2,7 +2,7 @@ from autoPyTorch.core.api import AutoNet
 from autoPyTorch.pipeline.base.pipeline import Pipeline
 from autoPyTorch.pipeline.nodes.one_hot_encoding import OneHotEncoding
 from autoPyTorch.pipeline.nodes.metric_selector import MetricSelector
-from autoPyTorch.pipeline.nodes.ensemble import EnableComputePredictionsForEnsemble, SavePredictionsForEnsemble, AddEnsembleLogger, BuildEnsemble
+from autoPyTorch.pipeline.nodes.ensemble import EnableComputePredictionsForEnsemble, SavePredictionsForEnsemble, BuildEnsemble, EnsembleServer
 
 class AutoNetEnsemble(AutoNet):
     def __init__(self, autonet, **autonet_config):
@@ -23,7 +23,7 @@ class AutoNetEnsemble(AutoNet):
         
         assert EnableComputePredictionsForEnsemble in self.pipeline
         assert SavePredictionsForEnsemble in self.pipeline
-        assert AddEnsembleLogger in self.pipeline
+        assert EnsembleServer in self.pipeline
         assert BuildEnsemble in self.pipeline
 
         self.base_config.update(autonet_config)

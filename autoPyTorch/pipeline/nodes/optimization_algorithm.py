@@ -57,7 +57,8 @@ class OptimizationAlgorithm(SubPipelineNode):
         self.budget_types["time"] = BudgetTypeTime
         self.budget_types["epochs"] = BudgetTypeEpochs
 
-    def fit(self, pipeline_config, X_train, Y_train, X_valid, Y_valid, result_loggers, dataset_info, initial_design=None, warmstarted_model=None, refit=None):
+    def fit(self, pipeline_config, X_train, Y_train, X_valid, Y_valid, result_loggers, dataset_info, shutdownables,
+            initial_design=None, warmstarted_model=None, refit=None):
         logger = logging.getLogger('autonet')
         res = None
 
@@ -92,7 +93,8 @@ class OptimizationAlgorithm(SubPipelineNode):
                 
             if task_id != 1 or pipeline_config["run_worker_on_master_node"]:
                 self.run_worker(pipeline_config=pipeline_config, run_id=run_id, task_id=task_id, ns_credentials_dir=ns_credentials_dir,
-                    network_interface_name=network_interface_name, X_train=X_train, Y_train=Y_train, X_valid=X_valid, Y_valid=Y_valid, dataset_info=dataset_info)
+                    network_interface_name=network_interface_name, X_train=X_train, Y_train=Y_train, X_valid=X_valid, Y_valid=Y_valid,
+                    dataset_info=dataset_info, shutdownables=shutdownables)
 
             # start BOHB if not on cluster or on master node in cluster
             res = None
@@ -169,7 +171,7 @@ class OptimizationAlgorithm(SubPipelineNode):
                 pass
         tmp_models_dir = os.path.join(pipeline_config["working_dir"], "tmp_models_" + str(pipeline_config['run_id']))
         ns_credentials_dir = os.path.abspath(os.path.join(pipeline_config["working_dir"], "ns_credentials_" + str(pipeline_config['run_id'])))
-        network_interface_name = pipeline_config["network_interface_name"] or (netifaces.interfaces()[1] if len(netifaces.interfaces()) > 1 else "lo")
+        network_interface_name = self.get_nic_name(pipeline_config)
         
         if os.path.exists(tmp_models_dir) and pipeline_config['task_id'] in [1, -1]:
             shutil.rmtree(tmp_models_dir)
@@ -229,7 +231,7 @@ class OptimizationAlgorithm(SubPipelineNode):
 
 
     def run_worker(self, pipeline_config, run_id, task_id, ns_credentials_dir, network_interface_name,
-            X_train, Y_train, X_valid, Y_valid, dataset_info):
+            X_train, Y_train, X_valid, Y_valid, dataset_info, shutdownables):
         if not task_id == -1:
             time.sleep(5)
         while not os.path.isdir(ns_credentials_dir):
@@ -241,7 +243,7 @@ class OptimizationAlgorithm(SubPipelineNode):
                               budget_type=self.budget_types[pipeline_config['budget_type']],
                               max_budget=pipeline_config["max_budget"],
                               host=host, run_id=run_id,
-                              id=task_id)
+                              id=task_id, shutdownables=shutdownables)
         worker.load_nameserver_credentials(ns_credentials_dir)
         # run in background if not on cluster
         worker.run(background=(task_id <= 1))
@@ -273,6 +275,10 @@ class OptimizationAlgorithm(SubPipelineNode):
         HB.shutdown(shutdown_workers=True)
         nameserver.shutdown()
         save_warmstarted_model_weights(pipeline_config, warmstarted_model)
+    
+    @staticmethod
+    def get_nic_name(pipeline_config):
+        return pipeline_config["network_interface_name"] or (netifaces.interfaces()[1] if len(netifaces.interfaces()) > 1 else "lo")
 
 def save_warmstarted_model_weights(pipeline_config, warmstarted_model):
     if warmstarted_model is not None:    
