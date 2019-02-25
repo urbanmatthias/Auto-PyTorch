@@ -16,5 +16,6 @@ mkdir meta_outputs
 cp $TMPDIR/stdout.txt meta_outputs/stdout_build_meta_model.txt
 cp $TMPDIR/stderr.txt meta_outputs/stderr_build_meta_model.txt
 
-cp $TMPDIR/initial_design.pkl .
-cp $TMPDIR/warmstarted_model.pkl .
+mkdir metamodels
+cp $TMPDIR/initial_design.pkl metamodels
+cp $TMPDIR/warmstarted_model.pkl metamodels
