@@ -7,6 +7,7 @@ import tempfile
 import uuid
 import asyncio
 import multiprocessing
+import signal
 from autoPyTorch.components.ensembles.ensemble_selection import EnsembleSelection
 
 def build_ensemble(result, train_metric, minimize,
@@ -120,20 +121,27 @@ async def serve_predictions(reader, writer):
     await writer.drain()
     writer.close()
 
-async def _start_server(host, queue):
-    server = await asyncio.start_server(serve_predictions, host, 0)
+def _start_server(host, queue, logger):
+    def shutdown(signum, stack):
+        raise KeyboardInterrupt
+    signal.signal(signal.SIGTERM, shutdown)
+    loop = asyncio.get_event_loop()
+    coro = asyncio.start_server(serve_predictions, host, 0, loop=loop)
+    server = loop.run_until_complete(coro)
     host, port = server.sockets[0].getsockname()
     queue.put((host, port))
-    async with server:
-        await server.serve_forever()
+    try:
+        loop.run_forever()
+    except KeyboardInterrupt:
+        pass
+    server.close()
+    loop.run_until_complete(server.wait_closed())
+    loop.close()
+    logger.info("Ensemble Server has been shut down")
 
-def start_server_process(host, queue):
-    loop = asyncio.get_event_loop()
-    loop.run_until_complete(_start_server(host, queue))
-
-def start_server(host):
+def start_server(host, logger):
     queue = multiprocessing.Queue()
-    p = multiprocessing.Process(target=start_server_process, args=(host, queue))
+    p = multiprocessing.Process(target=_start_server, args=(host, queue, logger))
     p.start()
     host, port = queue.get()
     p.shutdown = p.terminate

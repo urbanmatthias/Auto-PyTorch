@@ -15,6 +15,7 @@ import json
 import asyncio
 from hpbandster.core.nameserver import nic_name_to_host
 import time
+import logging
 
 class EnableComputePredictionsForEnsemble(PipelineNode):
     """Put this Node in the training pipeline after the metric selector node"""
@@ -107,7 +108,7 @@ class EnsembleServer(PipelineNode):
         # start server
         if pipeline_config["task_id"] != 1 or pipeline_config["run_worker_on_master_node"]:
             host = nic_name_to_host(OptimizationAlgorithm.get_nic_name(pipeline_config))
-            host, port, process = start_server(host)
+            host, port, process = start_server(host, logging.getLogger('autonet'))
             pipeline_config["ensemble_server_credentials"] = (host, port)
             shutdownables = shutdownables + [process]
 
