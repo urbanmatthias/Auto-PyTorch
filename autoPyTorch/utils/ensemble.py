@@ -138,7 +138,7 @@ def _start_server(host, queue):
     server.close()
     loop.run_until_complete(server.wait_closed())
     loop.close()
-    # logging.getLogger("autonet")("Ensemble Server has been shut down")
+    # logging.getLogger("autonet").info("Ensemble Server has been shut down")
 
 def start_server(host):
     queue = multiprocessing.Queue()
