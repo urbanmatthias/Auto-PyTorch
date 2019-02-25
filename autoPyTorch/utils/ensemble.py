@@ -8,6 +8,7 @@ import uuid
 import asyncio
 import multiprocessing
 import signal
+import logging
 from autoPyTorch.components.ensembles.ensemble_selection import EnsembleSelection
 
 def build_ensemble(result, train_metric, minimize,
@@ -107,7 +108,7 @@ def combine_test_predictions(data, pipeline_kwargs, X, Y):
 async def serve_predictions(reader, writer):
     data = await reader.read(1024)
     name, unique = data.decode().split("_")
-    print("Serve %s %s" % (name, unique))
+    # logging.getLogger("autonet").info("Serve %s %s" % (name, unique))
 
     with open(os.path.join(tempfile.gettempdir(), "autonet_ensemble_%s_%s.npy" % (name, unique)), "rb") as f:
         while True:
@@ -121,7 +122,7 @@ async def serve_predictions(reader, writer):
     await writer.drain()
     writer.close()
 
-def _start_server(host, queue, logger):
+def _start_server(host, queue):
     def shutdown(signum, stack):
         raise KeyboardInterrupt
     signal.signal(signal.SIGTERM, shutdown)
@@ -137,11 +138,11 @@ def _start_server(host, queue, logger):
     server.close()
     loop.run_until_complete(server.wait_closed())
     loop.close()
-    logger.info("Ensemble Server has been shut down")
+    # logging.getLogger("autonet")("Ensemble Server has been shut down")
 
-def start_server(host, logger):
+def start_server(host):
     queue = multiprocessing.Queue()
-    p = multiprocessing.Process(target=_start_server, args=(host, queue, logger))
+    p = multiprocessing.Process(target=_start_server, args=(host, queue))
     p.start()
     host, port = queue.get()
     p.shutdown = p.terminate
