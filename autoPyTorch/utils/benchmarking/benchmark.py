@@ -11,12 +11,13 @@ from autoPyTorch.utils.benchmarking.benchmark_pipeline import (BenchmarkSettings
                                                            SaveEnsembleLogs)
 from autoPyTorch.utils.benchmarking.visualization_pipeline import (CollectAutoNetConfigTrajectories,
                                                                CollectRunTrajectories,
+                                                               CollectInstanceTrajectories,
                                                                GetRunTrajectories,
                                                                PlotTrajectories,
                                                                ReadInstanceInfo,
                                                                VisualizationSettings,
-                                                               GetEnsembleTrajectories)
-from autoPyTorch.utils.benchmarking.visualization_pipeline import ForInstance as VisualizationForInstance
+                                                               GetEnsembleTrajectories,
+                                                               PlotRankings)
 from autoPyTorch.utils.config.config_file_parser import ConfigFileParser
 
 class Benchmark():
@@ -56,7 +57,7 @@ class Benchmark():
     def get_visualization_pipeline(self):
         return Pipeline([
             VisualizationSettings(),
-            VisualizationForInstance([
+            CollectInstanceTrajectories([
                 CollectAutoNetConfigTrajectories([
                     CollectRunTrajectories([
                         ReadInstanceInfo(),
@@ -66,5 +67,6 @@ class Benchmark():
                     ])
                 ]),
                 PlotTrajectories()
-            ])
+            ]),
+            PlotRankings()
         ])

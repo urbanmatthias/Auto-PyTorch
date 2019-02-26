@@ -8,60 +8,8 @@ import json
 class PlotTrajectories(PipelineNode):
 
     def fit(self, pipeline_config, trajectories, train_metrics, instance):
-        try:
-            # these imports won't work on meta
-            import matplotlib.pyplot as plt
-            from matplotlib.backends.backend_pdf import PdfPages
-            extension = "pdf"
-        except:
-            plt = DataPlot()
-            PdfPages = SaveDataPlot
-            extension = "json"
-
-        plot_logs = pipeline_config['plot_logs'] or train_metrics
-        output_folder = pipeline_config['output_folder']
-        instance_name = os.path.basename(instance).split(".")[0]
-
-        if output_folder and not os.path.exists(output_folder):
-            os.mkdir(output_folder)
-
-        for log in plot_logs:
-            if log not in trajectories.keys():
-                logging.getLogger('benchmark').warn('No trajectory found for ' + log)
-
-        # iterate over all incumbent trajectories for each metric
-        for i, metric_name in enumerate(trajectories.keys()):
-            if metric_name not in plot_logs:
-                continue
-            
-            # prepare pdf
-            if output_folder is not None:
-                pdf_destination = os.path.join(output_folder, instance_name + '_' + metric_name + '.' + extension)
-                pp = PdfPages(pdf_destination)
-
-            # create figure
-            figure = plt.figure(i)
-            if not plot_trajectory(instance_name,
-                                   metric_name,
-                                   pipeline_config["prefixes"],
-                                   trajectories,
-                                   pipeline_config['agglomeration'],
-                                   pipeline_config['scale_uncertainty'],
-                                   pipeline_config['font_size'],
-                                   plt):
-                logging.getLogger('benchmark').warn('Not showing empty plot for ' + instance)
-                continue
-
-            # show or save
-            if output_folder is None:
-                logging.getLogger('benchmark').info('Showing plot for ' + instance)
-                plt.show()
-            else:
-                logging.getLogger('benchmark').info('Saving plot for ' + instance + ' at ' + pdf_destination)
-                pp.savefig(figure)
-                pp.close()
-                plt.close(figure)
-        return dict()
+        plot(pipeline_config, trajectories, train_metrics, instance, plot_trajectory)
+        return {"trajectories": trajectories, "train_metrics": train_metrics}
     
 
     def get_pipeline_config_options(self):
@@ -74,6 +22,63 @@ class PlotTrajectories(PipelineNode):
             ConfigOption('prefixes', default=[""], list=True, choices=["", "train", "val", "test", "ensemble", "ensemble_test"])
         ]
         return options
+
+
+def plot(pipeline_config, trajectories, train_metrics, instance, plot_fnc):
+    try:
+        # these imports won't work on meta
+        import matplotlib.pyplot as plt
+        from matplotlib.backends.backend_pdf import PdfPages
+        extension = "pdf"
+    except:
+        plt = DataPlot()
+        PdfPages = SaveDataPlot
+        extension = "json"
+
+    plot_logs = pipeline_config['plot_logs'] or train_metrics
+    output_folder = pipeline_config['output_folder']
+    instance_name = os.path.basename(instance).split(".")[0]
+
+    if output_folder and not os.path.exists(output_folder):
+        os.mkdir(output_folder)
+
+    for log in plot_logs:
+        if log not in trajectories.keys():
+            logging.getLogger('benchmark').warn('No trajectory found for ' + log)
+
+    # iterate over all incumbent trajectories for each metric
+    for i, metric_name in enumerate(trajectories.keys()):
+        if metric_name not in plot_logs:
+            continue
+        
+        # prepare pdf
+        if output_folder is not None:
+            pdf_destination = os.path.join(output_folder, instance_name + '_' + metric_name + '.' + extension)
+            pp = PdfPages(pdf_destination)
+
+        # create figure
+        figure = plt.figure(i)
+        if not plot_fnc(instance_name,
+                        metric_name,
+                        pipeline_config["prefixes"],
+                        trajectories,
+                        pipeline_config['agglomeration'],
+                        pipeline_config['scale_uncertainty'],
+                        pipeline_config['font_size'],
+                        plt):
+            logging.getLogger('benchmark').warn('Not showing empty plot for ' + instance)
+            continue
+
+        # show or save
+        if output_folder is None:
+            logging.getLogger('benchmark').info('Showing plot for ' + instance)
+            plt.show()
+        else:
+            logging.getLogger('benchmark').info('Saving plot for ' + instance + ' at ' + pdf_destination)
+            pp.savefig(figure)
+            pp.close()
+            plt.close(figure)
+
 
 def plot_trajectory(instance_name, metric_name, prefixes, trajectories, agglomeration, scale_uncertainty, font_size, plt):
     # iterate over the incumbent trajectories of the different runs
@@ -148,6 +153,9 @@ class DataPlot():
         self.config_labels = list()
     
     def step(self, finishing_times, center, color, label, where):
+        self.plot(finishing_times, center, color, label)
+    
+    def plot(self, finishing_times, center, color, label):
         self.finishing_times.append(finishing_times)
         self.centers.append(center)
         self.colors.append(color)
