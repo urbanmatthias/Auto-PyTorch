@@ -10,4 +10,5 @@ if __name__ == "__main__":
         subprocess.call(["tar", "-czvf", "move_into_container.tar.gz"] + move_into_container)
     print("Building Singularity container. You need to be root for that.")
     subprocess.call(["sudo", "singularity", "build", "Auto-PyTorch.simg", "scripts/Singularity"])
-    os.remove("move_into_container.tar.gz")
+    if move_into_container:
+        os.remove("move_into_container.tar.gz")
