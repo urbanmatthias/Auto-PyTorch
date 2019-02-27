@@ -143,7 +143,9 @@ if __name__ == "__main__":
                     command_output = subprocess.check_output(command, shell=True)
                 except subprocess.CalledProcessError as e:
                     print("Warning: %s" % e)
-                    command_output = str(e)
+                    command_output = str(e).encode("utf-8")
+                    if not input("Continue (y/n)? ").startswith("y"):
+                        raise
                 os.chdir(base_dir)
 
                 # save output and info data
