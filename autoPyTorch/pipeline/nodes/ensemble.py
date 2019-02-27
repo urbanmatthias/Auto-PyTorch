@@ -57,7 +57,7 @@ class SavePredictionsForEnsemble(PipelineNode):
     
     def get_pipeline_config_options(self):
         options = [
-            ConfigOption("ensemble_server_credentials", default=None, type=dict())
+            ConfigOption("ensemble_server_credentials", default=None)
         ]
         return options
 
