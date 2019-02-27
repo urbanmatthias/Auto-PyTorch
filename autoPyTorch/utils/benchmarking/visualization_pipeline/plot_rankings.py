@@ -16,6 +16,7 @@ def plot_ranking(instance_name, metric_name, prefixes, trajectories, agglomerati
         for prefix in prefixes}
     trajectory_names = [t for t in trajectory_names_to_prefix.keys() if t in trajectories]
 
+    # save pointers for each trajectory to iterate over them simultaneously
     trajectory_pointers = {(config, name): {instance: ([0] * len(run_trajectories))
         for instance, run_trajectories in instance_trajectories.items()}
         for name in trajectory_names
@@ -81,6 +82,7 @@ def plot_ranking(instance_name, metric_name, prefixes, trajectories, agglomerati
     if plot_empty:
         return False
     
+    # do the plotting
     for i, (config, name) in enumerate(center.keys()):
         prefix = trajectory_names_to_prefix[name]
         label = ("%s: %s" % (prefix, config)) if prefix else config
@@ -89,6 +91,7 @@ def plot_ranking(instance_name, metric_name, prefixes, trajectories, agglomerati
         color = (color[0], color[1], color[2], 0.5)
         plt.fill_between(finishing_times, lower[(config, name)], upper[(config, name)], step=None, color=[color])
 
+    # setup labels, legend etc.
     plt.xlabel('wall clock time [s]', fontsize=font_size)
     plt.ylabel('ranking ' + metric_name, fontsize=font_size)
     plt.legend(loc='best', prop={'size': font_size})
