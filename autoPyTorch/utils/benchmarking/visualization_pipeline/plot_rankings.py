@@ -57,12 +57,13 @@ def plot_ranking(instance_name, metric_name, prefixes, trajectories, agglomerati
         trajectory_pointers[(current_config, current_name)][current_instance][trajectory_id] += 1
 
         # calculate ranks
-        values = [((config, name), value)
+        values = to_dict([(instance, (config, name), value)
             for (config, name), instance_values in trajectory_values.items()
             for instance, values in instance_values.items()
-            for value in values if value is not None]
-        values = list(map(lambda x: x[0], sorted(values, key=lambda x: x[1])))
-        ranks = {k: [i / len(values) for i, v in enumerate(values) if v == k] for k in center.keys()}
+            for value in values if value is not None])
+        values = {instance: list(map(lambda x: x[0], sorted(v, key=lambda x: x[1]))) for instance, v in values.items()}  # configs sorted by value
+        ranks = {instance: {k: [i / len(v) for i, v in enumerate(v) if v == k] for k in center.keys()} for instance, v in values.items()}
+        ranks = to_dict([(k, r) for rank_dict in ranks.values() for k, r in rank_dict.items()])
 
         # populate plotting data
         for key in center.keys():
@@ -94,3 +95,13 @@ def plot_ranking(instance_name, metric_name, prefixes, trajectories, agglomerati
     plt.title("Ranking", fontsize=font_size)
     plt.xscale("log")
     return True
+
+def to_dict(tuple_list):
+    result = dict()
+    for v in tuple_list:
+        a = v[0]
+        b = v[1:]
+        if a not in result:
+            result[a] = list()
+        result[a].append(b)
+    return result
