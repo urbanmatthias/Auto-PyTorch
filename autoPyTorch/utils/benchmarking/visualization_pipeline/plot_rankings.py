@@ -69,13 +69,15 @@ def plot_ranking(instance_name, metric_name, prefixes, trajectories, agglomerati
         # populate plotting data
         for key in center.keys():
             if agglomeration == "median":
-                center[key].append(np.median(ranks[key]))
-                lower[key].append(np.percentile(ranks[key], int(50 - scale_uncertainty * 25)))
-                upper[key].append(np.percentile(ranks[key], int(50 + scale_uncertainty * 25)))
+                r = [i for i in ranks[key] if i]
+                center[key].append(np.median(r))
+                lower[key].append(np.percentile(r, int(50 - scale_uncertainty * 25)))
+                upper[key].append(np.percentile(r, int(50 + scale_uncertainty * 25)))
             elif agglomeration == "mean":
-                center[key].append(np.mean(ranks[key]))
-                lower[key].append(-1 * scale_uncertainty * np.std(ranks[key]) + center[key][-1])
-                upper[key].append(scale_uncertainty * np.std(ranks[key]) + center[key][-1])
+                r = [i for i in ranks[key] if i]
+                center[key].append(np.mean(r))
+                lower[key].append(-1 * scale_uncertainty * np.std(r) + center[key][-1])
+                upper[key].append(scale_uncertainty * np.std(r) + center[key][-1])
         finishing_times.append(times_finished)
         plot_empty = False
     
@@ -104,6 +106,8 @@ def to_dict(tuple_list):
     for v in tuple_list:
         a = v[0]
         b = v[1:]
+        if len(b) == 1:
+            b = b[0]
         if a not in result:
             result[a] = list()
         result[a].append(b)
