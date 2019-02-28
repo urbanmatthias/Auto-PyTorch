@@ -102,7 +102,7 @@ def combine_test_predictions(data, pipeline_kwargs, X, Y):
         np.save(f, np.stack(predictions))
     with open(os.path.join(tempfile.gettempdir(), "autonet_ensemble_labels_%s.npy" % unique), "wb") as f:
         np.save(f, labels[0])
-    host, port = pipeline_kwargs["pipeline_config"]["ensemble_server_credentials"]
+    host, port = pipeline_kwargs[0]["pipeline_config"]["ensemble_server_credentials"]
     return host, port, unique
 
 async def serve_predictions(reader, writer):
