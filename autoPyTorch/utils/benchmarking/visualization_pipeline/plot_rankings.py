@@ -63,7 +63,7 @@ def plot_ranking(instance_name, metric_name, prefixes, trajectories, agglomerati
             for instance, values in instance_values.items()
             for value in values if value is not None])
         values = {instance: list(map(lambda x: x[0], sorted(v, key=lambda x: x[1]))) for instance, v in values.items()}  # configs sorted by value
-        ranks = {instance: {k: [i / len(v) for i, v in enumerate(v) if v == k] for k in center.keys()} for instance, v in values.items()}
+        ranks = {instance: {k: [i for i, v in enumerate(v) if v == k] for k in center.keys()} for instance, v in values.items()}
         ranks = to_dict([(k, r) for rank_dict in ranks.values() for k, r in rank_dict.items()])
 
         # populate plotting data

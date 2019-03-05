@@ -5,3 +5,4 @@ from autoPyTorch.utils.benchmarking.visualization_pipeline.read_instance_info im
 from autoPyTorch.utils.benchmarking.visualization_pipeline.visualization_settings import VisualizationSettings
 from autoPyTorch.utils.benchmarking.visualization_pipeline.get_ensemble_trajectories import GetEnsembleTrajectories
 from autoPyTorch.utils.benchmarking.visualization_pipeline.plot_rankings import PlotRankings
+from autoPyTorch.utils.benchmarking.visualization_pipeline.get_additional_trajectories import GetAdditionalTrajectories

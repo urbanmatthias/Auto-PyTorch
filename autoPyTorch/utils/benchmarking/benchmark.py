@@ -1,14 +1,14 @@
 from autoPyTorch.pipeline.base.pipeline import Pipeline
 from autoPyTorch.utils.benchmarking.benchmark_pipeline import (BenchmarkSettings,
-                                                           CreateAutoNet,
-                                                           FitAutoNet,
-                                                           ForAutoNetConfig,
-                                                           ForInstance, ForRun,
-                                                           PrepareResultFolder,
-                                                           ReadInstanceData,
-                                                           SaveResults,
-                                                           SetAutoNetConfig,
-                                                           SaveEnsembleLogs)
+                                                               CreateAutoNet,
+                                                               FitAutoNet,
+                                                               ForAutoNetConfig,
+                                                               ForInstance, ForRun,
+                                                               PrepareResultFolder,
+                                                               ReadInstanceData,
+                                                               SaveResults,
+                                                               SetAutoNetConfig,
+                                                               SaveEnsembleLogs)
 from autoPyTorch.utils.benchmarking.visualization_pipeline import (CollectAutoNetConfigTrajectories,
                                                                CollectRunTrajectories,
                                                                CollectInstanceTrajectories,
@@ -17,7 +17,8 @@ from autoPyTorch.utils.benchmarking.visualization_pipeline import (CollectAutoNe
                                                                ReadInstanceInfo,
                                                                VisualizationSettings,
                                                                GetEnsembleTrajectories,
-                                                               PlotRankings)
+                                                               PlotRankings,
+                                                               GetAdditionalTrajectories)
 from autoPyTorch.utils.config.config_file_parser import ConfigFileParser
 
 class Benchmark():
@@ -66,6 +67,7 @@ class Benchmark():
                         GetEnsembleTrajectories()
                     ])
                 ]),
+                GetAdditionalTrajectories(),
                 PlotTrajectories()
             ]),
             PlotRankings()

@@ -42,14 +42,8 @@ def plot(pipeline_config, trajectories, train_metrics, instance, plot_fnc):
     if output_folder and not os.path.exists(output_folder):
         os.mkdir(output_folder)
 
-    for log in plot_logs:
-        if log not in trajectories.keys():
-            logging.getLogger('benchmark').warn('No trajectory found for ' + log)
-
     # iterate over all incumbent trajectories for each metric
-    for i, metric_name in enumerate(trajectories.keys()):
-        if metric_name not in plot_logs:
-            continue
+    for i, metric_name in enumerate(plot_logs):
         
         # prepare pdf
         if output_folder is not None:
@@ -67,6 +61,7 @@ def plot(pipeline_config, trajectories, train_metrics, instance, plot_fnc):
                         pipeline_config['font_size'],
                         plt):
             logging.getLogger('benchmark').warn('Not showing empty plot for ' + instance)
+            plt.close(figure)
             continue
 
         # show or save

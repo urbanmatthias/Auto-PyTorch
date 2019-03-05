@@ -18,13 +18,14 @@ if __name__ == "__main__":
     parser.add_argument("--run_id_range", default=None, help="An id for the run. A range of run ids can be given: start-stop.")
     parser.add_argument("--result_dir", default=None, help="Override result dir in benchmark config.")
     parser.add_argument("--host_config", default=None, help="Override some configs according to host specifics.")
-    parser.add_argument("--plot_logs", default=None, help="List of metrics to plot. If not given, plot metric given in autonet config.")
+    parser.add_argument("--plot_logs", default=[], nargs="+", help="List of metrics to plot. If not given, plot metric given in autonet config.")
     parser.add_argument("--only_finished_runs", action="store_true", help="Skip run folders, that do not contain a summary.json")
     parser.add_argument("--output_folder", default=None, help="Store the plots as pdf. Specify an output folder.")
     parser.add_argument("--scale_uncertainty", default=1, type=float, help="Scale the uncertainty")
     parser.add_argument("--agglomeration", default="mean", help="Choose between mean and median.")
     parser.add_argument("--font_size", default=12, type=int, help="Set font size.")
     parser.add_argument("--prefixes", default=[""], type=str, nargs="+", help="The prefixes to plot. Choices: none, train, val, test, ensemble, ensemble_test")
+    parser.add_argument("--additional_trajectories", default=[], type=str, nargs="+", help="Path to json file describing additional trajectories")
     parser.add_argument('benchmark', help='The benchmark to visualize')
 
     args = parser.parse_args()
@@ -49,12 +50,13 @@ if __name__ == "__main__":
         benchmark_config['result_dir'] = os.path.join(ConfigFileParser.get_autonet_home(), args.result_dir)
 
     benchmark_config['run_id_range'] = run_id_range
-    benchmark_config['plot_logs'] = args.plot_logs.split(",") if args.plot_logs is not None else list()
+    benchmark_config['plot_logs'] = args.plot_logs
     benchmark_config['only_finished_runs'] = args.only_finished_runs
     benchmark_config['output_folder'] = args.output_folder
     benchmark_config['scale_uncertainty'] = args.scale_uncertainty
     benchmark_config['agglomeration'] = args.agglomeration
     benchmark_config['font_size'] = args.font_size
     benchmark_config['prefixes'] = [p if p != "none" else "" for p in args.prefixes]
+    benchmark_config['additional_trajectories'] = args.additional_trajectories
     
     benchmark.visualize_benchmark(**benchmark_config)
