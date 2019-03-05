@@ -68,8 +68,12 @@ def plot_ranking(instance_name, metric_name, prefixes, trajectories, agglomerati
 
         # populate plotting data
         for key in center.keys():
-            if agglomeration == "median":
-                r = [i for i in ranks[key] if i]
+            r = [i for i in ranks[key] if i]
+            if not r:
+                center[key].append(float("nan"))
+                lower[key].append(float("nan"))
+                upper[key].append(float("nan"))
+            elif agglomeration == "median":
                 center[key].append(np.median(r))
                 lower[key].append(np.percentile(r, int(50 - scale_uncertainty * 25)))
                 upper[key].append(np.percentile(r, int(50 + scale_uncertainty * 25)))
