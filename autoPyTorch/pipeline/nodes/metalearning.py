@@ -33,6 +33,7 @@ class MetaLearning(PipelineNode):
     def get_pipeline_config_options(self):
         options = [
             ConfigOption(name="initial_design", default=None, type="directory"),
-            ConfigOption(name="warmstarted_model", default=None, type="directory")
+            ConfigOption(name="warmstarted_model", default=None, type="directory"),
+            # ConfigOption(name="max_initial_design_configs", default=1, type=int)
         ]
         return options
