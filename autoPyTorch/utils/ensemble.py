@@ -39,6 +39,11 @@ def read_ensemble_prediction_file(filename, y_transform):
             try:
                 job_id, budget, timestamps = np.load(f)
                 predictions = np.load(f)
+
+                if np.any(np.isnan(predictions)):
+                    logging.getLogger("autonet").warn("Your stored predictions contained nans")
+                    continue
+
                 model_identifiers.append(job_id + (budget, ))
                 predictions = np.array(predictions)
                 all_predictions.append(predictions)

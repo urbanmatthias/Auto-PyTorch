@@ -27,15 +27,20 @@ class SaveEnsembleLogs(PipelineNode):
         filename = os.path.join(result_dir, "predictions_for_ensemble.npy")
         test_filename = os.path.join(result_dir, "test_predictions_for_ensemble.npy")
         ensemble_log_filename = os.path.join(result_dir, "ensemble_log.json")
+        with open(ensemble_log_filename, "w") as f: pass
 
         # read the predictions
         predictions, labels, model_identifiers, timestamps = read_ensemble_prediction_file(filename=filename, y_transform=y_transform)
+        assert(list(map(lambda x: x["finished"], timestamps)) == sorted(list(map(lambda x: x["finished"], timestamps))))
         test_data_available = False
         try:
             test_predictions, test_labels, test_model_identifiers, test_timestamps = read_ensemble_prediction_file(filename=test_filename, y_transform=y_transform)
+            test_predictions = [np.mean(p, axis=0) for p in test_predictions]     
             assert test_model_identifiers == model_identifiers and test_timestamps == timestamps
             test_data_available = True
-        except:
+        except Exception as e:
+            logging.getLogger("benchmark").warn("Could not load test data")
+            logging.getLogger("benchmark").warn(str(e))
             pass
 
         # compute the prediction subset used to compute performance over time
