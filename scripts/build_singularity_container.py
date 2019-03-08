@@ -8,7 +8,8 @@ if __name__ == "__main__":
                 move_into_container.append(f)
     if move_into_container:
         subprocess.call(["tar", "-czvf", "move_into_container.tar.gz"] + move_into_container)
+    image_name = input("Name of Image? (Default: Auto-PyTorch.simg) ") or "Auto-PyTorch.simg"
     print("Building Singularity container. You need to be root for that.")
-    subprocess.call(["sudo", "singularity", "build", "Auto-PyTorch.simg", "scripts/Singularity"])
+    subprocess.call(["sudo", "singularity", "build", image_name, "scripts/Singularity"])
     if move_into_container:
         os.remove("move_into_container.tar.gz")

@@ -23,6 +23,7 @@ if __name__ == "__main__":
     parser.add_argument("--memory_bonus", default=1000, type=int, help="Give the job some more memory. Unit: MB.")
     parser.add_argument("--result_dir", default=None, help="The dir to save the results")
     parser.add_argument("--output_dir", default=None, help="The dir to save the outputs")
+    parser.add_argument("--template_args", default=[], nargs="+", type=str, help="Additional args specified in template")
     parser.add_argument("runscript", help="The script template used to submit job on cluster.")
     parser.add_argument('benchmark', help='The benchmark to run')
     args = parser.parse_args()
@@ -34,6 +35,16 @@ if __name__ == "__main__":
     autonet_home = ConfigFileParser.get_autonet_home()
     host_config_orig = [l[13:] for l in runscript_template if l.startswith("#HOST_CONFIG ")][0].strip()
     host_config_file = os.path.join(autonet_home, host_config_orig) if not os.path.isabs(host_config_orig) else host_config_orig
+
+    # parse template args
+    runscript_template_args = [l[19:].strip().split() for l in runscript_template if l.startswith("#TEMPLATE_ARGUMENT ")]
+    parsed_template_args = dict()
+    for variable_name, default in runscript_template_args:
+        try:
+            value = [a.split("=")[1] for a in args.template_args if a.split("=")[0] == variable_name][0]
+        except IndexError:
+            value = default
+        parsed_template_args[variable_name] = value
     
     # get benchmark config
     benchmark_config_file = args.benchmark
@@ -79,6 +90,7 @@ if __name__ == "__main__":
         "ORIG_BENCHMARK": args.benchmark,
         "RESULT_DIR": result_dir
     }
+    replacement_dict.update(parsed_template_args)
 
     # create directories
     if not os.path.exists(outputs_folder):
@@ -128,8 +140,8 @@ if __name__ == "__main__":
                 replacement_dict["OUTPUT_DIR"] = output_dir
 
                 # make replacements in runscript and get command to submit the job
-                pattern = re.compile("|".join(map(lambda x: re.escape("$$" + x), replacement_dict.keys())))
-                runscript = [pattern.sub(lambda x: str(replacement_dict[x.group()[2:]]), l) for l in runscript_template]
+                pattern = re.compile("|".join(map(lambda x: re.escape("$${" + x + "}"), replacement_dict.keys())))
+                runscript = [pattern.sub(lambda x: str(replacement_dict[x.group()[3:-1]]), l) for l in runscript_template]
                 command = [l[9:] for l in runscript if l.startswith("#COMMAND ")][0].strip()
 
                 # save runscript
