@@ -28,6 +28,6 @@ then
     cp -r benchmark_results/* $${RESULT_DIR}
 fi
 
-#COMMAND echo msub run_nemo_singularity.moab
+#COMMAND msub run_nemo_singularity.moab
 #HOST_CONFIG configs/hosts/nemo_singularity.txt
 #TEMPLATE_ARGUMENT IMAGE Auto-PyTorch.simg
