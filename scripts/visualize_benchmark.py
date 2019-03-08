@@ -16,6 +16,7 @@ __license__ = "BSD"
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Run benchmarks for autonet.')
     parser.add_argument("--run_id_range", default=None, help="An id for the run. A range of run ids can be given: start-stop.")
+    parser.add_argument("--partial_benchmark", default=None, nargs="+", help="Only run a part of the benchmark. Run other parts later or in parallel. 3-tuple: instance_slice, autonet_config_slice, run_number_range.")
     parser.add_argument("--result_dir", default=None, help="Override result dir in benchmark config.")
     parser.add_argument("--host_config", default=None, help="Override some configs according to host specifics.")
     parser.add_argument("--plot_logs", default=[], nargs="+", help="List of metrics to plot. If not given, plot metric given in autonet config.")
@@ -48,6 +49,14 @@ if __name__ == "__main__":
 
     if (args.result_dir is not None):
         benchmark_config['result_dir'] = os.path.join(ConfigFileParser.get_autonet_home(), args.result_dir)
+    
+    if (args.partial_benchmark is not None):
+        if (len(args.partial_benchmark) > 0):
+            benchmark_config['instance_slice'] = args.partial_benchmark[0]
+        if (len(args.partial_benchmark) > 1):
+            benchmark_config['autonet_config_slice'] = args.partial_benchmark[1]
+        if (len(args.partial_benchmark) > 2):
+            benchmark_config['run_number_range'] = args.partial_benchmark[2]
 
     benchmark_config['run_id_range'] = run_id_range
     benchmark_config['plot_logs'] = args.plot_logs

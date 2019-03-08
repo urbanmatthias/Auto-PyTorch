@@ -7,7 +7,7 @@
 cd $$OUTPUT_DIR
 
 JOBID=(${MOAB_JOBID//[/ })
-COMMAND="python $$AUTONET_HOME/scripts/run_benchmark.py $$BENCHMARK --partial_benchmark $$INSTANCE_ID,$$CONFIG_ID,$$RUN_NUMBER --host_config $$HOST_CONFIG --result_dir $TMPDIR/benchmark_results --run_id $JOBID --task_id $MOAB_JOBARRAYINDEX"
+COMMAND="python $$AUTONET_HOME/scripts/run_benchmark.py $$BENCHMARK --partial_benchmark $$INSTANCE_ID $$CONFIG_ID $$RUN_NUMBER --host_config $$HOST_CONFIG --result_dir $TMPDIR/benchmark_results --run_id $JOBID --task_id $MOAB_JOBARRAYINDEX"
 echo "Run benchmark: $COMMAND"
 timeout -k $$TIME_LIMIT[1] $$TIME_LIMIT[0] $COMMAND 1> $TMPDIR/stdout.txt 2> $TMPDIR/stderr.txt
 
