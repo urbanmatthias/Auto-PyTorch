@@ -44,7 +44,7 @@ if __name__ == "__main__":
     benchmark_config.update(config_parser.read(host_config_file))
 
     if (args.result_dir is not None):
-        benchmark_config['result_dir'] = os.path.join(ConfigFileParser.get_autonet_home(), args.result_dir)
+        benchmark_config['result_dir'] = os.path.abspath(args.result_dir)
     
     if (args.partial_benchmark is not None):
         if (len(args.partial_benchmark) > 0):
@@ -59,6 +59,6 @@ if __name__ == "__main__":
     benchmark_config["ensemble_size"] = args.ensemble_size
     benchmark_config["ensemble_only_consider_n_best"] = args.ensemble_only_consider_n_best
     benchmark_config["ensemble_sorted_initialization_n_best"] = args.ensemble_sorted_initialization_n_best
-
+    benchmark_config['benchmark_name'] = os.path.basename(args.benchmark).split(".")[0]
     
     benchmark.compute_ensemble_performance(**benchmark_config)

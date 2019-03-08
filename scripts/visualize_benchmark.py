@@ -48,7 +48,7 @@ if __name__ == "__main__":
     benchmark_config.update(config_parser.read(host_config_file))
 
     if (args.result_dir is not None):
-        benchmark_config['result_dir'] = os.path.join(ConfigFileParser.get_autonet_home(), args.result_dir)
+        benchmark_config['result_dir'] = os.path.abspath(args.result_dir)
     
     if (args.partial_benchmark is not None):
         if (len(args.partial_benchmark) > 0):
@@ -67,5 +67,6 @@ if __name__ == "__main__":
     benchmark_config['font_size'] = args.font_size
     benchmark_config['prefixes'] = [p if p != "none" else "" for p in args.prefixes]
     benchmark_config['additional_trajectories'] = args.additional_trajectories
+    benchmark_config['benchmark_name'] = os.path.basename(args.benchmark).split(".")[0]
     
     benchmark.visualize_benchmark(**benchmark_config)

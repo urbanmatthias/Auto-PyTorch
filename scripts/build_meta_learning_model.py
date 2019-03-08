@@ -66,6 +66,7 @@ if __name__ == "__main__":
     config["print_missing_loss_matrix_entries"] = args.print_missing_loss_matrix_entries
     config["loss_matrix_db_config"] = dict()
     config["loss_matrix_name"] = args.loss_matrix_name
+    config['benchmark_name'] = os.path.basename(args.benchmark).split(".")[0]
 
     if args.loss_matrix_db_config_file is not None:
         with open(args.loss_matrix_db_config_file) as f:

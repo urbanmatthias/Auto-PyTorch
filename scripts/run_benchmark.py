@@ -46,5 +46,7 @@ if __name__ == "__main__":
             benchmark_config['run_number_range'] = args.partial_benchmark[2]
 
     benchmark_config['run_id'] = args.run_id
-    benchmark_config['task_id'] = args.task_id    
+    benchmark_config['task_id'] = args.task_id
+    benchmark_config['benchmark_name'] = os.path.basename(args.benchmark).split(".")[0]
+
     benchmark.run_benchmark(**benchmark_config)

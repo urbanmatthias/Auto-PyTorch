@@ -27,6 +27,7 @@ class MetaLearningSettings(BenchmarkSettings):
         options = [
             ConfigOption("run_id_range", type=str, default=None),
             ConfigOption("log_level", default="info", type=str, choices=list(self.logger_settings.keys())),
-            ConfigOption('result_dir', default=None, type='directory', required=True)
+            ConfigOption('result_dir', default=None, type='directory', required=True),
+            ConfigOption("benchmark_name", default=None, type=str, required=True)
         ]
         return options
