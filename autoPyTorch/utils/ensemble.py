@@ -202,7 +202,7 @@ class ensemble_logger(object):
         if "predictions_for_ensemble" in job.result and job.result["predictions_for_ensemble"] is None and \
             "test_predictions_for_ensemble" in job.result and job.result["test_predictions_for_ensemble"] is not None:
             host, port, unique =  job.result["test_predictions_for_ensemble"]
-            with open("/dev/null", "w") as f:
+            with open("/dev/null", "wb") as f:
                 loop.run_until_complete(self.save_remote_data(host, port, "predictions", unique, f))
 
         if "predictions_for_ensemble" in job.result and job.result["predictions_for_ensemble"] is not None:
