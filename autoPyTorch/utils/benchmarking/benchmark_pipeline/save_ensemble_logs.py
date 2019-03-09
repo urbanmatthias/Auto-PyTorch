@@ -11,6 +11,7 @@ import logging
 import math
 import numpy as np
 import json
+import traceback
 
 class SaveEnsembleLogs(PipelineNode):
 
@@ -36,12 +37,14 @@ class SaveEnsembleLogs(PipelineNode):
         try:
             test_predictions, test_labels, test_model_identifiers, test_timestamps = read_ensemble_prediction_file(filename=test_filename, y_transform=y_transform)
             test_predictions = [np.mean(p, axis=0) for p in test_predictions]     
-            assert test_model_identifiers == model_identifiers and test_timestamps == timestamps
+            assert test_model_identifiers == model_identifiers and test_timestamps == timestamps, "Different model identifiers or timestamps in test file"
             test_data_available = True
+        except IOError:
+            logging.getLogger("benchmark").info("No test data available when building ensemble logs.")
         except Exception as e:
             logging.getLogger("benchmark").warn("Could not load test data")
             logging.getLogger("benchmark").warn(str(e))
-            pass
+            traceback.print_exc()
 
         # compute the prediction subset used to compute performance over time
         start_time = min(map(lambda t: t["submitted"], timestamps))
