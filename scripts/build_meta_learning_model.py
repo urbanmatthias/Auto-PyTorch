@@ -31,7 +31,6 @@ if __name__ == "__main__":
     parser.add_argument("--initial_design_max_total_budget", default=None, type=float)    
     parser.add_argument("--initial_design_convergence_threshold", default=None, type=float)
     parser.add_argument("--loss_matrix_db_config_file", default=None, type=str)
-    parser.add_argument("--loss_matrix_name", default="loss_matrix_collection", type=str)
     parser.add_argument('benchmark', help='The benchmark to learn from')
 
     args = parser.parse_args()
@@ -65,7 +64,6 @@ if __name__ == "__main__":
     config["initial_design_convergence_threshold"] = args.initial_design_convergence_threshold
     config["print_missing_loss_matrix_entries"] = args.print_missing_loss_matrix_entries
     config["loss_matrix_db_config"] = dict()
-    config["loss_matrix_name"] = args.loss_matrix_name
     config['benchmark_name'] = os.path.basename(args.benchmark).split(".")[0]
 
     if args.loss_matrix_db_config_file is not None:

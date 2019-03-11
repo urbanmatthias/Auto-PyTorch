@@ -8,13 +8,13 @@ class MetaLearningFit(PipelineNode):
     def fit(self, pipeline_config, initial_design_learner, warmstarted_model_builder):
         if pipeline_config["calculate_loss_matrix_entry"] >= 0:
             assert not pipeline_config["learn_initial_design"] and not pipeline_config["learn_warmstarted_model"]
-            initial_design_learner[1].write_loss(collection_name=pipeline_config["loss_matrix_name"],
+            initial_design_learner[1].write_loss(collection_name=pipeline_config["benchmark_name"],
                                                  db_config=pipeline_config["loss_matrix_db_config"],
                                                  entry=pipeline_config["calculate_loss_matrix_entry"])
         
         if pipeline_config["print_missing_loss_matrix_entries"]:
             print("\n".join(map(str, initial_design_learner[1].missing_loss_matrix_entries(
-                collection_name=pipeline_config["loss_matrix_name"],
+                collection_name=pipeline_config["benchmark_name"],
                 db_config=pipeline_config["loss_matrix_db_config"]))))
 
         if not os.path.exists(pipeline_config["save_path"]):
@@ -24,7 +24,7 @@ class MetaLearningFit(PipelineNode):
             assert pipeline_config["initial_design_max_total_budget"] is not None, "initial_design_max_total_budget needs to be specified"
             assert pipeline_config["initial_design_convergence_threshold"] is not None, "initial_design_convergence_threshold needs to be specified"
 
-            losses, incumbent_dict = initial_design_learner[1].read_loss(collection_name=pipeline_config["loss_matrix_name"],
+            losses, incumbent_dict = initial_design_learner[1].read_loss(collection_name=pipeline_config["benchmark_name"],
                                                                          db_config=pipeline_config["loss_matrix_db_config"])
             initial_design_learner[0].set_incumbent_losses(losses, incumbent_dict)
             initial_design, cost = initial_design_learner[0].learn(
@@ -67,8 +67,7 @@ class MetaLearningFit(PipelineNode):
             ConfigOption("calculate_loss_matrix_entry", default=-1, type=int),
             ConfigOption("initial_design_max_total_budget", default=None, type=float),
             ConfigOption("initial_design_convergence_threshold", default=None, type=float),
-            ConfigOption("loss_matrix_db_config", default=dict(), type=dict),
-            ConfigOption("loss_matrix_name", default="loss_matrix_collection", type=str)
+            ConfigOption("loss_matrix_db_config", default=dict(), type=dict)
         ]
         return options
 

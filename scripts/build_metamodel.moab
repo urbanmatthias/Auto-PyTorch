@@ -9,7 +9,7 @@ cp metalearning_data.tar.gz $TMPDIR
 
 tar -zxf $TMPDIR/metalearning_data.tar.gz -C $TMPDIR
 
-COMMAND="python scripts/build_meta_learning_model.py configs/benchmark/collect_metalearning_data.txt --result_dir $TMPDIR/benchmark_results --only_finished_runs --save_path $TMPDIR --learn_warmstarted_model --learn_initial_design --initial_design_max_total_budget 90000 --initial_design_convergence_threshold 0.0001 --loss_matrix_name collect_metalearning_data --loss_matrix_db_config_file mongo_db.conf"
+COMMAND="python scripts/build_meta_learning_model.py configs/benchmark/collect_metalearning_data.txt --result_dir $TMPDIR/benchmark_results --only_finished_runs --save_path $TMPDIR --learn_warmstarted_model --learn_initial_design --initial_design_max_total_budget 90000 --initial_design_convergence_threshold 0.0001 --loss_matrix_db_config_file mongo_db.conf"
 $COMMAND 1> $TMPDIR/stdout.txt 2> $TMPDIR/stderr.txt
 
 mkdir meta_outputs
