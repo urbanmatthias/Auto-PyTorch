@@ -77,16 +77,18 @@ def plot(pipeline_config, trajectories, train_metrics, instance, plot_fnc):
 
 def plot_trajectory(instance_name, metric_name, prefixes, trajectories, agglomeration, scale_uncertainty, font_size, plt):
     # iterate over the incumbent trajectories of the different runs
+    linestyles = ['-', '--', '-.', ':']
     cmap = plt.get_cmap('jet')
     plot_empty = True
     for p, prefix in enumerate(prefixes):
         trajectory_name = ("%s_%s" % (prefix, metric_name)) if prefix else metric_name
+        linestyle = linestyles[p % len(linestyles)]
         if trajectory_name not in trajectories:
             continue
 
         run_trajectories = trajectories[trajectory_name]
         for i, (config_name, trajectory) in enumerate(run_trajectories.items()):
-            color = cmap((i * len(prefixes) + p) / (len(run_trajectories) * len(prefixes)))
+            color = cmap(i / len(run_trajectories))
 
             trajectory_pointers = [0] * len(trajectory)  # points to current entry of each trajectory
             trajectory_values = [None] * len(trajectory)  # list of current values of each trajectory
@@ -124,7 +126,7 @@ def plot_trajectory(instance_name, metric_name, prefixes, trajectories, agglomer
 
             # insert into plot
             label = ("%s: %s" % (prefix, config_name)) if prefix else config_name
-            plt.step(finishing_times, center, color=color, label=label, where='post')
+            plt.step(finishing_times, center, color=color, label=label, where='post', linestyle=linestyle)
             color = (color[0], color[1], color[2], 0.5)
             plt.fill_between(finishing_times, lower, upper, step="post", color=[color])
     plt.xlabel('wall clock time [s]', fontsize=font_size)

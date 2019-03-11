@@ -44,7 +44,7 @@ def csv_trajectory_loader(path, config_name, columns_description, trajectories):
         for row in reader:
             for i, col in enumerate(row):
                 if i == columns_description["time_column"]:
-                    times_finished.append(float(col))
+                    times_finished.append(max(0, float(col)))
                 if str(i) in columns_description["metric_columns"].keys():
                     log_name = columns_description["metric_columns"][str(i)]["name"]
                     transform = columns_description["metric_columns"][str(i)]["transform"] \
@@ -62,8 +62,8 @@ def csv_trajectory_loader(path, config_name, columns_description, trajectories):
             if config_name not in trajectories[log_name]:
                 trajectories[log_name][config_name] = list()
             trajectories[log_name][config_name].append({
-                "times_finished": times_finished,
-                "losses": performance_list,
+                "times_finished": sorted(times_finished),
+                "losses": list(zip(*sorted(zip(times_finished, performance_list))))[1],
                 "flipped": False
             })
 

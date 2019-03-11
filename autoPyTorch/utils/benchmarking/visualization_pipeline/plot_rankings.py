@@ -62,8 +62,8 @@ def plot_ranking(instance_name, metric_name, prefixes, trajectories, agglomerati
             for (config, name), instance_values in trajectory_values.items()
             for instance, values in instance_values.items()
             for value in values if value is not None])
-        values = {instance: list(map(lambda x: x[0], sorted(v, key=lambda x: x[1]))) for instance, v in values.items()}  # configs sorted by value
-        ranks = {instance: {k: [i for i, v in enumerate(v) if v == k] for k in center.keys()} for instance, v in values.items()}
+        sorted_values = {instance: sorted(map(lambda x: x[1], v), reverse=True) for instance, v in values.items()}  # configs sorted by value
+        ranks = {instance: {k: [sorted_values[instance].index(value) for config_name, value in v if config_name == k] for k in center.keys()} for instance, v in values.items()}
         ranks = to_dict([(k, r) for rank_dict in ranks.values() for k, r in rank_dict.items()])
 
         # populate plotting data
@@ -102,6 +102,7 @@ def plot_ranking(instance_name, metric_name, prefixes, trajectories, agglomerati
     plt.legend(loc='best', prop={'size': font_size})
     plt.title("Ranking", fontsize=font_size)
     plt.xscale("log")
+    plt.xlim((50, None))
     return True
 
 def to_dict(tuple_list):
