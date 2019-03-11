@@ -22,7 +22,7 @@ from ConfigSpace.read_and_write.json import read as read_json
 
 class Collect(PipelineNode):
 
-    def fit(self, pipeline_config, instance, initial_design_learner, warmstarted_model_builder, run_result_dir, data_manager, autonet):
+    def fit(self, pipeline_config, instance, initial_design_learner, warmstarted_model_builder, evaluator, run_result_dir, data_manager, autonet):
         logger = logging.getLogger("metalearning")
 
         if pipeline_config["only_finished_runs"] and not os.path.exists(os.path.join(run_result_dir, "summary.json")):
@@ -46,6 +46,7 @@ class Collect(PipelineNode):
 
         initial_design_learner[1].add_result(run_result_dir, config_space, instance, exact_cost_model)
         warmstarted_model_builder.add_result(run_result_dir, config_space, origin=instance)
+        evaluator.add_result(run_result_dir, config_space, origin=instance)
         return dict()
     
     def get_pipeline_config_options(self):

@@ -7,13 +7,14 @@ from autoPyTorch.utils.config.config_option import ConfigOption
 
 
 class ForAutoNetConfig(BaseForAutonetConfig):
-    def fit(self, pipeline_config, instance, run_id_range, initial_design_learner, warmstarted_model_builder):
+    def fit(self, pipeline_config, instance, run_id_range, initial_design_learner, warmstarted_model_builder, evaluator):
         for config_file in self.get_config_files(pipeline_config):
             try:
                 self.sub_pipeline.fit_pipeline(pipeline_config=pipeline_config,
                     instance=instance,
                     run_id_range=run_id_range, autonet_config_file=config_file,
-                    initial_design_learner=initial_design_learner, warmstarted_model_builder=warmstarted_model_builder)
+                    initial_design_learner=initial_design_learner, warmstarted_model_builder=warmstarted_model_builder,
+                    evaluator=evaluator)
             except Exception as e:
                 print(e)
                 traceback.print_exc()

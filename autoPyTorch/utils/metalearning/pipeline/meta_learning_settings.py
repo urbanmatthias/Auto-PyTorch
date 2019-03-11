@@ -8,6 +8,7 @@ from autoPyTorch.utils.config.config_file_parser import ConfigFileParser
 from autoPyTorch.utils.config.config_option import ConfigOption, to_bool
 from hpbandster.metalearning.initial_design import Hydra, LossMatrixComputation
 from hpbandster.metalearning.model_warmstarting import WarmstartedModelBuilder
+from hpbandster.metalearning.evaluator import Evaluator
 
 
 class MetaLearningSettings(BenchmarkSettings):
@@ -21,7 +22,8 @@ class MetaLearningSettings(BenchmarkSettings):
 
         return {'run_id_range': pipeline_config['run_id_range'],
                 'initial_design_learner': (Hydra(bigger_is_better=False), LossMatrixComputation(bigger_is_better=False)) ,
-                'warmstarted_model_builder': WarmstartedModelBuilder()}
+                'warmstarted_model_builder': WarmstartedModelBuilder(),
+                'evaluator': Evaluator(bigger_budget_is_better=False, cg_kwargs={})}
 
     def get_pipeline_config_options(self):
         options = [

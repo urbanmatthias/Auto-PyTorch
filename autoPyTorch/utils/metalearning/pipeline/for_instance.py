@@ -7,9 +7,9 @@ from autoPyTorch.utils.benchmarking.benchmark_pipeline import ForInstance as Bas
 import traceback
 
 class ForInstance(BaseForInstance):
-    def fit(self, pipeline_config, run_id_range, initial_design_learner, warmstarted_model_builder):
+    def fit(self, pipeline_config, run_id_range, initial_design_learner, warmstarted_model_builder, evaluator):
         instances = self.get_instances(pipeline_config, instance_slice=self.parse_slice(pipeline_config["instance_slice"]))
-        instance_result_dirs = next(os.walk(pipeline_config["result_dir"]))[1]
+        instance_result_dirs = next(os.walk(os.path.join(pipeline_config["result_dir"], pipeline_config["benchmark_name"])))[1]
         for i, instance in enumerate(instances):
             # if i >= 2:
             #     break
@@ -18,7 +18,8 @@ class ForInstance(BaseForInstance):
             print('Process instance ' +  str(i) + ' of ' + str(len(instances)))
             try:
                 self.sub_pipeline.fit_pipeline(pipeline_config=pipeline_config, instance=instance,
-                    run_id_range=run_id_range, initial_design_learner=initial_design_learner, warmstarted_model_builder=warmstarted_model_builder)
+                    run_id_range=run_id_range, initial_design_learner=initial_design_learner, warmstarted_model_builder=warmstarted_model_builder,
+                    evaluator=evaluator)
             except Exception as e:
                 print(e)
                 traceback.print_exc()

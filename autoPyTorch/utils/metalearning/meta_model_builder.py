@@ -8,7 +8,8 @@ from autoPyTorch.utils.metalearning.pipeline import (Collect,
                                                      ForInstance,
                                                      ForAutoNetConfig,
                                                      ForRun,
-                                                     SetAutoNetConfig)
+                                                     SetAutoNetConfig,
+                                                     MetalearningEval)
 
 
 class MetaModelBuilder():
@@ -32,5 +33,6 @@ class MetaModelBuilder():
                     ])
                 ])
             ]),
+            MetalearningEval(),
             MetaLearningFit()
         ])
