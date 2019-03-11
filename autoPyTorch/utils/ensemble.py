@@ -39,11 +39,6 @@ def read_ensemble_prediction_file(filename, y_transform):
             try:
                 job_id, budget, timestamps = np.load(f)
                 predictions = np.load(f)
-
-                if np.any(np.isnan(predictions)):
-                    logging.getLogger("autonet").warn("Your stored predictions contained nans")
-                    continue
-
                 model_identifiers.append(job_id + (budget, ))
                 predictions = np.array(predictions)
                 all_predictions.append(predictions)
@@ -73,6 +68,10 @@ class test_predictions_for_ensemble():
         return self.predict(self.autonet, self.X_test, return_probabilities=True)[1], self.Y_test
 
 def combine_predictions(data, pipeline_kwargs, X, Y):
+    if (np.any(np.isnan(Y))):
+        logging.getLogger("autonet").warn("Not saving predictions containing nans")
+        return None
+
     all_indices = None
     all_predictions = None
     for split, predictions in data.items():
@@ -174,8 +173,15 @@ class ensemble_logger(object):
         except:
             raise
         
-        if os.path.exists(self.test_file_name) and not overwrite:
-            raise FileExistsError('The file %s already exists.'%self.file_name)
+        try:
+            with open(self.test_file_name, 'x') as fh: pass
+        except FileExistsError:
+            if overwrite:
+                with open(self.test_file_name, 'w') as fh: pass
+            else:
+                raise FileExistsError('The file %s already exists.'%self.test_file_name)
+        except:
+            raise
 
     def new_config(self, *args, **kwargs):
         pass
@@ -192,7 +198,14 @@ class ensemble_logger(object):
             return
         loop = asyncio.new_event_loop()
         asyncio.set_event_loop(loop)
-        if "predictions_for_ensemble" in job.result:
+
+        if "predictions_for_ensemble" in job.result and job.result["predictions_for_ensemble"] is None and \
+            "test_predictions_for_ensemble" in job.result and job.result["test_predictions_for_ensemble"] is not None:
+            host, port, unique =  job.result["test_predictions_for_ensemble"]
+            with open("/dev/null", "wb") as f:
+                loop.run_until_complete(self.save_remote_data(host, port, "predictions", unique, f))
+
+        if "predictions_for_ensemble" in job.result and job.result["predictions_for_ensemble"] is not None:
             host, port, unique = job.result["predictions_for_ensemble"]
             with open(self.file_name, "ab") as f:
                 if not self.labels_written:
