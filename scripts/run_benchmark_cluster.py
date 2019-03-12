@@ -85,6 +85,7 @@ if __name__ == "__main__":
         "OUTPUT_BASE_DIR": output_base_dir,
         "AUTONET_HOME": autonet_home,
         "BENCHMARK": benchmark,
+        "BENCHMARK_NAME": os.path.basename(benchmark).split(".")[0],
         "HOST_CONFIG": host_config_file,
         "ORIG_HOST_CONFIG": host_config_orig,
         "ORIG_BENCHMARK": args.benchmark,
