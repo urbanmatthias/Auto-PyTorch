@@ -131,7 +131,6 @@ def plot_summary(instance_name, metric_name, prefixes, trajectories, agglomerati
     plt.legend(loc='best', prop={'size': font_size})
     plt.title(instance_name, fontsize=font_size)
     plt.xscale("log")
-    plt.xlim((50, None))
     return True
 
 def to_dict(tuple_list):
