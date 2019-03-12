@@ -14,7 +14,7 @@ class PlotSummary(PipelineNode):
 def get_ranking_plot_values(values, names):
     """ values = instance_name --> [((key=prefix + metric), value), ...] """
     sorted_values = {instance: sorted(map(lambda x: x[1], v), reverse=True) for instance, v in values.items()}  # configs sorted by value
-    ranks = {instance: {n: [sorted_values[instance].index(value) for config_name, value in v if config_name == n] for n in names}
+    ranks = {instance: {n: [sorted_values[instance].index(value) + 1 for config_name, value in v if config_name == n] for n in names}
              for instance, v in values.items()}
     ranks = to_dict([(n, r) for rank_dict in ranks.values() for n, r in rank_dict.items()])
     for name in names:
@@ -25,12 +25,10 @@ def get_ranking_plot_values(values, names):
 def get_average_plot_values(values, names):
     """ values = instance_name --> [((key=prefix + metric), value), ...] """
     result = dict()
+    for name in names: # prepare lists
+        result[name] = list()
     for _, v in values.items():  # aggregate over all instances
         for name, value in v:  # aggregate over all runs
-            if name not in names:
-                continue
-            if name not in result:
-                result[name] = list()
             result[name].append(value)
     for name, values in result.items():
         result[name] = sum(values) / len(values)  # compute average

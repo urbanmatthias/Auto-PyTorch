@@ -142,13 +142,10 @@ def plot_trajectory(instance_name, metric_name, prefixes, trajectories, agglomer
 
 LABEL_RENAME = dict()
 def label_rename(label):
-    if label in LABEL_RENAME:
-        return LABEL_RENAME[label]
-    rename = input("Rename label %s to? (Leave empty for no rename) " % label)
-    if rename:
-        LABEL_RENAME[label] = rename
-        return rename
-    return label
+    if label not in LABEL_RENAME:
+        rename = input("Rename label %s to? (Leave empty for no rename) " % label)
+        LABEL_RENAME[label] = rename if rename else label
+    return LABEL_RENAME[label]
 
 class DataPlot():
     def __init__(self):
