@@ -8,14 +8,15 @@
 
 
 cd $HOME/Auto-PyTorch
-cp metalearning_data.tar.gz $TMPDIR
+mkdir benchmark_results
+cp metalearning_data.tar.gz $TMPDIR/benchmark_results
 cp Auto-PyTorch.simg $TMPDIR
 cp mongo_db.conf $TMPDIR
 
 WORKSPACE=$PWD
-cd $TMPDIR
-
+cd $TMPDIR/benchmark_results
 tar -zxf metalearning_data.tar.gz
+cd ..
 JOBID=(${MOAB_JOBID//[/ })
 
 module load tools/singularity/2.6
