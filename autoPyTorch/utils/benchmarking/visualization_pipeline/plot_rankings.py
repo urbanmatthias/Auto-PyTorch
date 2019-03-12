@@ -1,5 +1,5 @@
 from autoPyTorch.pipeline.base.pipeline_node import PipelineNode
-from autoPyTorch.utils.benchmarking.visualization_pipeline.plot_trajectories import plot
+from autoPyTorch.utils.benchmarking.visualization_pipeline.plot_trajectories import plot, label_rename
 import os
 import logging
 import numpy as np
@@ -43,7 +43,7 @@ get_plot_values_funcs = {
 }
 
 
-def plot_summary(instance_name, metric_name, prefixes, trajectories, agglomeration, scale_uncertainty, font_size, plt):
+def plot_summary(instance_name, metric_name, prefixes, trajectories, agglomeration, scale_uncertainty, font_size, do_label_rename, plt):
     assert instance_name in get_plot_values_funcs.keys()
     cmap = plt.get_cmap('jet')
     trajectory_names_to_prefix = {(("%s_%s" % (prefix, metric_name)) if prefix else metric_name): prefix
@@ -122,6 +122,8 @@ def plot_summary(instance_name, metric_name, prefixes, trajectories, agglomerati
     for i, (config, name) in enumerate(center.keys()):
         prefix = trajectory_names_to_prefix[name]
         label = ("%s: %s" % (prefix, config)) if prefix else config
+        if do_label_rename:
+            label = label_rename(label)
         color = cmap(i / len(center))
         plt.plot(finishing_times, center[(config, name)], color=color, label=label)
         color = (color[0], color[1], color[2], 0.5)
