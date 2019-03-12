@@ -18,7 +18,7 @@ __license__ = "BSD"
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Run benchmarks for autonet.')
-    parser.add_argument("--partial_benchmark", default=None, help="Only run a part of the benchmark. Run other parts later. 3-tuple: instance_slice, autonet_config_slice, run_number_range.")
+    parser.add_argument("--partial_benchmark", default=None, nargs="+", help="Only run a part of the benchmark. Run other parts later or in parallel. 3-tuple: instance_slice, autonet_config_slice, run_number_range.")
     parser.add_argument("--time_bonus", default=[7200, 8200, 10800], type=int, nargs="+", help="Give the job some more time.")
     parser.add_argument("--memory_bonus", default=1000, type=int, help="Give the job some more memory. Unit: MB.")
     parser.add_argument("--result_dir", default=None, help="The dir to save the results")
@@ -64,14 +64,13 @@ if __name__ == "__main__":
     configs_range = list(range(len(all_configs)))
     instances_range = list(range(len(all_instances)))
 
-    if (args.partial_benchmark is not None):
-        split = args.partial_benchmark.split(',')
-        if (len(split) > 0):
-            instances_range = instances_range[ForInstance.parse_slice(split[0])]
-        if (len(split) > 1):
-            configs_range = configs_range[ForAutoNetConfig.parse_slice(split[1])]
-        if (len(split) > 2):
-            runs_range = list(ForRun.parse_range(split[2], benchmark_config["num_runs"]))
+    if args.partial_benchmark:
+        if len(args.partial_benchmark) > 0:
+            instances_range = instances_range[ForInstance.parse_slice(args.partial_benchmark[0])]
+        if len(args.partial_benchmark) > 1:
+            configs_range = configs_range[ForAutoNetConfig.parse_slice(args.partial_benchmark[1])]
+        if len(args.partial_benchmark) > 2:
+            runs_range = list(ForRun.parse_range(args.partial_benchmark[2], benchmark_config["num_runs"]))
     
     # set up dict used used to make replacements in runscript
     base_dir = os.getcwd()

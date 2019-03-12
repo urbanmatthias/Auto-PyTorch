@@ -37,12 +37,12 @@ if __name__ == "__main__":
     if (args.result_dir is not None):
         benchmark_config['result_dir'] = os.path.abspath(args.result_dir)
 
-    if (args.partial_benchmark is not None):
-        if (len(args.partial_benchmark) > 0):
+    if args.partial_benchmark is not None:
+        if len(args.partial_benchmark) > 0:
             benchmark_config['instance_slice'] = args.partial_benchmark[0]
-        if (len(args.partial_benchmark) > 1):
+        if len(args.partial_benchmark) > 1:
             benchmark_config['autonet_config_slice'] = args.partial_benchmark[1]
-        if (len(args.partial_benchmark) > 2):
+        if len(args.partial_benchmark) > 2:
             benchmark_config['run_number_range'] = args.partial_benchmark[2]
 
     benchmark_config['run_id'] = args.run_id
