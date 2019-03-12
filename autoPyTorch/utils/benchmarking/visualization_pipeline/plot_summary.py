@@ -30,8 +30,6 @@ def get_average_plot_values(values, names):
     for _, v in values.items():  # aggregate over all instances
         for name, value in v:  # aggregate over all runs
             result[name].append(value)
-    for name, values in result.items():
-        result[name] = sum(values) / len(values)  # compute average
     return result
 
 
