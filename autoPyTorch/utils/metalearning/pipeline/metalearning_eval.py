@@ -6,6 +6,7 @@ class MetalearningEval(PipelineNode):
         if pipeline_config["metalearning_evaluate"]:
             score = evaluator.evaluate()
             print("Warmstarted model score on this benchmark", score)
+        return dict()
 
     
     def get_pipeline_config_options(self):
