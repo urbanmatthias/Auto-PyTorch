@@ -4,20 +4,54 @@ import os
 import logging
 import numpy as np
 
-class PlotRankings(PipelineNode):
+class PlotSummary(PipelineNode):
     def fit(self, pipeline_config, trajectories, train_metrics):
-        plot(pipeline_config, trajectories, train_metrics, "ranking", plot_ranking)
+        plot(pipeline_config, trajectories, train_metrics, "ranking", plot_summary)
+        plot(pipeline_config, trajectories, train_metrics, "average", plot_summary)
         return dict()
 
-def plot_ranking(instance_name, metric_name, prefixes, trajectories, agglomeration, scale_uncertainty, font_size, plt):
-    assert instance_name == "ranking"
+
+def get_ranking_plot_values(values, names):
+    """ values = instance_name --> [((key=prefix + metric), value), ...] """
+    sorted_values = {instance: sorted(map(lambda x: x[1], v), reverse=True) for instance, v in values.items()}  # configs sorted by value
+    ranks = {instance: {n: [sorted_values[instance].index(value) for config_name, value in v if config_name == n] for n in names}
+             for instance, v in values.items()}
+    ranks = to_dict([(n, r) for rank_dict in ranks.values() for n, r in rank_dict.items()])
+    for name in names:
+        ranks[name] = [i for j in ranks[name] for i in j]  # flatten
+    return ranks
+
+
+def get_average_plot_values(values, names):
+    """ values = instance_name --> [((key=prefix + metric), value), ...] """
+    result = dict()
+    for _, v in values.items:  # aggregate over all instances
+        for name, value in v:  # aggregate over all runs
+            if name not in names:
+                continue
+            if name not in result:
+                result[name] = list()
+            result[name].append(value)
+    for name, values in result.items():
+        result[name] = sum(values) / len(values)  # compute average
+    return result
+
+
+get_plot_values_funcs = {
+    "ranking": get_ranking_plot_values,
+    "average": get_average_plot_values
+}
+
+
+def plot_summary(instance_name, metric_name, prefixes, trajectories, agglomeration, scale_uncertainty, font_size, plt):
+    assert instance_name in get_plot_values_funcs.keys()
     cmap = plt.get_cmap('jet')
     trajectory_names_to_prefix = {(("%s_%s" % (prefix, metric_name)) if prefix else metric_name): prefix
         for prefix in prefixes}
     trajectory_names = [t for t in trajectory_names_to_prefix.keys() if t in trajectories]
 
     # save pointers for each trajectory to iterate over them simultaneously
-    trajectory_pointers = {(config, name): {instance: ([0] * len(run_trajectories))
+    trajectory_pointers = {(config, name): {instance: ([0] * len(run_trajectories))  # name is trajectory name, which consists of prefix and metric
         for instance, run_trajectories in instance_trajectories.items()}
         for name in trajectory_names
         for config, instance_trajectories in trajectories[name].items()}
@@ -62,25 +96,22 @@ def plot_ranking(instance_name, metric_name, prefixes, trajectories, agglomerati
             for (config, name), instance_values in trajectory_values.items()
             for instance, values in instance_values.items()
             for value in values if value is not None])
-        sorted_values = {instance: sorted(map(lambda x: x[1], v), reverse=True) for instance, v in values.items()}  # configs sorted by value
-        ranks = {instance: {k: [sorted_values[instance].index(value) for config_name, value in v if config_name == k] for k in center.keys()} for instance, v in values.items()}
-        ranks = to_dict([(k, r) for rank_dict in ranks.values() for k, r in rank_dict.items()])
-
+        plot_values = get_plot_values_funcs[instance_name](values, center.keys)
+        
         # populate plotting data
         for key in center.keys():
-            r = [i for j in  ranks[key] for i in j]
-            if not r:
+            if not plot_values:
                 center[key].append(float("nan"))
                 lower[key].append(float("nan"))
                 upper[key].append(float("nan"))
             elif agglomeration == "median":
-                center[key].append(np.median(r))
-                lower[key].append(np.percentile(r, int(50 - scale_uncertainty * 25)))
-                upper[key].append(np.percentile(r, int(50 + scale_uncertainty * 25)))
+                center[key].append(np.median(plot_values))
+                lower[key].append(np.percentile(plot_values, int(50 - scale_uncertainty * 25)))
+                upper[key].append(np.percentile(plot_values, int(50 + scale_uncertainty * 25)))
             elif agglomeration == "mean":
-                center[key].append(np.mean(r))
-                lower[key].append(-1 * scale_uncertainty * np.std(r) + center[key][-1])
-                upper[key].append(scale_uncertainty * np.std(r) + center[key][-1])
+                center[key].append(np.mean(plot_values))
+                lower[key].append(-1 * scale_uncertainty * np.std(plot_values) + center[key][-1])
+                upper[key].append(scale_uncertainty * np.std(plot_values) + center[key][-1])
         finishing_times.append(times_finished)
         plot_empty = False
     
@@ -98,9 +129,9 @@ def plot_ranking(instance_name, metric_name, prefixes, trajectories, agglomerati
 
     # setup labels, legend etc.
     plt.xlabel('wall clock time [s]', fontsize=font_size)
-    plt.ylabel('ranking ' + metric_name, fontsize=font_size)
+    plt.ylabel(instance_name + ' ' + metric_name, fontsize=font_size)
     plt.legend(loc='best', prop={'size': font_size})
-    plt.title("Ranking", fontsize=font_size)
+    plt.title(instance_name, fontsize=font_size)
     plt.xscale("log")
     plt.xlim((50, None))
     return True

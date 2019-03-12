@@ -18,7 +18,7 @@ from autoPyTorch.utils.benchmarking.visualization_pipeline import (CollectAutoNe
                                                                ReadInstanceInfo,
                                                                VisualizationSettings,
                                                                GetEnsembleTrajectories,
-                                                               PlotRankings,
+                                                               PlotSummary,
                                                                GetAdditionalTrajectories)
 from autoPyTorch.utils.config.config_file_parser import ConfigFileParser
 
@@ -76,7 +76,7 @@ class Benchmark():
                 GetAdditionalTrajectories(),
                 PlotTrajectories()
             ]),
-            PlotRankings()
+            PlotSummary()
         ])
     
     def get_ensemble_performance_pipeline(self):

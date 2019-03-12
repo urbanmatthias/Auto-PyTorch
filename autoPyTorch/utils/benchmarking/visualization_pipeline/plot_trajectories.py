@@ -19,7 +19,8 @@ class PlotTrajectories(PipelineNode):
             ConfigOption('agglomeration', default='mean', choices=['mean', 'median']),
             ConfigOption('scale_uncertainty', default=1, type=float),
             ConfigOption('font_size', default=12, type=int),
-            ConfigOption('prefixes', default=[""], list=True, choices=["", "train", "val", "test", "ensemble", "ensemble_test"])
+            ConfigOption('prefixes', default=[""], list=True, choices=["", "train", "val", "test", "ensemble", "ensemble_test"]),
+            ConfigOption('label_rename', default=False, type=to_bool)
         ]
         return options
 
@@ -59,6 +60,7 @@ def plot(pipeline_config, trajectories, train_metrics, instance, plot_fnc):
                         pipeline_config['agglomeration'],
                         pipeline_config['scale_uncertainty'],
                         pipeline_config['font_size'],
+                        pipeline_config['label_rename'],
                         plt):
             logging.getLogger('benchmark').warn('Not showing empty plot for ' + instance)
             plt.close(figure)
@@ -75,7 +77,7 @@ def plot(pipeline_config, trajectories, train_metrics, instance, plot_fnc):
             plt.close(figure)
 
 
-def plot_trajectory(instance_name, metric_name, prefixes, trajectories, agglomeration, scale_uncertainty, font_size, plt):
+def plot_trajectory(instance_name, metric_name, prefixes, trajectories, agglomeration, scale_uncertainty, font_size, do_label_rename, plt):
     # iterate over the incumbent trajectories of the different runs
     linestyles = ['-', '--', '-.', ':']
     cmap = plt.get_cmap('jet')
@@ -126,6 +128,8 @@ def plot_trajectory(instance_name, metric_name, prefixes, trajectories, agglomer
 
             # insert into plot
             label = ("%s: %s" % (prefix, config_name)) if prefix else config_name
+            if do_label_rename:
+                label = label_rename(label)
             plt.step(finishing_times, center, color=color, label=label, where='post', linestyle=linestyle)
             color = (color[0], color[1], color[2], 0.5)
             plt.fill_between(finishing_times, lower, upper, step="post", color=[color])
@@ -135,6 +139,16 @@ def plot_trajectory(instance_name, metric_name, prefixes, trajectories, agglomer
     plt.title(instance_name, fontsize=font_size)
     plt.xscale("log")
     return not plot_empty
+
+LABEL_RENAME = dict()
+def label_rename(label):
+    if label in LABEL_RENAME:
+        return LABEL_RENAME[label]
+    rename = input("Rename label %s to? (Leave empty for no rename) " % label)
+    if rename:
+        LABEL_RENAME[label] = rename
+        return rename
+    return label
 
 class DataPlot():
     def __init__(self):
