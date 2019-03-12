@@ -25,7 +25,7 @@ def get_ranking_plot_values(values, names):
 def get_average_plot_values(values, names):
     """ values = instance_name --> [((key=prefix + metric), value), ...] """
     result = dict()
-    for _, v in values.items:  # aggregate over all instances
+    for _, v in values.items():  # aggregate over all instances
         for name, value in v:  # aggregate over all runs
             if name not in names:
                 continue
@@ -96,22 +96,22 @@ def plot_summary(instance_name, metric_name, prefixes, trajectories, agglomerati
             for (config, name), instance_values in trajectory_values.items()
             for instance, values in instance_values.items()
             for value in values if value is not None])
-        plot_values = get_plot_values_funcs[instance_name](values, center.keys)
+        plot_values = get_plot_values_funcs[instance_name](values, center.keys())
         
         # populate plotting data
         for key in center.keys():
-            if not plot_values:
+            if not plot_values[key]:
                 center[key].append(float("nan"))
                 lower[key].append(float("nan"))
                 upper[key].append(float("nan"))
             elif agglomeration == "median":
-                center[key].append(np.median(plot_values))
-                lower[key].append(np.percentile(plot_values, int(50 - scale_uncertainty * 25)))
-                upper[key].append(np.percentile(plot_values, int(50 + scale_uncertainty * 25)))
+                center[key].append(np.median(plot_values[key]))
+                lower[key].append(np.percentile(plot_values[key], int(50 - scale_uncertainty * 25)))
+                upper[key].append(np.percentile(plot_values[key], int(50 + scale_uncertainty * 25)))
             elif agglomeration == "mean":
-                center[key].append(np.mean(plot_values))
-                lower[key].append(-1 * scale_uncertainty * np.std(plot_values) + center[key][-1])
-                upper[key].append(scale_uncertainty * np.std(plot_values) + center[key][-1])
+                center[key].append(np.mean(plot_values[key]))
+                lower[key].append(-1 * scale_uncertainty * np.std(plot_values[key]) + center[key][-1])
+                upper[key].append(scale_uncertainty * np.std(plot_values[key]) + center[key][-1])
         finishing_times.append(times_finished)
         plot_empty = False
     
