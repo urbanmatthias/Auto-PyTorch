@@ -109,6 +109,13 @@ def combine_test_predictions(data, pipeline_kwargs, X, Y):
     host, port = pipeline_kwargs[0]["pipeline_config"]["ensemble_server_credentials"]
     return host, port, unique
 
+def filter_nan_predictions(predictions, *args):
+    nan_predictions = set([i for i, p in enumerate(predictions) if np.any(np.isnan(p))])
+    return [
+        [x for i, x in enumerate(vector) if i not in nan_predictions] if vector is not None else None
+        for vector in [predictions, *args]
+    ]
+
 async def serve_predictions(reader, writer):
     data = await reader.read(1024)
     name, unique = data.decode().split("_")

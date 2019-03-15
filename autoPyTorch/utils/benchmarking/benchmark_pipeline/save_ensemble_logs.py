@@ -5,6 +5,7 @@ from autoPyTorch.pipeline.nodes.metric_selector import MetricSelector
 from autoPyTorch.pipeline.nodes import OneHotEncoding
 from autoPyTorch.pipeline.nodes.ensemble import build_ensemble, read_ensemble_prediction_file
 from hpbandster.core.result import logged_results_to_HBS_result
+from autoPyTorch.utils.ensemble import filter_nan_predictions
 from copy import copy
 import os
 import logging
@@ -38,13 +39,13 @@ class SaveEnsembleLogs(PipelineNode):
             test_predictions, test_labels, test_model_identifiers, test_timestamps = read_ensemble_prediction_file(filename=test_filename, y_transform=y_transform)
             test_predictions = [np.mean(p, axis=0) for p in test_predictions]     
             assert test_model_identifiers == model_identifiers and test_timestamps == timestamps, "Different model identifiers or timestamps in test file"
+            predictions, labels, model_identifiers, timestamps, test_predictions, test_labels = \
+                filter_nan_predictions(predictions, labels, model_identifiers, timestamps, test_predictions, test_labels)
             test_data_available = True
         except IOError:
             logging.getLogger("benchmark").info("No test data available when building ensemble logs.")
-        except Exception as e:
-            logging.getLogger("benchmark").warn("Could not load test data")
-            logging.getLogger("benchmark").warn(str(e))
-            traceback.print_exc()
+            predictions, labels, model_identifiers, timestamps = \
+                filter_nan_predictions(predictions, labels, model_identifiers, timestamps)
 
         # compute the prediction subset used to compute performance over time
         start_time = min(map(lambda t: t["submitted"], timestamps))
