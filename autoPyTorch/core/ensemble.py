@@ -1,3 +1,4 @@
+import os
 from autoPyTorch.core.api import AutoNet
 from autoPyTorch.pipeline.base.pipeline import Pipeline
 from autoPyTorch.pipeline.nodes.one_hot_encoding import OneHotEncoding
@@ -5,7 +6,7 @@ from autoPyTorch.pipeline.nodes.metric_selector import MetricSelector
 from autoPyTorch.pipeline.nodes.ensemble import EnableComputePredictionsForEnsemble, SavePredictionsForEnsemble, BuildEnsemble, EnsembleServer
 
 class AutoNetEnsemble(AutoNet):
-    def __init__(self, autonet, **autonet_config):
+    def __init__(self, autonet, config_preset=None, **autonet_config):
         if isinstance(autonet, AutoNet):
             self.pipeline = autonet.pipeline
             self.autonet_type = type(autonet)
@@ -28,7 +29,14 @@ class AutoNetEnsemble(AutoNet):
 
         self.base_config.update(autonet_config)
         self.trained_autonets = None
-    
+
+        if config_preset is not None:
+            parser = self.get_autonet_config_file_parser()
+            c = parser.read(os.path.join(parser.get_autonet_home(), "configs", "autonet", "presets",
+                autonet.preset_folder_name, config_preset + ".txt"))
+            c.update(self.base_config)
+            self.base_config = c
+
     def fit(self, X_train, Y_train, X_valid=None, Y_valid=None, refit=True, **autonet_config):
         self.autonet_config = self.pipeline.get_pipeline_config(**dict(self.base_config, **autonet_config))
         self.fit_result = self.pipeline.fit_pipeline(pipeline_config=self.autonet_config,

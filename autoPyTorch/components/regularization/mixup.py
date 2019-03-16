@@ -1,4 +1,5 @@
-from autoPyTorch.training.base_training import BaseBatchLossComputationTechnique
+from autoPyTorch.components.training.base_training import BaseBatchLossComputationTechnique
+from autoPyTorch.utils.config_space_hyperparameter import add_hyperparameter
 import numpy as np
 from torch.autograd import Variable
 import ConfigSpace
@@ -23,7 +24,9 @@ class Mixup(BaseBatchLossComputationTechnique):
         return lambda criterion, pred: lam * criterion(pred, y_a) + (1 - lam) * criterion(pred, y_b)
 
     @staticmethod
-    def get_hyperparameter_search_space(**pipeline_config):
+    def get_hyperparameter_search_space(
+        alpha=(0, 1)
+    ):
         cs = ConfigSpace.ConfigurationSpace()
-        cs.add_hyperparameter(ConfigSpace.hyperparameters.UniformFloatHyperparameter("alpha", lower=0, upper=1, default_value=1))
+        add_hyperparameter(cs, ConfigSpace.hyperparameters.UniformFloatHyperparameter, "alpha", alpha)
         return cs

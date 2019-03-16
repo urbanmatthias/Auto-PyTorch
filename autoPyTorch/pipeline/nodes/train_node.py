@@ -18,10 +18,10 @@ import ConfigSpace
 import ConfigSpace.hyperparameters as CSH
 from autoPyTorch.utils.configspace_wrapper import ConfigWrapper
 from autoPyTorch.utils.config.config_option import ConfigOption, to_bool
-from autoPyTorch.training.base_training import BaseTrainingTechnique, BaseBatchLossComputationTechnique
-from autoPyTorch.training.trainer import Trainer
-from autoPyTorch.training.lr_scheduling import LrScheduling
-from autoPyTorch.training.budget_types import BudgetTypeTime, BudgetTypeEpochs
+from autoPyTorch.components.training.base_training import BaseTrainingTechnique, BaseBatchLossComputationTechnique
+from autoPyTorch.components.training.trainer import Trainer
+from autoPyTorch.components.training.lr_scheduling import LrScheduling
+from autoPyTorch.components.training.budget_types import BudgetTypeTime, BudgetTypeEpochs
 
 import signal
 
@@ -141,16 +141,22 @@ class TrainNode(PipelineNode):
         pipeline_config = self.pipeline.get_pipeline_config(**pipeline_config)
         cs = ConfigSpace.ConfigurationSpace()
 
-        hp_batch_loss_computation = CSH.CategoricalHyperparameter("batch_loss_computation_technique",
-            pipeline_config['batch_loss_computation_techniques'], default_value=pipeline_config['batch_loss_computation_techniques'][0])
+        possible_techniques = set(pipeline_config['batch_loss_computation_techniques']).intersection(self.batch_loss_computation_techniques.keys())
+        hp_batch_loss_computation = CSH.CategoricalHyperparameter("batch_loss_computation_technique", possible_techniques)
         cs.add_hyperparameter(hp_batch_loss_computation)
 
-        for name in pipeline_config['batch_loss_computation_techniques']:
+        for name, technique in self.batch_loss_computation_techniques.items():
+            if name not in possible_techniques:
+                continue
             technique = self.batch_loss_computation_techniques[name]
-            cs.add_configuration_space(prefix=name, configuration_space=technique.get_hyperparameter_search_space(**pipeline_config),
+
+            technique_cs = technique.get_hyperparameter_search_space(
+                **self._get_search_space_updates(prefix=("batch_loss_computation_technique", name)))
+            cs.add_configuration_space(prefix=name, configuration_space=technique_cs,
                 delimiter=ConfigWrapper.delimiter, parent_hyperparameter={'parent': hp_batch_loss_computation, 'value': name})
 
-        return self._apply_user_updates(cs)
+        self._check_search_space_updates((possible_techniques, "*"))
+        return cs
 
     def get_pipeline_config_options(self):
         options = [

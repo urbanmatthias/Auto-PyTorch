@@ -19,7 +19,7 @@ from autoPyTorch.pipeline.base.sub_pipeline_node import SubPipelineNode
 from autoPyTorch.pipeline.base.pipeline import Pipeline
 
 from autoPyTorch.utils.config.config_option import ConfigOption, to_bool, to_dict
-from autoPyTorch.training.budget_types import BudgetTypeTime
+from autoPyTorch.components.training.budget_types import BudgetTypeTime
 
 import time
 

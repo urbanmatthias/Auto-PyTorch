@@ -1,4 +1,4 @@
-from autoPyTorch.training.base_training import BaseTrainingTechnique
+from autoPyTorch.components.training.base_training import BaseTrainingTechnique
 import time
 
 class LrScheduling(BaseTrainingTechnique):

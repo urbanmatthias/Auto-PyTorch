@@ -106,8 +106,8 @@ class AutoNetFeatureData(AutoNet):
         from autoPyTorch.components.preprocessing.feature_preprocessing import \
                 TruncatedSVD, FastICA, RandomKitchenSinks, KernelPCA, Nystroem, PowerTransformer
 
-        from autoPyTorch.training.early_stopping import EarlyStopping
-        from autoPyTorch.training.mixup import Mixup
+        from autoPyTorch.components.training.early_stopping import EarlyStopping
+        from autoPyTorch.components.regularization.mixup import Mixup
 
         pre_selector = pipeline[PreprocessorSelector.get_name()]
         pre_selector.add_preprocessor('truncated_svd', TruncatedSVD)

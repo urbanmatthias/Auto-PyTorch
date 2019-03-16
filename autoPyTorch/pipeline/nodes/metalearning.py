@@ -2,18 +2,11 @@ __author__ = "Max Dippel, Michael Burkart and Matthias Urban"
 __version__ = "0.0.1"
 __license__ = "BSD"
 
-import os
-from autoPyTorch.pipeline.base.pipeline_node import PipelineNode
-
-from autoPyTorch.components.lr_scheduler.lr_schedulers import AutoNetLearningRateSchedulerBase
-
-import ConfigSpace
-import ConfigSpace.hyperparameters as CSH
-from autoPyTorch.utils.configspace_wrapper import ConfigWrapper
-from autoPyTorch.utils.config.config_option import ConfigOption
-from autoPyTorch.training.lr_scheduling import LrScheduling
-from hpbandster.metalearning.initial_design import InitialDesign
 import pickle
+
+from autoPyTorch.pipeline.base.pipeline_node import PipelineNode
+from autoPyTorch.utils.config.config_option import ConfigOption
+
 
 class MetaLearning(PipelineNode):
     def fit(self, pipeline_config):

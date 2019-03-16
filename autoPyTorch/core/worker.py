@@ -5,7 +5,7 @@ import numpy as np
 import Pyro4
 from hpbandster.core.worker import Worker
 
-from autoPyTorch.training.budget_types import BudgetTypeTime
+from autoPyTorch.components.training.budget_types import BudgetTypeTime
 
 __author__ = "Max Dippel, Michael Burkart and Matthias Urban"
 __version__ = "0.0.1"

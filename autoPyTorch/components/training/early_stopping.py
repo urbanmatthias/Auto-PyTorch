@@ -1,4 +1,4 @@
-from autoPyTorch.training.base_training import BaseTrainingTechnique
+from autoPyTorch.components.training.base_training import BaseTrainingTechnique
 from autoPyTorch.utils.config.config_option import ConfigOption, to_bool
 
 class EarlyStopping(BaseTrainingTechnique):

@@ -19,7 +19,7 @@ from autoPyTorch.core.hpbandster_extensions.bohb_ext import BOHBExt
 from autoPyTorch.core.hpbandster_extensions.hyperband_ext import HyperBandExt
 from autoPyTorch.core.worker import ModuleWorker
 
-from autoPyTorch.training.budget_types import BudgetTypeTime, BudgetTypeEpochs
+from autoPyTorch.components.training.budget_types import BudgetTypeTime, BudgetTypeEpochs
 import copy
 
 class OptimizationAlgorithm(SubPipelineNode):
