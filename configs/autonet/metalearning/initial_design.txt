@@ -15,5 +15,5 @@ normalization_strategies=[maxabs, standardize]
 over_sampling_methods=[smote]
 preprocessors=[none,truncated_svd]
 target_size_strategies=[none,upsample,median]
-initial_design=metamodels/initial_design.pkl
+initial_design=metamodels/initial_design<leave_out_suffix>.pkl
 min_budget_for_cv=250

@@ -9,9 +9,14 @@ from autoPyTorch.utils.config.config_option import ConfigOption
 
 
 class MetaLearning(PipelineNode):
-    def fit(self, pipeline_config):
+    def fit(self, pipeline_config, dataset_info):
         initial_design = pipeline_config["initial_design"]
         warmstarted_model = pipeline_config["warmstarted_model"]
+
+        if initial_design is not None and "<leave_out_suffix>" in initial_design:
+            initial_design = initial_design.replace("<leave_out_suffix>",  "_leave_out_%s" % "_".join(dataset_info.name.split(":")))
+        if warmstarted_model is not None and "<leave_out_suffix>" in warmstarted_model:
+            warmstarted_model = warmstarted_model.replace("<leave_out_suffix>",  "_leave_out_%s" % "_".join(dataset_info.name.split(":")))
 
         if initial_design is not None:
             with open(initial_design, "rb") as f:

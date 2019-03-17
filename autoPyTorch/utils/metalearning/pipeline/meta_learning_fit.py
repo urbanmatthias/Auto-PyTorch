@@ -5,7 +5,7 @@ import logging
 import os
 
 class MetaLearningFit(PipelineNode):    
-    def fit(self, pipeline_config, initial_design_learner, warmstarted_model_builder):
+    def fit(self, pipeline_config, initial_design_learner, warmstarted_model_builder, leave_out_instance_name):
         if pipeline_config["calculate_loss_matrix_entry"] >= 0:
             assert not pipeline_config["learn_initial_design"] and not pipeline_config["learn_warmstarted_model"]
             initial_design_learner[1].write_loss(collection_name=pipeline_config["benchmark_name"],
@@ -17,9 +17,13 @@ class MetaLearningFit(PipelineNode):
                 collection_name=pipeline_config["benchmark_name"],
                 db_config=pipeline_config["loss_matrix_db_config"]))))
 
+        # fit and save metemodels
         if not os.path.exists(pipeline_config["save_path"]):
             os.mkdir(pipeline_config["save_path"])
+        leave_out_name_suffix = "_leave_out_%s" % leave_out_instance_name if leave_out_instance_name is not None else ""
+        logger = logging.getLogger('metalearning')
 
+        # fit and save initial design
         if pipeline_config["learn_initial_design"]:
             assert pipeline_config["initial_design_max_total_budget"] is not None, "initial_design_max_total_budget needs to be specified"
             assert pipeline_config["initial_design_convergence_threshold"] is not None, "initial_design_convergence_threshold needs to be specified"
@@ -32,19 +36,19 @@ class MetaLearningFit(PipelineNode):
                 convergence_threshold = pipeline_config["initial_design_convergence_threshold"]
             )
             if initial_design is not None:
-                logger = logging.getLogger('metalearning')
-                save_path = os.path.join(pipeline_config["save_path"], "initial_design.pkl")
+                save_path = os.path.join(pipeline_config["save_path"], "initial_design%s.pkl" % leave_out_name_suffix)
                 with open(save_path, "wb") as f:
                     pickle.dump(initial_design, f)
                     logger.info('Success!')
                 del initial_design_learner
                 del initial_design
         
+        # fit and save warmstarted model
         if pipeline_config["learn_warmstarted_model"]:
             warmstarted_model = warmstarted_model_builder.build()
             if warmstarted_model is not None:
-                save_path = os.path.join(pipeline_config["save_path"], "warmstarted_model.pkl")
-                try:
+                save_path = os.path.join(pipeline_config["save_path"], "warmstarted_model%s.pkl" % leave_out_name_suffix)
+                try:  # this fails sometimes for some reason, then fix_statsmodels_pickle() needs to be called
                     with open(save_path, "wb") as f:
                         pickle.dump(warmstarted_model, f)
                         logger.info('Success!')

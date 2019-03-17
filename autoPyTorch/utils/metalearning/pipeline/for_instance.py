@@ -10,9 +10,13 @@ class ForInstance(BaseForInstance):
     def fit(self, pipeline_config, run_id_range, initial_design_learner, warmstarted_model_builder, evaluator):
         instances = self.get_instances(pipeline_config, instance_slice=self.parse_slice(pipeline_config["instance_slice"]))
         instance_result_dirs = next(os.walk(os.path.join(pipeline_config["result_dir"], pipeline_config["benchmark_name"])))[1]
+        leave_out_instance_name = None
         for i, instance in enumerate(instances):
-            # if i >= 2:
+            # if i >= 10:
             #     break
+            if i + 1 == pipeline_config["leave_out_instance"]:
+                leave_out_instance_name = "_".join(instance.split(":"))
+                continue
             if "_".join(instance.split(":")) not in instance_result_dirs:
                 continue
             print('Process instance ' +  str(i) + ' of ' + str(len(instances)))
@@ -23,4 +27,10 @@ class ForInstance(BaseForInstance):
             except Exception as e:
                 print(e)
                 traceback.print_exc()
-        return dict()
+        return {"leave_out_instance_name": leave_out_instance_name}
+    
+        def get_pipeline_config_options(self):
+            options = [
+                ConfigOption("leave_out_instance", default=-1, type=int)
+            ] + super(ForInstance, self).get_pipeline_config_options()
+            return options

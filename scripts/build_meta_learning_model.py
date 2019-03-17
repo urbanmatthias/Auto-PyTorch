@@ -28,9 +28,10 @@ if __name__ == "__main__":
     parser.add_argument("--print_missing_loss_matrix_entries", action='store_true', help='Which loss matrix entries are not yet computed.')
     parser.add_argument("--memory_limit_mb", default=None, type=int)
     parser.add_argument("--time_limit_per_entry", default=None, type=int)
-    parser.add_argument("--initial_design_max_total_budget", default=None, type=float)    
+    parser.add_argument("--initial_design_max_total_budget", default=None, type=float)
     parser.add_argument("--initial_design_convergence_threshold", default=None, type=float)
-    parser.add_argument("--loss_matrix_db_config_file", default=None, type=str)
+    parser.add_argument("--loss_matrix_db_config_file", default=None, type=str, help="File specifying mongodb host / port / login credentials")
+    parser.add_argument("--leave_out", default=-1, type=int, help="Leave out dataset with given index")
     parser.add_argument('benchmark', help='The benchmark to learn from')
 
     args = parser.parse_args()
@@ -64,6 +65,7 @@ if __name__ == "__main__":
     config["initial_design_convergence_threshold"] = args.initial_design_convergence_threshold
     config["print_missing_loss_matrix_entries"] = args.print_missing_loss_matrix_entries
     config["loss_matrix_db_config"] = dict()
+    config["leave_out_instance"] = args.leave_out
     config['benchmark_name'] = os.path.basename(args.benchmark).split(".")[0]
 
     if args.loss_matrix_db_config_file is not None:
