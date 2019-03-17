@@ -1,6 +1,6 @@
 result_dir=benchmark_results_cluster
 instances=configs/datasets/openml.txt
-autonet_configs=[configs/autonet/collect_metalearning_data/collect_metalearning_data.txt]
+autonet_configs=[configs/autonet/collect_metalearning_data/tiny_cs.txt]
 problem_type=feature_classification
 log_level=info
 num_runs=1

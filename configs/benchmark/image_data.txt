@@ -1,7 +1,0 @@
-result_dir=benchmark_results
-instances=configs/datasets/openml_image.txt
-autonet_configs=[configs/autonet/bohb_cv.txt]
-problem_type=image_classification
-log_level=info
-test_split=0.0
-num_runs=4
