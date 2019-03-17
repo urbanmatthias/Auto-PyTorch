@@ -68,13 +68,12 @@ class test_predictions_for_ensemble():
         return self.predict(self.autonet, self.X_test, return_probabilities=True)[1], self.Y_test
 
 def combine_predictions(data, pipeline_kwargs, X, Y):
-    if (np.any(np.isnan(Y))):
-        logging.getLogger("autonet").warn("Not saving predictions containing nans")
-        return None
-
     all_indices = None
     all_predictions = None
     for split, predictions in data.items():
+        if (np.any(np.isnan(predictions))):
+            logging.getLogger("autonet").warn("Not saving predictions containing nans")
+            return None
         indices = pipeline_kwargs[split]["valid_indices"]
         assert len(predictions) == len(indices), "Different number of predictions and indices:" + str(len(predictions)) + "!=" + str(len(indices))
         all_indices = indices if all_indices is None else np.append(all_indices, indices)
