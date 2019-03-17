@@ -93,6 +93,8 @@ if __name__ == "__main__":
     replacement_dict.update(parsed_template_args)
 
     # create directories
+    if os.path.exists(output_base_dir) and input("%s exists. Delete? (y/n)" %output_base_dir).startswith("y"):
+        shutil.rmtree(output_base_dir)
     if not os.path.exists(outputs_folder):
         os.mkdir(outputs_folder)
     if not os.path.exists(output_base_dir):
