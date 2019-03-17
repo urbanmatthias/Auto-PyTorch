@@ -39,13 +39,13 @@ class SaveEnsembleLogs(PipelineNode):
             test_predictions, test_labels, test_model_identifiers, test_timestamps = read_ensemble_prediction_file(filename=test_filename, y_transform=y_transform)
             test_predictions = [np.mean(p, axis=0) for p in test_predictions]     
             assert test_model_identifiers == model_identifiers and test_timestamps == timestamps, "Different model identifiers or timestamps in test file"
-            predictions, labels, model_identifiers, timestamps, test_predictions, test_labels = \
-                filter_nan_predictions(predictions, labels, model_identifiers, timestamps, test_predictions, test_labels)
+            predictions, model_identifiers, timestamps, test_predictions = \
+                filter_nan_predictions(predictions, model_identifiers, timestamps, test_predictions)
             test_data_available = True
         except IOError:
             logging.getLogger("benchmark").info("No test data available when building ensemble logs.")
-            predictions, labels, model_identifiers, timestamps = \
-                filter_nan_predictions(predictions, labels, model_identifiers, timestamps)
+            predictions, model_identifiers, timestamps = \
+                filter_nan_predictions(predictions, model_identifiers, timestamps)
 
         # compute the prediction subset used to compute performance over time
         start_time = min(map(lambda t: t["submitted"], timestamps))
