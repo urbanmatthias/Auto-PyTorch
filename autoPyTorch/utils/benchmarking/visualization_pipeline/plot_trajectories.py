@@ -90,7 +90,7 @@ def plot_trajectory(instance_name, metric_name, prefixes, trajectories, agglomer
 
         run_trajectories = trajectories[trajectory_name]
         for i, (config_name, trajectory) in enumerate(run_trajectories.items()):
-            color = cmap(i / len(run_trajectories))
+            color = cmap((i *len(prefixes) + p) / (len(run_trajectories) * len(prefixes)))
 
             trajectory_pointers = [0] * len(trajectory)  # points to current entry of each trajectory
             trajectory_values = [None] * len(trajectory)  # list of current values of each trajectory
