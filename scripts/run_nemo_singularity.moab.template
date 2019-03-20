@@ -1,6 +1,6 @@
 #!/bin/bash
 #MOAB -t 1-$${NUM_NODES}
-#MOAB -N AUTONET
+#MOAB -N $${BENCHMARK_NAME}
 #MOAB -l nodes=1:ppn=$${NUM_PROCESSES},walltime=$${TIME_LIMIT[2]},pmem=$${MEMORY_LIMIT_MB}MB
 #MOAB -E
 
