@@ -48,7 +48,7 @@ class MlpNet(BaseFeatureNet):
 
     @staticmethod
     def get_config_space(
-        num_layers=(1, 15),
+        num_layers=((1, 15), False),
         num_units=((10, 1024), True),
         activation=('sigmoid', 'tanh', 'relu'),
         dropout=(0.0, 0.8),
@@ -61,11 +61,11 @@ class MlpNet(BaseFeatureNet):
         cs.add_hyperparameter(num_layers_hp)
         use_dropout_hp = add_hyperparameter(cs, CS.CategoricalHyperparameter, "use_dropout", use_dropout)
 
-        for i in range(1, num_layers[1] + 1):
+        for i in range(1, num_layers[0][1] + 1):
             n_units_hp = get_hyperparameter(CSH.UniformIntegerHyperparameter, "num_units_%d" % i, kwargs.pop("num_units_%d" % i, num_units))
             cs.add_hyperparameter(n_units_hp)
 
-            if i > num_layers[0]:
+            if i > num_layers[0][0]:
                 cs.add_condition(CS.GreaterThanCondition(n_units_hp, num_layers_hp, i - 1))
 
             if True in use_dropout:
@@ -73,7 +73,7 @@ class MlpNet(BaseFeatureNet):
                 cs.add_hyperparameter(dropout_hp)
                 dropout_condition_1 = CS.EqualsCondition(dropout_hp, use_dropout_hp, True)
 
-                if i > num_layers[0]:
+                if i > num_layers[0][0]:
                     dropout_condition_2 = CS.GreaterThanCondition(dropout_hp, num_layers_hp, i - 1)
                     cs.add_condition(CS.AndConjunction(dropout_condition_1, dropout_condition_2))
                 else:

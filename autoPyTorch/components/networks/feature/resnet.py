@@ -59,8 +59,8 @@ class ResNet(BaseFeatureNet):
 
     @staticmethod
     def get_config_space(
-        num_groups=(1, 9),
-        blocks_per_group=(1, 4),
+        num_groups=((1, 9), False),
+        blocks_per_group=((1, 4), False),
         num_units=((10, 1024), True),
         activation=('sigmoid', 'tanh', 'relu'),
         max_shake_drop_probability=(0, 1),
@@ -90,7 +90,7 @@ class ResNet(BaseFeatureNet):
         
 
         # it is the upper bound of the nr of groups, since the configuration will actually be sampled.
-        for i in range(0, num_groups[1] + 1):
+        for i in range(0, num_groups[0][1] + 1):
 
             n_units_hp = add_hyperparameter(cs, ConfigSpace.UniformIntegerHyperparameter,
                 "num_units_%d" % i, kwargs.pop("num_units_%d" % i, num_units))
