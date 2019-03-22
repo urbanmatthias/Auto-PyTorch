@@ -1,0 +1,7 @@
+result_dir=benchmark_results_cluster
+instances=configs/datasets/openml.txt
+autonet_configs=[configs/autonet/metalearning/none.txt, configs/autonet/metalearning/warmstarted_model1.txt, configs/autonet/metalearning/warmstarted_model2.txt]
+problem_type=feature_classification
+log_level=info
+num_runs=3
+test_split=0.0

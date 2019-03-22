@@ -1,4 +1,5 @@
 #!/bin/bash
+#MOAB -t 1-73
 #MOAB -N METAMODEL
 #MOAB -l nodes=1:ppn=1,walltime=90:00:00,pmem=8gb
 #MOAB -V
@@ -10,13 +11,13 @@ cp metalearning_data.tar.gz $TMPDIR
 mkdir $TMPDIR/benchmark_results
 tar -zxf $TMPDIR/metalearning_data.tar.gz -C $TMPDIR/benchmark_results
 
-COMMAND="python scripts/build_meta_learning_model.py configs/benchmark/collect_metalearning_data.txt --result_dir $TMPDIR/benchmark_results --only_finished_runs --save_path $TMPDIR --learn_warmstarted_model --learn_initial_design --initial_design_max_total_budget 90000 --initial_design_convergence_threshold 0.0001 --loss_matrix_db_config_file mongo_db.conf"
+COMMAND="python scripts/build_meta_learning_model.py configs/benchmark/collect_metalearning_data_tiny.txt --result_dir $TMPDIR/benchmark_results --only_finished_runs --save_path $TMPDIR --learn_warmstarted_model --leave_out $MOAB_JOBARRAYINDEX --learn_initial_design --initial_design_max_total_budget 90000 --initial_design_convergence_threshold 0.0001 --loss_matrix_db_config_file mongo_db.conf"
 $COMMAND 1> $TMPDIR/stdout.txt 2> $TMPDIR/stderr.txt
 
 mkdir meta_outputs
-cp $TMPDIR/stdout.txt meta_outputs/stdout_build_meta_model.txt
-cp $TMPDIR/stderr.txt meta_outputs/stderr_build_meta_model.txt
+cp $TMPDIR/stdout.txt meta_outputs/stdout_build_meta_model_$MOAB_JOBARRAYINDEX.txt
+cp $TMPDIR/stderr.txt meta_outputs/stderr_build_meta_model_$MOAB_JOBARRAYINDEX.txt
 
 mkdir metamodels
-cp $TMPDIR/initial_design.pkl metamodels
-cp $TMPDIR/warmstarted_model.pkl metamodels
+cd $TMPDIR
+cp warmstarted_model*.pkl $HOME/Auto-PyTorch/metamodels
