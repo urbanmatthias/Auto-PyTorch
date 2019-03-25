@@ -8,7 +8,8 @@ import json
 class PlotTrajectories(PipelineNode):
 
     def fit(self, pipeline_config, trajectories, train_metrics, instance):
-        plot(pipeline_config, trajectories, train_metrics, instance, plot_trajectory)
+        if not pipeline_config["skip_dataset_plots"]:
+            plot(pipeline_config, trajectories, train_metrics, instance, plot_trajectory)
         return {"trajectories": trajectories, "train_metrics": train_metrics}
     
 
@@ -20,7 +21,14 @@ class PlotTrajectories(PipelineNode):
             ConfigOption('scale_uncertainty', default=1, type=float),
             ConfigOption('font_size', default=12, type=int),
             ConfigOption('prefixes', default=[""], list=True, choices=["", "train", "val", "test", "ensemble", "ensemble_test"]),
-            ConfigOption('label_rename', default=False, type=to_bool)
+            ConfigOption('label_rename', default=False, type=to_bool),
+            ConfigOption('skip_dataset_plots', default=False, type=to_bool),
+            ConfigOption('xscale', default='log', type=str),
+            ConfigOption('yscale', default='linear', type=str),
+            ConfigOption('xmin', default=None, type=float),
+            ConfigOption('xmax', default=None, type=float),
+            ConfigOption('ymin', default=None, type=float),
+            ConfigOption('ymax', default=None, type=float)
         ]
         return options
 
@@ -65,6 +73,11 @@ def plot(pipeline_config, trajectories, train_metrics, instance, plot_fnc):
             logging.getLogger('benchmark').warn('Not showing empty plot for ' + instance)
             plt.close(figure)
             continue
+        
+        plt.xscale(pipeline_config["xscale"])
+        plt.yscale(pipeline_config["yscale"])
+        plt.xlim((pipeline_config["xmin"], pipeline_config["xmax"]))
+        plt.ylim((pipeline_config["ymin"], pipeline_config["ymax"]))
 
         # show or save
         if output_folder is None:
@@ -137,7 +150,6 @@ def plot_trajectory(instance_name, metric_name, prefixes, trajectories, agglomer
     plt.ylabel('incumbent ' + metric_name, fontsize=font_size)
     plt.legend(loc='best', prop={'size': font_size})
     plt.title(instance_name, fontsize=font_size)
-    plt.xscale("log")
     return not plot_empty
 
 LABEL_RENAME = dict()
@@ -196,6 +208,15 @@ class DataPlot():
         pass
     
     def xscale(self, *args, **kwargs):
+        pass
+    
+    def yscale(self, *args, **kwargs):
+        pass
+    
+    def xlim(self, *args, **kwargs):
+        pass
+    
+    def ylim(self, *args, **kwargs):
         pass
     
     def close(self, *args, **kwargs):

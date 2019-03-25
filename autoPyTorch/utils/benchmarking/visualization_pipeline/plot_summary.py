@@ -1,14 +1,24 @@
 from autoPyTorch.pipeline.base.pipeline_node import PipelineNode
 from autoPyTorch.utils.benchmarking.visualization_pipeline.plot_trajectories import plot, label_rename
+from autoPyTorch.utils.config.config_option import ConfigOption, to_bool
 import os
 import logging
 import numpy as np
 
 class PlotSummary(PipelineNode):
     def fit(self, pipeline_config, trajectories, train_metrics):
-        plot(pipeline_config, trajectories, train_metrics, "ranking", plot_summary)
-        plot(pipeline_config, trajectories, train_metrics, "average", plot_summary)
+        if not pipeline_config["skip_ranking_plot"]:
+            plot(pipeline_config, trajectories, train_metrics, "ranking", plot_summary)
+        if not pipeline_config["skip_average_plot"]:
+            plot(pipeline_config, trajectories, train_metrics, "average", plot_summary)
         return dict()
+
+    def get_pipeline_config_options(self):
+        options = [
+            ConfigOption('skip_ranking_plot', default=False, type=to_bool),
+            ConfigOption('skip_average_plot', default=False, type=to_bool)
+        ]
+        return options
 
 
 def get_ranking_plot_values(values, names):
@@ -130,7 +140,6 @@ def plot_summary(instance_name, metric_name, prefixes, trajectories, agglomerati
     plt.ylabel(instance_name + ' ' + metric_name, fontsize=font_size)
     plt.legend(loc='best', prop={'size': font_size})
     plt.title(instance_name, fontsize=font_size)
-    plt.xscale("log")
     return True
 
 def to_dict(tuple_list):

@@ -28,6 +28,15 @@ if __name__ == "__main__":
     parser.add_argument("--prefixes", default=[""], type=str, nargs="+", help="The prefixes to plot. Choices: none, train, val, test, ensemble, ensemble_test")
     parser.add_argument("--additional_trajectories", default=[], type=str, nargs="+", help="Path to json file describing additional trajectories")
     parser.add_argument("--do_label_rename", action="store_true", help="Whether the default labels should be renamed")
+    parser.add_argument("--skip_dataset_plots", action="store_true", help="Whether the plots for each dataset should be skipped")
+    parser.add_argument("--skip_ranking_plot", action="store_true", help="Whether the ranking plot should be skipped")
+    parser.add_argument("--skip_average_plot", action="store_true", help="Whether the average plot should be skipped")
+    parser.add_argument("--xscale", default="log", type=str, help="Whether x should be in logscale")
+    parser.add_argument("--yscale", default="linear", help="Whether x should be in logscale")
+    parser.add_argument("--xmin", default=None, type=float, help="Limit the x axis")
+    parser.add_argument("--xmax", default=None, type=float, help="Limit the x axis")
+    parser.add_argument("--ymin", default=None, type=float, help="Limit the y axis")
+    parser.add_argument("--ymax", default=None, type=float, help="Limit the y axis")
     parser.add_argument('benchmark', help='The benchmark to visualize')
 
     args = parser.parse_args()
@@ -70,5 +79,15 @@ if __name__ == "__main__":
     benchmark_config['additional_trajectories'] = args.additional_trajectories
     benchmark_config['benchmark_name'] = os.path.basename(args.benchmark).split(".")[0]
     benchmark_config['label_rename'] = args.do_label_rename
+    benchmark_config["skip_dataset_plots"] = args.skip_dataset_plots
+    benchmark_config["skip_ranking_plot"] = args.skip_ranking_plot
+    benchmark_config["skip_average_plot"] = args.skip_average_plot
+    benchmark_config["xscale"] = args.xscale
+    benchmark_config["yscale"] = args.yscale
+    benchmark_config["xmin"] = args.xmin
+    benchmark_config["xmax"] = args.xmax
+    benchmark_config["ymin"] = args.ymin    
+    benchmark_config["ymax"] = args.ymax    
+    
     
     benchmark.visualize_benchmark(**benchmark_config)
