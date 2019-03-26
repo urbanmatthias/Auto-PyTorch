@@ -102,7 +102,7 @@ def save_ensemble_logs(pipeline_config, autonet, result_dir, ensemble_size=None,
             if test_data_available:
                 metric_performances["test_%s" % metric_name] = metric(test_ensemble_prediction, test_labels)
 
-        ensemble_time = ensemble_start_time - time.time()
+        ensemble_time = time.time() - ensemble_start_time
 
         # write to log
         with open(ensemble_log_filename, "a") as f:
