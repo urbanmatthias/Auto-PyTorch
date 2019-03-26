@@ -8,6 +8,7 @@ cross_validator=k_fold
 cross_validator_args={"n_splits": 5}
 memory_limit_mb=8000
 ensemble_size=50
+ensemble_only_consider_n_best=50
 embeddings=[none]
 lr_scheduler=[exponential,step]
 networks=[mlpnet]
