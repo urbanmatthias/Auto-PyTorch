@@ -13,6 +13,7 @@ import math
 import numpy as np
 import json
 import traceback
+import time
 
 class SaveEnsembleLogs(PipelineNode):
 
@@ -79,6 +80,7 @@ def save_ensemble_logs(pipeline_config, autonet, result_dir, ensemble_size=None,
         subset_model_identifiers = [model_identifiers[s] for s in subset]
 
         # build an ensemble with current subset and size
+        ensemble_start_time = time.time()
         ensemble, _ = build_ensemble(result=result,
             train_metric=train_metric, minimize=autonet_config["minimize"], ensemble_size=ensemble_size or autonet_config["ensemble_size"],
             all_predictions=subset_predictions, labels=labels, model_identifiers=subset_model_identifiers,
@@ -100,10 +102,12 @@ def save_ensemble_logs(pipeline_config, autonet, result_dir, ensemble_size=None,
             if test_data_available:
                 metric_performances["test_%s" % metric_name] = metric(test_ensemble_prediction, test_labels)
 
+        ensemble_time = ensemble_start_time - time.time()
+
         # write to log
         with open(ensemble_log_filename, "a") as f:
             print(json.dumps([
-                finished,
+                finished + ensemble_time,
                 metric_performances,
                 sorted([(identifier, weight) for identifier, weight in zip(ensemble.identifiers_, ensemble.weights_) if weight > 0],
                         key=lambda x: -x[1]),
