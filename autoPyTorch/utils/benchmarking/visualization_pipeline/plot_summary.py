@@ -21,8 +21,10 @@ class PlotSummary(PipelineNode):
         return options
 
 
-def get_ranking_plot_values(values, names):
+def get_ranking_plot_values(values, names, agglomeration):
     """ values = instance_name --> [((key=prefix + metric), value), ...] """
+    keys = {instance: set([key for key, _ in v]) for instance, v in values.items()}
+    values = {instance: [(key, agglomeration([value for k, value in v if k == key])) for key in keys[instance]] for instance, v in values.items()}
     sorted_values = {instance: sorted(map(lambda x: x[1], v), reverse=True) for instance, v in values.items()}  # configs sorted by value
     ranks = {instance: {n: [sorted_values[instance].index(value) + 1 for config_name, value in v if config_name == n] for n in names}
              for instance, v in values.items()}
@@ -32,7 +34,7 @@ def get_ranking_plot_values(values, names):
     return ranks
 
 
-def get_average_plot_values(values, names):
+def get_average_plot_values(values, names, agglomeration):
     """ values = instance_name --> [((key=prefix + metric), value), ...] """
     result = dict()
     for name in names: # prepare lists
@@ -97,12 +99,15 @@ def plot_summary(instance_name, metric_name, prefixes, trajectories, agglomerati
         trajectory_values[(current_config, current_name)][current_instance][trajectory_id] = current_value * (-1 if current_trajectory["flipped"] else 1)
         trajectory_pointers[(current_config, current_name)][current_instance][trajectory_id] += 1
 
+        if any(value is None for _, instance_values in trajectory_values.items() for _, values in instance_values.items() for value in values):
+            continue
+
         # calculate ranks
         values = to_dict([(instance, (config, name), value)
             for (config, name), instance_values in trajectory_values.items()
             for instance, values in instance_values.items()
             for value in values if value is not None])
-        plot_values = get_plot_values_funcs[instance_name](values, center.keys())
+        plot_values = get_plot_values_funcs[instance_name](values, center.keys(), np.median if agglomeration == "median" else np.mean)
         
         # populate plotting data
         for key in center.keys():
