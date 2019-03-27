@@ -31,6 +31,8 @@ if __name__ == "__main__":
     parser.add_argument("--skip_dataset_plots", action="store_true", help="Whether the plots for each dataset should be skipped")
     parser.add_argument("--skip_ranking_plot", action="store_true", help="Whether the ranking plot should be skipped")
     parser.add_argument("--skip_average_plot", action="store_true", help="Whether the average plot should be skipped")
+    parser.add_argument("--plot_markers", action="store_true", help="Whether markers should be plotted")
+    parser.add_argument("--plot_individual", action="store_true", help="Whether the individual trajectories should be plotted")
     parser.add_argument("--xscale", default="log", type=str, help="Whether x should be in logscale")
     parser.add_argument("--yscale", default="linear", help="Whether x should be in logscale")
     parser.add_argument("--xmin", default=None, type=float, help="Limit the x axis")
@@ -88,6 +90,8 @@ if __name__ == "__main__":
     benchmark_config["xmax"] = args.xmax
     benchmark_config["ymin"] = args.ymin    
     benchmark_config["ymax"] = args.ymax    
+    benchmark_config["plot_individual"] = args.plot_individual    
+    benchmark_config["plot_markers"] = args.plot_markers    
     
     
     benchmark.visualize_benchmark(**benchmark_config)

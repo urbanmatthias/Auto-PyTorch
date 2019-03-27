@@ -9,7 +9,8 @@ class PlotTrajectories(PipelineNode):
 
     def fit(self, pipeline_config, trajectories, train_metrics, instance):
         if not pipeline_config["skip_dataset_plots"]:
-            plot(pipeline_config, trajectories, train_metrics, instance, plot_trajectory)
+            plot(pipeline_config, trajectories, train_metrics, instance, plot_trajectory,
+                plot_individual=pipeline_config["plot_individual"], plot_markers=pipeline_config["plot_markers"])
         return {"trajectories": trajectories, "train_metrics": train_metrics}
     
 
@@ -23,6 +24,8 @@ class PlotTrajectories(PipelineNode):
             ConfigOption('prefixes', default=[""], list=True, choices=["", "train", "val", "test", "ensemble", "ensemble_test"]),
             ConfigOption('label_rename', default=False, type=to_bool),
             ConfigOption('skip_dataset_plots', default=False, type=to_bool),
+            ConfigOption('plot_markers', default=False, type=to_bool),
+            ConfigOption('plot_individual', default=False, type=to_bool),
             ConfigOption('xscale', default='log', type=str),
             ConfigOption('yscale', default='linear', type=str),
             ConfigOption('xmin', default=None, type=float),
@@ -33,7 +36,7 @@ class PlotTrajectories(PipelineNode):
         return options
 
 
-def plot(pipeline_config, trajectories, train_metrics, instance, plot_fnc):
+def plot(pipeline_config, trajectories, train_metrics, instance, plot_fnc, **plot_kwargs):
     try:
         # these imports won't work on meta
         import matplotlib.pyplot as plt
@@ -69,7 +72,8 @@ def plot(pipeline_config, trajectories, train_metrics, instance, plot_fnc):
                         pipeline_config['scale_uncertainty'],
                         pipeline_config['font_size'],
                         pipeline_config['label_rename'],
-                        plt):
+                        plt,
+                        **plot_kwargs):
             logging.getLogger('benchmark').warn('Not showing empty plot for ' + instance)
             plt.close(figure)
             continue
@@ -90,7 +94,8 @@ def plot(pipeline_config, trajectories, train_metrics, instance, plot_fnc):
             plt.close(figure)
 
 
-def plot_trajectory(instance_name, metric_name, prefixes, trajectories, agglomeration, scale_uncertainty, font_size, do_label_rename, plt):
+def plot_trajectory(instance_name, metric_name, prefixes, trajectories, agglomeration, scale_uncertainty, font_size, do_label_rename, plt,
+        plot_individual=False, plot_markers=False):
     # iterate over the incumbent trajectories of the different runs
     linestyles = ['-', '--', '-.', ':']
     cmap = plt.get_cmap('jet')
@@ -107,6 +112,8 @@ def plot_trajectory(instance_name, metric_name, prefixes, trajectories, agglomer
 
             trajectory_pointers = [0] * len(trajectory)  # points to current entry of each trajectory
             trajectory_values = [None] * len(trajectory)  # list of current values of each trajectory
+            individual_trajectories = [[] for _ in range(len(trajectory))]
+            individual_times_finished = [[] for _ in range(len(trajectory))]
 
             # data to plot
             center = []
@@ -124,9 +131,13 @@ def plot_trajectory(instance_name, metric_name, prefixes, trajectories, agglomer
 
                 # update trajectory values and pointers
                 trajectory_values[trajectory_id] = current_trajectory["losses"][trajectory_pointers[trajectory_id]]
+                individual_trajectories[trajectory_id].append(trajectory_values[trajectory_id])
+                individual_times_finished[trajectory_id].append(times_finished)
                 trajectory_pointers[trajectory_id] += 1
 
                 # populate plotting data
+                if any(v is None for v in trajectory_values):
+                    continue
                 values = [v * (-1 if current_trajectory["flipped"] else 1) for v in trajectory_values if v is not None]
                 if agglomeration == "median":
                     center.append(np.median(values))
@@ -143,7 +154,11 @@ def plot_trajectory(instance_name, metric_name, prefixes, trajectories, agglomer
             label = ("%s: %s" % (prefix, config_name)) if prefix else config_name
             if do_label_rename:
                 label = label_rename(label)
-            plt.step(finishing_times, center, color=color, label=label, where='post', linestyle=linestyle)
+            
+            if plot_individual:
+                for individual_trajectory, individual_times_finished in zip(individual_trajectories, individual_times_finished):
+                    plt.step(individual_times_finished, individual_trajectory, color=color, where='post', linestyle=":", marker="x" if plot_markers else None)
+            plt.step(finishing_times, center, color=color, label=label, where='post', linestyle=linestyle, marker="o" if plot_markers else None)
             color = (color[0], color[1], color[2], 0.5)
             plt.fill_between(finishing_times, lower, upper, step="post", color=[color])
     plt.xlabel('wall clock time [s]', fontsize=font_size)

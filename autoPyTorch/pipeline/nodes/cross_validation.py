@@ -112,7 +112,7 @@ class CrossValidation(SubPipelineNode):
 
     def get_pipeline_config_options(self):
         options = [
-            ConfigOption("validation_split", default=0.0, type=float, choices=[0, 1],
+            ConfigOption("validation_split", default=0.3, type=float, choices=[0, 1],
                 info='In range [0, 1). Part of train dataset used for validation. Ignored in fit if cross validator or valid data given.'),
             ConfigOption("refit_validation_split", default=0.0, type=float, choices=[0, 1],
                 info='In range [0, 1). Part of train dataset used for validation in refit.'),
