@@ -1,7 +1,7 @@
 embeddings=[none]
 lr_scheduler=[cosine_annealing]
 networks=[shapedresnet]
-preprocessors=[none]
+preprocessors=[truncated_svd]
 target_size_strategies=[none]
 over_sampling_methods=[none]
 under_sampling_methods=[none]
