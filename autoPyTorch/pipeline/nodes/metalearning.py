@@ -25,6 +25,8 @@ class MetaLearning(PipelineNode):
         if warmstarted_model is not None:
             with open(warmstarted_model, "rb") as f:
                 warmstarted_model = pickle.load(f)
+                warmstarted_model.choose_sample_budget_strategy = pipeline_config["warmstarted_model_sample_budget"]
+                warmstarted_model.choose_similarity_budget_strategy = pipeline_config["warmstarted_model_similarity_budget"]
 
         return {"warmstarted_model": warmstarted_model, "initial_design": initial_design}
 
@@ -32,6 +34,7 @@ class MetaLearning(PipelineNode):
         options = [
             ConfigOption(name="initial_design", default=None, type="directory"),
             ConfigOption(name="warmstarted_model", default=None, type="directory"),
-            # ConfigOption(name="max_initial_design_configs", default=1, type=int)
+            ConfigOption(name="warmstarted_model_similarity_budget", default="max_with_model", type=str, choices=["max_with_model", "current"]),
+            ConfigOption(name="warmstarted_model_sample_budget", default="max_available", type=str, choices=["max_available", "current"])
         ]
         return options

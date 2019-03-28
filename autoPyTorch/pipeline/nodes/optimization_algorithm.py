@@ -206,13 +206,11 @@ class OptimizationAlgorithm(SubPipelineNode):
                   "working_directory": pipeline_config["working_dir"],
                   "previous_result": previous_result,
                   "initial_design": initial_design,
-                  "warmstarted_model": warmstarted_model,
-                  "bigger_budget_is_better": False}
+                  "warmstarted_model": warmstarted_model}
         try:
             hb = optimization_algorithm(**kwargs)
         except:
             del kwargs["warmstarted_model"]
-            del kwargs["bigger_budget_is_better"]
             hb = optimization_algorithm(**kwargs)
         return hb
 
