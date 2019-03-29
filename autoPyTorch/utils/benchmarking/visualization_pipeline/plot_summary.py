@@ -10,7 +10,9 @@ class PlotSummary(PipelineNode):
         if not pipeline_config["skip_ranking_plot"]:
             plot(pipeline_config, trajectories, train_metrics, "ranking", plot_summary)
         if not pipeline_config["skip_average_plot"]:
-            plot(pipeline_config, trajectories, train_metrics, "average", plot_summary)
+            c = pipeline_config
+            c["scale_uncertainty"] = 0
+            plot(c, trajectories, train_metrics, "average", plot_summary)
         return dict()
 
     def get_pipeline_config_options(self):
