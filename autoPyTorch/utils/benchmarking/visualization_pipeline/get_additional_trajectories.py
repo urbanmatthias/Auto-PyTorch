@@ -1,6 +1,6 @@
 from autoPyTorch.pipeline.base.pipeline_node import PipelineNode
 from autoPyTorch.utils.config.config_option import ConfigOption
-import json, os, csv
+import json, os, csv, traceback
 
 
 class GetAdditionalTrajectories(PipelineNode):
@@ -23,7 +23,11 @@ class GetAdditionalTrajectories(PipelineNode):
                 # process all trajectories for current instance
                 for path in trajectories_description["instances"][instance]:
                     path = os.path.join(os.path.dirname(additional_trajectory_path), path)
-                    trajectory_loaders[file_format](path, config_name, columns_description, trajectories)
+                    try:
+                        trajectory_loaders[file_format](path, config_name, columns_description, trajectories)
+                    except FileNotFoundError as e:
+                        print("Trajectory could not be loaded: %s. Skipping." % e)
+                        traceback.print_exc()                        
         return {"trajectories": trajectories,
                 "train_metrics": train_metrics}
     
