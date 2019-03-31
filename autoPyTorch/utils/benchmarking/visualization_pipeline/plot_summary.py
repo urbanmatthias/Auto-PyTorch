@@ -101,8 +101,8 @@ def plot_summary(instance_name, metric_name, prefixes, trajectories, agglomerati
         trajectory_values[(current_config, current_name)][current_instance][trajectory_id] = current_value * (-1 if current_trajectory["flipped"] else 1)
         trajectory_pointers[(current_config, current_name)][current_instance][trajectory_id] += 1
 
-        if any(value is None for _, instance_values in trajectory_values.items() for _, values in instance_values.items() for value in values):
-            continue
+        # if any(value is None for _, instance_values in trajectory_values.items() for _, values in instance_values.items() for value in values):
+        #     continue
 
         # calculate ranks
         values = to_dict([(instance, (config, name), value)
