@@ -25,7 +25,7 @@ if __name__ == "__main__":
     parser.add_argument("--scale_uncertainty", default=1, type=float, help="Scale the uncertainty")
     parser.add_argument("--agglomeration", default="mean", help="Choose between mean and median.")
     parser.add_argument("--font_size", default=12, type=int, help="Set font size.")
-    parser.add_argument("--prefixes", default=[""], type=str, nargs="+", help="The prefixes to plot. Choices: none, train, val, test, ensemble, ensemble_test")
+    parser.add_argument("--prefixes", default=["val"], type=str, nargs="+", help="The prefixes to plot. Choices: none, train, val, test, ensemble, ensemble_test")
     parser.add_argument("--additional_trajectories", default=[], type=str, nargs="+", help="Path to json file describing additional trajectories")
     parser.add_argument("--do_label_rename", action="store_true", help="Whether the default labels should be renamed")
     parser.add_argument("--skip_dataset_plots", action="store_true", help="Whether the plots for each dataset should be skipped")
