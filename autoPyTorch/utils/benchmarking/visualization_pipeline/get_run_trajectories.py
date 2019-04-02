@@ -67,5 +67,12 @@ def build_run_trajectories(results_folder, autonet_config):
         tj["flipped"] = False
         if tj["losses"]:
             incumbent_trajectories[name] = tj
-            
+    
+    # assume first random config has been evaluated already at time 0
+    for name, trajectory in incumbent_trajectories.items():
+        for key, value_list in trajectory.items():
+            if not isinstance(value_list, (list, tuple)):
+                continue
+            trajectory[key] = [value_list[0] if key != "times_finished" else 0] + value_list
+
     return incumbent_trajectories

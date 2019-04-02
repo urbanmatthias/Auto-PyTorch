@@ -9,8 +9,7 @@ class PlotTrajectories(PipelineNode):
 
     def fit(self, pipeline_config, trajectories, train_metrics, instance):
         if not pipeline_config["skip_dataset_plots"]:
-            plot(pipeline_config, trajectories, train_metrics, instance, plot_trajectory,
-                plot_individual=pipeline_config["plot_individual"], plot_markers=pipeline_config["plot_markers"])
+            plot(pipeline_config, trajectories, train_metrics, instance, process_trajectory)
         return {"trajectories": trajectories, "train_metrics": train_metrics}
     
 
@@ -21,7 +20,7 @@ class PlotTrajectories(PipelineNode):
             ConfigOption('agglomeration', default='mean', choices=['mean', 'median']),
             ConfigOption('scale_uncertainty', default=1, type=float),
             ConfigOption('font_size', default=12, type=int),
-            ConfigOption('prefixes', default=[""], list=True, choices=["", "train", "val", "test", "ensemble", "ensemble_test"]),
+            ConfigOption('prefixes', default=["val"], list=True, choices=["", "train", "val", "test", "ensemble", "ensemble_test"]),
             ConfigOption('label_rename', default=False, type=to_bool),
             ConfigOption('skip_dataset_plots', default=False, type=to_bool),
             ConfigOption('plot_markers', default=False, type=to_bool),
@@ -36,16 +35,10 @@ class PlotTrajectories(PipelineNode):
         return options
 
 
-def plot(pipeline_config, trajectories, train_metrics, instance, plot_fnc, **plot_kwargs):
-    try:
-        # these imports won't work on meta
-        import matplotlib.pyplot as plt
-        from matplotlib.backends.backend_pdf import PdfPages
-        extension = "pdf"
-    except:
-        plt = DataPlot()
-        PdfPages = SaveDataPlot
-        extension = "json"
+def plot(pipeline_config, trajectories, train_metrics, instance, process_fnc):
+    import matplotlib.pyplot as plt
+    from matplotlib.backends.backend_pdf import PdfPages
+    extension = "pdf"
 
     plot_logs = pipeline_config['plot_logs'] or train_metrics
     output_folder = pipeline_config['output_folder']
@@ -64,19 +57,26 @@ def plot(pipeline_config, trajectories, train_metrics, instance, plot_fnc, **plo
 
         # create figure
         figure = plt.figure(i)
-        if not plot_fnc(instance_name,
-                        metric_name,
-                        pipeline_config["prefixes"],
-                        trajectories,
-                        pipeline_config['agglomeration'],
-                        pipeline_config['scale_uncertainty'],
-                        pipeline_config['font_size'],
-                        pipeline_config['label_rename'],
-                        plt,
-                        **plot_kwargs):
+        plot_empty, plot_data = process_fnc(instance_name=instance_name,
+                                            metric_name=metric_name,
+                                            prefixes=pipeline_config["prefixes"],
+                                            trajectories=trajectories,
+                                            agglomeration=pipeline_config["agglomeration"],
+                                            scale_uncertainty=pipeline_config['scale_uncertainty'],
+                                            cmap=plt.get_cmap('jet'))
+        if plot_empty:
             logging.getLogger('benchmark').warn('Not showing empty plot for ' + instance)
             plt.close(figure)
             continue
+
+        plot_trajectory(plot_data=plot_data,
+                        instance_name=instance_name,
+                        metric_name=metric_name,
+                        font_size=pipeline_config["font_size"],
+                        do_label_rename=pipeline_config['label_rename'],
+                        plt=plt,
+                        plot_individual=pipeline_config["plot_individual"],
+                        plot_markers=pipeline_config["plot_markers"])
         
         plt.xscale(pipeline_config["xscale"])
         plt.yscale(pipeline_config["yscale"])
@@ -94,26 +94,26 @@ def plot(pipeline_config, trajectories, train_metrics, instance, plot_fnc, **plo
             plt.close(figure)
 
 
-def plot_trajectory(instance_name, metric_name, prefixes, trajectories, agglomeration, scale_uncertainty, font_size, do_label_rename, plt,
-        plot_individual=False, plot_markers=False):
+def process_trajectory(instance_name, metric_name, prefixes, trajectories, agglomeration, scale_uncertainty, cmap):
     # iterate over the incumbent trajectories of the different runs
     linestyles = ['-', '--', '-.', ':']
-    cmap = plt.get_cmap('jet')
     plot_empty = True
+    plot_data = dict()
     for p, prefix in enumerate(prefixes):
         trajectory_name = ("%s_%s" % (prefix, metric_name)) if prefix else metric_name
         linestyle = linestyles[p % len(linestyles)]
         if trajectory_name not in trajectories:
             continue
 
-        run_trajectories = trajectories[trajectory_name]
-        for i, (config_name, trajectory) in enumerate(run_trajectories.items()):
-            color = cmap((i *len(prefixes) + p) / (len(run_trajectories) * len(prefixes)))
+        config_trajectories = trajectories[trajectory_name]
+        for i, (config_name, trajectory) in enumerate(config_trajectories.items()):
+            color = cmap((i *len(prefixes) + p) / (len(config_trajectories) * len(prefixes)))
 
             trajectory_pointers = [0] * len(trajectory)  # points to current entry of each trajectory
             trajectory_values = [None] * len(trajectory)  # list of current values of each trajectory
             individual_trajectories = [[] for _ in range(len(trajectory))]
             individual_times_finished = [[] for _ in range(len(trajectory))]
+            num_finished = 0
 
             # data to plot
             center = []
@@ -122,7 +122,7 @@ def plot_trajectory(instance_name, metric_name, prefixes, trajectories, agglomer
             finishing_times = []
 
             # iterate simultaneously over all trajectories with increasing finishing times
-            while any(trajectory_pointers[j] < len(trajectory[j]["losses"]) for j in range(len(trajectory))):
+            while num_finished < len(trajectory):
 
                 # get trajectory with lowest finishing times
                 times_finished, trajectory_id = min([(trajectory[j]["times_finished"][trajectory_pointers[j]], j)
@@ -134,10 +134,13 @@ def plot_trajectory(instance_name, metric_name, prefixes, trajectories, agglomer
                 individual_trajectories[trajectory_id].append(trajectory_values[trajectory_id])
                 individual_times_finished[trajectory_id].append(times_finished)
                 trajectory_pointers[trajectory_id] += 1
+                num_finished += 1  if trajectory_pointers[trajectory_id] == len(current_trajectory["losses"])  else 0
 
                 # populate plotting data
                 if any(v is None for v in trajectory_values):
                     continue
+                if finishing_times and np.isclose(times_finished, finishing_times[-1]):
+                    [x.pop for x in [center, upper, lower, finishing_times]]
                 values = [v * (-1 if current_trajectory["flipped"] else 1) for v in trajectory_values if v is not None]
                 if agglomeration == "median":
                     center.append(np.median(values))
@@ -149,23 +152,36 @@ def plot_trajectory(instance_name, metric_name, prefixes, trajectories, agglomer
                     upper.append(scale_uncertainty * np.std(values) + center[-1])
                 finishing_times.append(times_finished)
                 plot_empty = False
-
-            # insert into plot
             label = ("%s: %s" % (prefix, config_name)) if prefix else config_name
-            if do_label_rename:
-                label = label_rename(label)
-            
-            if plot_individual:
-                for individual_trajectory, individual_times_finished in zip(individual_trajectories, individual_times_finished):
-                    plt.step(individual_times_finished, individual_trajectory, color=color, where='post', linestyle=":", marker="x" if plot_markers else None)
-            plt.step(finishing_times, center, color=color, label=label, where='post', linestyle=linestyle, marker="o" if plot_markers else None)
-            color = (color[0], color[1], color[2], 0.5)
-            plt.fill_between(finishing_times, lower, upper, step="post", color=[color])
+
+            plot_data[label] = {
+                "individual_trajectory": individual_trajectories,
+                "individual_times_finished": individual_times_finished,
+                "color": color,
+                "linestyle": linestyle,
+                "center": center,
+                "lower": lower,
+                "upper": upper,
+                "finishing_times": finishing_times
+            }
+    return plot_empty, plot_data
+    
+def plot_trajectory(plot_data, instance_name, metric_name, font_size, do_label_rename, plt, plot_individual, plot_markers):
+    for label, d in plot_data.items():
+
+        if do_label_rename:
+            label = label_rename(label)
+        
+        if plot_individual and d["individual_trajectories"] and d["individual_times_finished"]:
+            for individual_trajectory, individual_times_finished in zip(d["individual_trajectories"], d["individual_times_finished"]):
+                plt.step(individual_times_finished, individual_trajectory, color=d["color"], where='post', linestyle=":", marker="x" if plot_markers else None)
+        
+        plt.step(d["finishing_times"], d["center"], color=d["color"], label=label, where='post', linestyle=d["linestyle"], marker="o" if plot_markers else None)
+        plt.fill_between(d["finishing_times"], d["lower"], d["upper"], step="post", color=[(d["color"][0], d["color"][1], d["color"][2], 0.5)])
     plt.xlabel('wall clock time [s]', fontsize=font_size)
     plt.ylabel('incumbent ' + metric_name, fontsize=font_size)
     plt.legend(loc='best', prop={'size': font_size})
     plt.title(instance_name, fontsize=font_size)
-    return not plot_empty
 
 LABEL_RENAME = dict()
 def label_rename(label):
@@ -173,77 +189,3 @@ def label_rename(label):
         rename = input("Rename label %s to? (Leave empty for no rename) " % label)
         LABEL_RENAME[label] = rename if rename else label
     return LABEL_RENAME[label]
-
-class DataPlot():
-    def __init__(self):
-        self._xlabel = None
-        self._ylabel = None
-        self._title = None
-        self.fontsize = None
-        self.finishing_times = list()
-        self.lowers = list()
-        self.uppers = list()
-        self.centers = list()
-        self.colors = list()
-        self.config_labels = list()
-    
-    def step(self, finishing_times, center, color, label, where):
-        self.plot(finishing_times, center, color, label)
-    
-    def plot(self, finishing_times, center, color, label):
-        self.finishing_times.append(finishing_times)
-        self.centers.append(center)
-        self.colors.append(color)
-        self.config_labels.append(label)
-    
-    def fill_between(self, finishing_times, lower, upper, step, color):
-        assert finishing_times == self.finishing_times[-1]
-        self.lowers.append(lower)
-        self.uppers.append(upper)
-    
-    def xlabel(self, xlabel, fontsize):
-        self._xlabel = xlabel
-        self.fontsize = fontsize
-    
-    def ylabel(self, ylabel, fontsize):
-        self._ylabel = ylabel
-        self.fontsize = fontsize
-    
-    def title(self, title, fontsize):
-        self._title = title
-        self.fontsize = fontsize
-    
-    def figure(self, i):
-        return self
-    
-    def show(self):
-        raise ValueError("Could not import Matplotlib. Specify output folder to save plot as json.")
-    
-    def legend(self, *args, **kwargs):
-        pass
-    
-    def xscale(self, *args, **kwargs):
-        pass
-    
-    def yscale(self, *args, **kwargs):
-        pass
-    
-    def xlim(self, *args, **kwargs):
-        pass
-    
-    def ylim(self, *args, **kwargs):
-        pass
-    
-    def close(self, *args, **kwargs):
-        self.__init__()
-
-class SaveDataPlot():
-    def __init__(self, destination):
-        self.destination = destination
-    
-    def savefig(self, figure):
-        with open(self.destination, "w") as f:
-            print(json.dumps(figure.__dict__), file=f)
-    
-    def close(self, *args, **kwargs):
-        pass

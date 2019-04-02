@@ -1,18 +1,17 @@
 from autoPyTorch.pipeline.base.pipeline_node import PipelineNode
-from autoPyTorch.utils.benchmarking.visualization_pipeline.plot_trajectories import plot, label_rename
+from autoPyTorch.utils.benchmarking.visualization_pipeline.plot_trajectories import plot, label_rename, process_trajectory
 from autoPyTorch.utils.config.config_option import ConfigOption, to_bool
 import os
 import logging
 import numpy as np
+import random
 
 class PlotSummary(PipelineNode):
     def fit(self, pipeline_config, trajectories, train_metrics):
         if not pipeline_config["skip_ranking_plot"]:
-            plot(pipeline_config, trajectories, train_metrics, "ranking", plot_summary)
+            plot(pipeline_config, trajectories, train_metrics, "ranking", process_summary)
         if not pipeline_config["skip_average_plot"]:
-            c = pipeline_config
-            c["scale_uncertainty"] = 0
-            plot(c, trajectories, train_metrics, "average", plot_summary)
+            plot(pipeline_config, trajectories, train_metrics, "average", trajectory_sampling)
         return dict()
 
     def get_pipeline_config_options(self):
@@ -46,16 +45,13 @@ def get_average_plot_values(values, names, agglomeration):
             result[name].append(value)
     return result
 
-
 get_plot_values_funcs = {
     "ranking": get_ranking_plot_values,
     "average": get_average_plot_values
 }
 
-
-def plot_summary(instance_name, metric_name, prefixes, trajectories, agglomeration, scale_uncertainty, font_size, do_label_rename, plt):
+def process_summary(instance_name, metric_name, prefixes, trajectories, agglomeration, scale_uncertainty, cmap):
     assert instance_name in get_plot_values_funcs.keys()
-    cmap = plt.get_cmap('jet')
     trajectory_names_to_prefix = {(("%s_%s" % (prefix, metric_name)) if prefix else metric_name): prefix
         for prefix in prefixes}
     trajectory_names = [t for t in trajectory_names_to_prefix.keys() if t in trajectories]
@@ -101,8 +97,11 @@ def plot_summary(instance_name, metric_name, prefixes, trajectories, agglomerati
         trajectory_values[(current_config, current_name)][current_instance][trajectory_id] = current_value * (-1 if current_trajectory["flipped"] else 1)
         trajectory_pointers[(current_config, current_name)][current_instance][trajectory_id] += 1
 
-        # if any(value is None for _, instance_values in trajectory_values.items() for _, values in instance_values.items() for value in values):
-        #     continue
+        if any(value is None for _, instance_values in trajectory_values.items() for _, values in instance_values.items() for value in values):
+            continue
+
+        if finishing_times and np.isclose(times_finished, finishing_times[-1]):
+            [x.pop for x in [center, upper, lower, finishing_times]]
 
         # calculate ranks
         values = to_dict([(instance, (config, name), value)
@@ -117,37 +116,30 @@ def plot_summary(instance_name, metric_name, prefixes, trajectories, agglomerati
                 center[key].append(float("nan"))
                 lower[key].append(float("nan"))
                 upper[key].append(float("nan"))
-            elif agglomeration == "median":
-                center[key].append(np.median(plot_values[key]))
-                lower[key].append(np.percentile(plot_values[key], int(50 - scale_uncertainty * 25)))
-                upper[key].append(np.percentile(plot_values[key], int(50 + scale_uncertainty * 25)))
-            elif agglomeration == "mean":
-                center[key].append(np.mean(plot_values[key]))
-                lower[key].append(-1 * scale_uncertainty * np.std(plot_values[key]) + center[key][-1])
-                upper[key].append(scale_uncertainty * np.std(plot_values[key]) + center[key][-1])
+
+            center[key].append(np.mean(plot_values[key]))
+            lower[key].append(-1 * scale_uncertainty * np.std(plot_values[key]) + center[key][-1])
+            upper[key].append(scale_uncertainty * np.std(plot_values[key]) + center[key][-1])
         finishing_times.append(times_finished)
         plot_empty = False
-    
-    if plot_empty:
-        return False
-    
+        
     # do the plotting
+    plot_data = dict()
     for i, (config, name) in enumerate(center.keys()):
         prefix = trajectory_names_to_prefix[name]
         label = ("%s: %s" % (prefix, config)) if prefix else config
-        if do_label_rename:
-            label = label_rename(label)
         color = cmap(i / len(center))
-        plt.plot(finishing_times, center[(config, name)], color=color, label=label)
-        color = (color[0], color[1], color[2], 0.5)
-        plt.fill_between(finishing_times, lower[(config, name)], upper[(config, name)], step=None, color=[color])
-
-    # setup labels, legend etc.
-    plt.xlabel('wall clock time [s]', fontsize=font_size)
-    plt.ylabel(instance_name + ' ' + metric_name, fontsize=font_size)
-    plt.legend(loc='best', prop={'size': font_size})
-    plt.title(instance_name, fontsize=font_size)
-    return True
+        plot_data[label] = {
+            "individual_trajectory": None,
+            "individual_times_finished": None,
+            "color": color,
+            "linestyle": "-",
+            "center": center[(config, name)],
+            "lower": lower[(config, name)],
+            "upper": upper[(config, name)],
+            "finishing_times": finishing_times
+        }
+    return plot_empty, plot_data
 
 def to_dict(tuple_list):
     result = dict()
@@ -160,3 +152,67 @@ def to_dict(tuple_list):
             result[a] = list()
         result[a].append(b)
     return result
+
+
+def trajectory_sampling(instance_name, metric_name, prefixes, trajectories, agglomeration, scale_uncertainty, cmap, num_samples=1000):
+    averaged_trajectories = dict()
+
+    # sample #num_samples average trajectories
+    for i in range(num_samples):
+        sampled_trajectories = dict()
+
+        for p, prefix in enumerate(prefixes):
+            trajectory_name = ("%s_%s" % (prefix, metric_name)) if prefix else metric_name
+            config_trajectories = trajectories[trajectory_name]
+            if trajectory_name not in sampled_trajectories:
+                        sampled_trajectories[trajectory_name] = dict()
+
+            for config, instance_trajectories in config_trajectories.items():
+                if config not in sampled_trajectories[trajectory_name]:
+                        sampled_trajectories[trajectory_name][config] = list()
+
+                # for each instance choose a random trajectory over the runs
+                for instance, run_trajectories in instance_trajectories.items():
+                    run_trajectory = random.choice(run_trajectories)
+                    sampled_trajectories[trajectory_name][config].append(run_trajectory)
+
+        # compute the average over the instances
+        plot_empty, plot_data = process_trajectory(
+            instance_name=instance_name,
+            metric_name=metric_name,
+            prefixes=prefixes,
+            trajectories=sampled_trajectories,
+            agglomeration=agglomeration,
+            scale_uncertainty=0,
+            cmap=cmap
+        )
+
+        if plot_empty:
+            continue
+
+        # save the average trajectories
+        for label, d in plot_data.items():
+            prefix, config = label.split(": ") if ": " in label else ("", label)
+            trajectory_name = ("%s_%s" % (prefix, metric_name)) if prefix else metric_name
+
+            if trajectory_name not in averaged_trajectories:
+                averaged_trajectories[trajectory_name] = dict()
+            if config not in averaged_trajectories[trajectory_name]:
+                averaged_trajectories[trajectory_name][config] = list()
+
+            averaged_trajectories[trajectory_name][config].append({
+                "times_finished": d["finishing_times"],
+                "losses": d["center"],
+                "flipped": False
+            })
+    
+    # compute mean and stddev over the averaged trajectories
+    return process_trajectory(
+        instance_name=instance_name,
+        metric_name=metric_name,
+        prefixes=prefixes,
+        trajectories=averaged_trajectories,
+        agglomeration="mean",
+        scale_uncertainty=scale_uncertainty,
+        cmap=cmap
+    )
