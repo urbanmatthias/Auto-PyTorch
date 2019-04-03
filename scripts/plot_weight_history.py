@@ -29,7 +29,7 @@ if __name__ == "__main__":
             data = line[-1]
             data = list(map(float, map(str.strip, data.split(","))))
             title = "\t".join(line[:-1])
-            if title in show_labels:
+            if title == "current" or title in show_labels:
                 plt.plot(list(range(len(data))), data, label=title)
 
         plt.legend(loc='best')
