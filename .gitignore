@@ -49,3 +49,6 @@ warmstarted_model_weights_history.txt
 # ensemble data
 predictions_for_ensemble.npy
 test_predictions_for_ensemble.npy
+
+# PDF
+*.pdf
