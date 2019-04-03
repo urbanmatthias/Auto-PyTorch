@@ -5,4 +5,3 @@ from autoPyTorch.utils.metalearning.pipeline.for_run import ForRun
 from autoPyTorch.utils.metalearning.pipeline.for_autonet_config import ForAutoNetConfig
 from autoPyTorch.utils.metalearning.pipeline.for_instance import ForInstance
 from autoPyTorch.utils.metalearning.pipeline.set_autonet_config import SetAutoNetConfig
-from autoPyTorch.utils.metalearning.pipeline.metalearning_eval import MetalearningEval
