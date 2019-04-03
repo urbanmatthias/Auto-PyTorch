@@ -14,12 +14,12 @@ if __name__ == "__main__":
                 continue
             data = line[-1]
             data = list(map(float, map(str.strip, data.split(","))))
-            title = "\t".join(line[:-1])
+            title = "\t".join(line[:-1]).strip()
             plt.plot(list(range(len(data))), data, label=title)
-            show_labels[title] = np.sum(data)
+            show_labels[title] = data[-1]
         plt.show()
         plt.title("Weight history")
-        show_labels = sorted(show_labels.keys(), key=lambda x: -show_labels[x])[:5]
+        show_labels = sorted(show_labels.keys(), key=lambda x: -show_labels[x])[:7]
 
     with open(weight_history_file, "r") as f:
         for line in f:
