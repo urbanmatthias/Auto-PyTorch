@@ -28,7 +28,7 @@ if __name__ == "__main__":
                 continue
             data = line[-1]
             data = list(map(float, map(str.strip, data.split(","))))
-            title = "\t".join(line[:-1])
+            title = "\t".join(line[:-1]).strip()
             if title == "current" or title in show_labels:
                 plt.plot(list(range(len(data))), data, label=title)
 
