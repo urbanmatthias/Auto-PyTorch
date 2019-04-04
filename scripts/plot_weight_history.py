@@ -88,6 +88,8 @@ if __name__ == "__main__":
     heap = [(weight_deviation_timestamps[i, 0], weight_deviation_history[i, 0], i, 0)  # use heap to sort by timestamps
             for i in range(weight_deviation_timestamps.shape[0])]
     heapq.heapify(heap)
+    # progress = 0
+    # total = weight_deviation_timestamps.shape[0] * weight_deviation_timestamps.shape[1]
 
     times = []
     values = []
@@ -99,6 +101,9 @@ if __name__ == "__main__":
         history_pointers[i] += 1
         if p + 1 < weight_deviation_timestamps.shape[1]:
             heapq.heappush(heap, (weight_deviation_timestamps[i, p + 1], weight_deviation_history[i, p + 1], i, p + 1))
+            
+        # progress += 1
+        # print("Progress Summary:", (progress / total) * 100, " " * 20, end="\r" if progress != total else "\n")
 
     plt.plot(times, values, marker="x")
     plt.title("weight deviation over time")

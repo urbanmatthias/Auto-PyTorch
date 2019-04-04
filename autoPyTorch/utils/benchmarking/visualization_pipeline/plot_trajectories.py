@@ -4,6 +4,7 @@ from autoPyTorch.pipeline.base.pipeline_node import PipelineNode
 import numpy as np
 import logging
 import json
+import heapq
 
 class PlotTrajectories(PipelineNode):
 
@@ -113,20 +114,23 @@ def process_trajectory(instance_name, metric_name, prefixes, trajectories, agglo
             trajectory_values = [None] * len(trajectory)  # list of current values of each trajectory
             individual_trajectories = [[] for _ in range(len(trajectory))]
             individual_times_finished = [[] for _ in range(len(trajectory))]
-            num_finished = 0
+            heap = [(trajectory[j]["times_finished"][0], j) for j in range(len(trajectory))]
+            heapq.heapify(heap)
+            # progress = 0
+            # total = sum(len(trajectory[j]["times_finished"]) for j in range(len(trajectory)))
 
             # data to plot
             center = []
             lower = []
             upper = []
             finishing_times = []
+            # print("Calculate plot data for instance %s and trajectory %s and config %s" % (instance_name, trajectory_name, config_name))
 
             # iterate simultaneously over all trajectories with increasing finishing times
-            while num_finished < len(trajectory):
+            while heap:
 
                 # get trajectory with lowest finishing times
-                times_finished, trajectory_id = min([(trajectory[j]["times_finished"][trajectory_pointers[j]], j)
-                    for j in range(len(trajectory)) if trajectory_pointers[j] < len(trajectory[j]["losses"])])
+                times_finished, trajectory_id = heapq.heappop(heap)
                 current_trajectory = trajectory[trajectory_id]
 
                 # update trajectory values and pointers
@@ -134,13 +138,19 @@ def process_trajectory(instance_name, metric_name, prefixes, trajectories, agglo
                 individual_trajectories[trajectory_id].append(trajectory_values[trajectory_id])
                 individual_times_finished[trajectory_id].append(times_finished)
                 trajectory_pointers[trajectory_id] += 1
-                num_finished += 1  if trajectory_pointers[trajectory_id] == len(current_trajectory["losses"])  else 0
+                if trajectory_pointers[trajectory_id] < len(current_trajectory["losses"]):
+                    heapq.heappush(heap,
+                        (trajectory[trajectory_id]["times_finished"][trajectory_pointers[trajectory_id]], trajectory_id)
+                    )
+
+                # progress += 1
+                # print("Progress:", (progress / total) * 100, " " * 20, end="\r" if progress != total else "\n")
 
                 # populate plotting data
                 if any(v is None for v in trajectory_values):
                     continue
                 if finishing_times and np.isclose(times_finished, finishing_times[-1]):
-                    [x.pop for x in [center, upper, lower, finishing_times]]
+                    [x.pop() for x in [center, upper, lower, finishing_times]]
                 values = [v * (-1 if current_trajectory["flipped"] else 1) for v in trajectory_values if v is not None]
                 if agglomeration == "median":
                     center.append(np.median(values))

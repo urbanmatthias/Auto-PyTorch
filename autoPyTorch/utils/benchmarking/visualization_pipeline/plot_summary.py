@@ -5,6 +5,7 @@ import os
 import logging
 import numpy as np
 import random
+import heapq
 
 class PlotSummary(PipelineNode):
     def fit(self, pipeline_config, trajectories, train_metrics):
@@ -65,6 +66,12 @@ def process_summary(instance_name, metric_name, prefixes, trajectories, agglomer
         for instance, run_trajectories in instance_trajectories.items()}
         for name in trajectory_names
         for config, instance_trajectories in trajectories[name].items()}
+    heap = [(run_trajectories[j]["times_finished"][0], config, name, instance, j)
+            for name in trajectory_names
+            for config, instance_trajectories in trajectories[name].items()
+            for instance, run_trajectories in instance_trajectories.items()
+            for j in range(len(run_trajectories))]
+    heapq.heapify(heap)
 
     # data to plot
     center = {(config, name): [] for name in trajectory_names for config in trajectories[name].keys()}
@@ -74,20 +81,10 @@ def process_summary(instance_name, metric_name, prefixes, trajectories, agglomer
     plot_empty = True
 
     # iterate simultaneously over all trajectories with increasing finishing times
-    while any(trajectory_pointers[(config, name)][instance][j] < len(instance_trajectories[instance][j]["losses"])
-            for name in trajectory_names
-            for config, instance_trajectories in trajectories[name].items()
-            for instance, run_trajectories in instance_trajectories.items()
-            for j in range(len(run_trajectories))):
+    while heap:
 
         # get trajectory with lowest finishing time
-        times_finished, current_config, current_name, current_instance, trajectory_id = min(
-            (run_trajectories[j]["times_finished"][trajectory_pointers[(config, name)][instance][j]], config, name, instance, j)
-            for name in trajectory_names
-            for config, instance_trajectories in trajectories[name].items()
-            for instance, run_trajectories in instance_trajectories.items()
-            for j in range(len(run_trajectories))
-            if trajectory_pointers[(config, name)][instance][j] < len(instance_trajectories[instance][j]["losses"]))
+        times_finished, current_config, current_name, current_instance, trajectory_id = heapq.heappop(heap)
 
         # update trajectory values and pointers
         current_trajectory = trajectories[current_name][current_config][current_instance][trajectory_id]
@@ -97,11 +94,17 @@ def process_summary(instance_name, metric_name, prefixes, trajectories, agglomer
         trajectory_values[(current_config, current_name)][current_instance][trajectory_id] = current_value * (-1 if current_trajectory["flipped"] else 1)
         trajectory_pointers[(current_config, current_name)][current_instance][trajectory_id] += 1
 
+        if trajectory_pointers[(current_config, current_name)][current_instance][trajectory_id] < len(current_trajectory["losses"]):
+            heapq.heappush(heap,
+                (current_trajectory["times_finished"][trajectory_pointers[(current_config, current_name)][current_instance][trajectory_id]],
+                 current_config, current_name, current_instance, trajectory_id))
+
         if any(value is None for _, instance_values in trajectory_values.items() for _, values in instance_values.items() for value in values):
             continue
 
         if finishing_times and np.isclose(times_finished, finishing_times[-1]):
-            [x.pop for x in [center, upper, lower, finishing_times]]
+            finishing_times.pop()
+            [x[k].pop() for x in [center, upper, lower] for k in x.keys()]
 
         # calculate ranks
         values = to_dict([(instance, (config, name), value)
@@ -178,7 +181,7 @@ def trajectory_sampling(instance_name, metric_name, prefixes, trajectories, aggl
 
         # compute the average over the instances
         plot_empty, plot_data = process_trajectory(
-            instance_name=instance_name,
+            instance_name="prepare_sampled_%s_(%s/%s)" % (instance_name, i, num_samples),
             metric_name=metric_name,
             prefixes=prefixes,
             trajectories=sampled_trajectories,
