@@ -21,7 +21,7 @@ JOBID=(${MOAB_JOBID//[/ })
 
 module load tools/singularity/2.6
 
-COMMAND="python /data/Auto-PyTorch/scripts/build_meta_learning_model.py /data/Auto-PyTorch/configs/benchmark/collect_metalearning_data.txt --result_dir $TMPDIR/benchmark_results --only_finished_runs --calculate_loss_matrix_entry $MOAB_JOBARRAYINDEX --loss_matrix_db_config_file $TMPDIR/mongo_db.conf --save_path $TMPDIR --memory_limit_mb 7000 --time_limit_per_entry 8000"
+COMMAND="python /data/Auto-PyTorch/scripts/build_meta_learning_model.py /data/Auto-PyTorch/configs/benchmark/collect_metalearning_data_tiny.txt --result_dir $TMPDIR/benchmark_results --only_finished_runs --calculate_loss_matrix_entry $MOAB_JOBARRAYINDEX --loss_matrix_db_config_file $TMPDIR/mongo_db.conf --save_path $TMPDIR --memory_limit_mb 7000 --time_limit_per_entry 8000"
 COMMAND="singularity exec Auto-PyTorch.simg $COMMAND"
 echo $COMMAND
 timeout -k 9.2h 9h $COMMAND  1> stdout.txt 2> stderr.txt
