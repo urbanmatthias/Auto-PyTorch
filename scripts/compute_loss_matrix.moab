@@ -32,6 +32,6 @@ if [ $EXIT_CODE -ne 0 ]
 then
     cd $WORKSPACE
     mkdir meta_outputs
-    cp $TMPDIR/stdout.txt meta_outputs/stdout_${EXIT_CODE}_${MOAB_JOBARRAYINDEX}.txt
-    cp $TMPDIR/stderr.txt meta_outputs/stderr_${EXIT_CODE}_${MOAB_JOBARRAYINDEX}.txt
+    cp $TMPDIR/stdout.txt meta_outputs/stdout_lossmatrix_${EXIT_CODE}_${MOAB_JOBARRAYINDEX}.txt
+    cp $TMPDIR/stderr.txt meta_outputs/stderr_lossmatrix_${EXIT_CODE}_${MOAB_JOBARRAYINDEX}.txt
 fi
