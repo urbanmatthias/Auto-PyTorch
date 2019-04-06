@@ -90,7 +90,7 @@ autoPyTorch = AutoNetClassification("full_cs")
 # enabling / disabling of components is done using the Auto-PyTorch config:
 autoPyTorch = AutoNetClassification(networks=["shapedresnet"])
 
-# you can take a look at the search space.
+# You can take a look at the search space.
 # Each hyperparameter belongs to a node in Auto-PyTorch's ML Pipeline.
 # The names of the hyperparameters are prefixed with the name of the node: NodeName:hyperparameter_name.
 # If a hyperparameter belongs to a component: NodeName:component_name:hyperparameter_name.
@@ -108,8 +108,11 @@ search_space_updates.append(node_name="NetworkSelector",
                             value_range=[2,5],
                             log=False)
 autoPyTorch = AutoNetClassification(hyperparameter_search_space_updates=search_space_updates)
+```
 
-# Enable ensemble building:
+Enable ensemble building:
+
+```py
 from autoPyTorch import AutoNetEnsemble
 autoPyTorchEnsemble = AutoNetEnsemble(AutoNetClassification, "tiny_cs", max_runtime=300, min_budget=30, max_budget=90)
 
