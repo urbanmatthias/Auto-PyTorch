@@ -26,6 +26,7 @@ https://pytorch.org/
 Install autonet
 
 ```sh
+$ cat requirements.txt | xargs -n 1 -L 1 pip install
 $ python setup.py install
 ```
 
