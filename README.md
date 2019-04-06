@@ -26,7 +26,6 @@ https://pytorch.org/
 Install autonet
 
 ```sh
-$ conda install pytorch torchvision cudatoolkit=10.0 -c pytorch  # choose version on https://pytorch.org/
 $ cat requirements.txt | xargs -n 1 -L 1 pip install
 $ python setup.py install
 ```
