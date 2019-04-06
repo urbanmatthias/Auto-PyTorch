@@ -81,7 +81,7 @@ class AutoNetEnsemble(AutoNet):
             metric = autonet.pipeline[MetricSelector.get_name()].fit_output['train_metric']
 
         # reverse one hot encoding 
-        result = OHE.reverse_transform_y(prediction, OHE.fit_output['y_one_hot_encoder']).reshape(1, -1)
+        result = OHE.reverse_transform_y(prediction, OHE.fit_output['y_one_hot_encoder'])
         if not return_probabilities and not return_metric:
             return result
         result = [result]
