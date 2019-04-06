@@ -42,7 +42,7 @@ class MetaLearning(PipelineNode):
             ConfigOption(name="warmstarted_model_sample_budget", default="max_available", type=str, choices=["max_available", "current"]),
             ConfigOption(name="warmstarted_model_num_nonzero_weight", default=0, type=int),
             ConfigOption(name="warmstarted_model_weight_type", type=str, default="max_likelihood",
-                         choices=["max_likelihood", "likelihood", "likelihood_sum", "log_likelihood"])
+                         choices=["max_likelihood", "likelihood", "likelihood_sum", "log_likelihood"]),
             ConfigOption(name="warmstarted_model_average_type", type=str, default="weighted_arithmetic_mean",
                          choices=["weighted_arithmetic_mean", "weighted_geometric_mean"])
         ]

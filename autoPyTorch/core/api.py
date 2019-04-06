@@ -22,7 +22,7 @@ from autoPyTorch.utils.config.config_file_parser import ConfigFileParser
 class AutoNet():
     preset_folder_name = None
 
-    def __init__(self, config_preset=None, pipeline=None, **autonet_config):
+    def __init__(self, config_preset="medium_cs", pipeline=None, **autonet_config):
         """Superclass for all AutoNet variations, that specifies the API of AutoNet.
         
         Keyword Arguments:

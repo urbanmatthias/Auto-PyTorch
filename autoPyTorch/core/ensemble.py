@@ -6,7 +6,7 @@ from autoPyTorch.pipeline.nodes.metric_selector import MetricSelector
 from autoPyTorch.pipeline.nodes.ensemble import EnableComputePredictionsForEnsemble, SavePredictionsForEnsemble, BuildEnsemble, EnsembleServer
 
 class AutoNetEnsemble(AutoNet):
-    def __init__(self, autonet, config_preset=None, **autonet_config):
+    def __init__(self, autonet, config_preset="medium_cs", **autonet_config):
         if isinstance(autonet, AutoNet):
             self.pipeline = autonet.pipeline
             self.autonet_type = type(autonet)
