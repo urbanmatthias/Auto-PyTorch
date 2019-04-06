@@ -143,7 +143,8 @@ class OptimizationAlgorithm(SubPipelineNode):
             ConfigOption("network_interface_name", default=self.get_default_network_interface_name(), type=str),
             ConfigOption("memory_limit_mb", default=1000000, type=int),
             ConfigOption("use_tensorboard_logger", default=False, type=to_bool),
-            ConfigOption("run_worker_on_master_node", default=True, type=to_bool)
+            ConfigOption("run_worker_on_master_node", default=True, type=to_bool),
+            ConfigOption("use_pynisher", default=True, type=to_bool)
         ]
         return options
 
@@ -243,7 +244,8 @@ class OptimizationAlgorithm(SubPipelineNode):
                               budget_type=self.budget_types[pipeline_config['budget_type']],
                               max_budget=pipeline_config["max_budget"],
                               host=host, run_id=run_id,
-                              id=task_id, shutdownables=shutdownables)
+                              id=task_id, shutdownables=shutdownables,
+                              use_pynisher=pipeline_config["use_pynisher"])
         worker.load_nameserver_credentials(ns_credentials_dir)
         # run in background if not on cluster
         worker.run(background=(task_id <= 1))

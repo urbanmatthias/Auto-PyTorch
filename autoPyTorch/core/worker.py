@@ -13,7 +13,8 @@ __license__ = "BSD"
 
 class ModuleWorker(Worker):
     def __init__(self, pipeline, pipeline_config,
-            X_train, Y_train, X_valid, Y_valid, dataset_info, budget_type, max_budget, shutdownables, *args, **kwargs):
+            X_train, Y_train, X_valid, Y_valid, dataset_info, budget_type, max_budget,
+            shutdownables, use_pynisher, *args, **kwargs):
         self.X_train = X_train #torch.from_numpy(X_train).float()
         self.Y_train = Y_train #torch.from_numpy(Y_train).long()
         self.X_valid = X_valid
@@ -30,7 +31,7 @@ class ModuleWorker(Worker):
         self.autonet_logger = logging.getLogger('autonet')
 
         # We can only use user defined limits (memory) if we have the required module 'resource' - not available on windows!
-        self.guarantee_limits = module_exists("resource") and module_exists("pynisher")
+        self.guarantee_limits = use_pynisher and module_exists("resource") and module_exists("pynisher")
         if (not self.guarantee_limits):
             self.autonet_logger.info("Can not guarantee memory and time limit because module 'resource' is not available")
 

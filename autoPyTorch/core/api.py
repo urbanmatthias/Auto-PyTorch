@@ -54,7 +54,7 @@ class AutoNet():
         print("Configure AutoNet with the following keyword arguments.")
         print("Pass these arguments to either the constructor or fit().")
         print()
-        config_file_parser.print_help()
+        config_file_parser.print_help(self.base_config)
 
 
     def get_current_autonet_config(self):
