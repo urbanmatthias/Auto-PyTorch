@@ -11,4 +11,4 @@ initialization_methods=[default]
 loss_modules=[cross_entropy_weighted]
 normalization_strategies=[standardize]
 optimizer=[sgd]
-hyperparameter_search_space_updates=configs/configspace/tiny_cs.txt
+hyperparameter_search_space_updates=autoPyTorch/core/presets/tiny_cs_updates.txt
