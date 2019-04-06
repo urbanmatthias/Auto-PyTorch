@@ -87,8 +87,8 @@ autoPyTorch.fit(X_train, y_train, log_level='debug', max_runtime=900, min_budget
 # full_cs is recommended if you have many resources and a very high search budget.
 autoPyTorch = AutoNetClassification("full_cs")
 
-# enabling / disabling of components is done using the Auto-PyTorch config:
-autoPyTorch = AutoNetClassification(networks=["shapedresnet"])
+# Enabling / disabling of components is done using the Auto-PyTorch config:
+autoPyTorch = AutoNetClassification(networks=["resnet", "shapedresnet", "mlpnet", "shapedmlpnet"])
 
 # You can take a look at the search space.
 # Each hyperparameter belongs to a node in Auto-PyTorch's ML Pipeline.
@@ -104,7 +104,7 @@ search_space_updates.append(node_name="NetworkSelector",
                             hyperparameter="shapedresnet:activation",
                             value_range=["relu", "sigmoid"])
 search_space_updates.append(node_name="NetworkSelector",
-                            hyperparameter="shapedresnet:blocks_per_group,",
+                            hyperparameter="shapedresnet:blocks_per_group",
                             value_range=[2,5],
                             log=False)
 autoPyTorch = AutoNetClassification(hyperparameter_search_space_updates=search_space_updates)
