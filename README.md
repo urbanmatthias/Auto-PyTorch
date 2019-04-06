@@ -58,6 +58,15 @@ y_pred = autoPyTorch.predict(X_test)
 print("Accuracy score", sklearn.metrics.accuracy_score(y_test, y_pred))
 ```
 
+More examples with datasets:
+
+```sh
+$ cd examples/
+
+```
+
+## Configuration
+
 How to configure Auto-PyTorch for your needs:
 
 ```py
@@ -111,12 +120,6 @@ Disable pynisher if you experience issues when using cuda:
 ```py
 autoPyTorch = AutoNetClassification("tiny_cs", log_level='info', max_runtime=300, min_budget=30, max_budget=90, cuda=True, use_pynisher=False)
 
-```
-
-More examples with datasets:
-
-```sh
-$ cd examples/
 ```
 
 ## License
