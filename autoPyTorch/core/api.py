@@ -36,7 +36,7 @@ class AutoNet():
 
         if config_preset is not None:
             parser = self.get_autonet_config_file_parser()
-            c = parser.read(os.path.join(parser.get_autonet_home(), "configs", "autonet", "presets",
+            c = parser.read(os.path.join(os.path.dirname(__file__), "presets",
                 self.preset_folder_name, config_preset + ".txt"))
             c.update(self.base_config)
             self.base_config = c

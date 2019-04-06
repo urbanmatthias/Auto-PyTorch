@@ -82,7 +82,7 @@ autoPyTorch.fit(X_train, y_train, log_level='debug', max_runtime=900, min_budget
 
 # You can use presets to configure the config space.
 # Available presets: full_cs, medium_cs (default), tiny_cs.
-# These are defined in configs/autonet/presets.
+# These are defined in autoPyTorch/core/presets.
 # tiny_cs is recommended if you want fast results with few resources.
 # full_cs is recommended if you have many resources and a very high search budget.
 autoPyTorch = AutoNetClassification("full_cs")
