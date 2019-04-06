@@ -87,7 +87,7 @@ autoPyTorch.fit(X_train, y_train, log_level='debug', max_runtime=900, min_budget
 # full_cs is recommended if you have many resources and a very high search budget.
 autoPyTorch = AutoNetClassification("full_cs")
 
-# Enabling / disabling of components is done using the Auto-PyTorch config:
+# Enable or disable components using the Auto-PyTorch config:
 autoPyTorch = AutoNetClassification(networks=["resnet", "shapedresnet", "mlpnet", "shapedmlpnet"])
 
 # You can take a look at the search space.
