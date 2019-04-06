@@ -23,7 +23,7 @@ $ git checkout develop
 Install pytorch: 
 https://pytorch.org/
 
-Install autonet
+Install Auto-PyTorch
 
 ```sh
 $ cat requirements.txt | xargs -n 1 -L 1 pip install
