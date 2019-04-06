@@ -62,36 +62,36 @@ How to configure Auto-PyTorch for your needs:
 
 ```py
 
-# print all possible configuration options
+# Print all possible configuration options.
 autoPyTorch = AutoNetClassification().print_help()
 
-# you pass use the constructor to configure Auto-PyTorch
+# You can use the constructor to configure Auto-PyTorch.
 autoPyTorch = AutoNetClassification(log_level='info', max_runtime=300, min_budget=30, max_budget=90)
 
-# you can overwrite this configuration in each fit call
+# You can overwrite this configuration in each fit call.
 autoPyTorch.fit(X_train, y_train, log_level='debug', max_runtime=900, min_budget=50, max_budget=150)
 
-# you can use presets to configure the config space
-# available presets: full_cs, medium_cs (default), tiny_cs
-# these are defined in configs/autonet/presets
-# tiny_cs is recommended if you want fast results with few resources
-# full_cs is recommended if you have many resources and a high search budget
+# You can use presets to configure the config space.
+# Available presets: full_cs, medium_cs (default), tiny_cs.
+# These are defined in configs/autonet/presets.
+# tiny_cs is recommended if you want fast results with few resources.
+# full_cs is recommended if you have many resources and a very high search budget.
 autoPyTorch = AutoNetClassification("full_cs")
 
 # enabling / disabling of components is done using the Auto-PyTorch config:
 autoPyTorch = AutoNetClassification(networks=["shapedresnet"])
 
-# print the search space.
-# each hyperparameter belongs to a node in Auto-PyTorch's ML Pipeline.
-# The names of the hyperparameters are prefixed with the name of the node: NodeName:hyperparameter_name
-# If a hyperparameter belongs to a component: NodeName:component_name:hyperparameter_name
+# you can take a look at the search space.
+# Each hyperparameter belongs to a node in Auto-PyTorch's ML Pipeline.
+# The names of the hyperparameters are prefixed with the name of the node: NodeName:hyperparameter_name.
+# If a hyperparameter belongs to a component: NodeName:component_name:hyperparameter_name.
 autoPyTorch.get_hyperparameter_search_space()
 
 # You can configure the search space of every hyperparameter of every component:
 from autoPyTorch import HyperparameterSearchSpaceUpdates
 search_space_updates = HyperparameterSearchSpaceUpdates()
 
-search_space_updates.append(node_name="NetworkSelector",  # refers to the node in the ML-Pipeline of Auto-PyTorch, see above
+search_space_updates.append(node_name="NetworkSelector",
                             hyperparameter="shapedresnet:activation",
                             value_range=["relu", "sigmoid"])
 search_space_updates.append(node_name="NetworkSelector",
@@ -100,9 +100,9 @@ search_space_updates.append(node_name="NetworkSelector",
                             log=False)
 autoPyTorch = AutoNetClassification(hyperparameter_search_space_updates=search_space_updates)
 
-# enable ensemble building:
+# Enable ensemble building:
+from autoPyTorch import AutoNetEnsemble
 autoPyTorchEnsemble = AutoNetEnsemble(AutoNetClassification, "tiny_cs", max_runtime=300, min_budget=30, max_budget=90)
-
 
 ```
 
