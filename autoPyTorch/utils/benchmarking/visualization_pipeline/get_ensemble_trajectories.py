@@ -59,4 +59,10 @@ def get_ensemble_trajectories(ensemble_log_file, started, prefix="ensemble_", on
                     ensemble_trajectories[trajectory_name] = {"times_finished": [], "losses": [], "flipped": False}
                 ensemble_trajectories[trajectory_name]["times_finished"].append(finished - started)
                 ensemble_trajectories[trajectory_name]["losses"].append(metric_value)
+
+    for name, trajectory in ensemble_trajectories.items():
+        for key, value_list in trajectory.items():
+            if not isinstance(value_list, (list, tuple)):
+                continue
+            trajectory[key] = [value_list[0] if key != "times_finished" else 0] + value_list
     return ensemble_trajectories
