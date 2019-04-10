@@ -23,4 +23,6 @@ normalization_strategies=[standardize]
 optimizer=[sgd]
 hyperparameter_search_space_updates=configs/configspace/tiny_cs.txt
 warmstarted_model=metamodels/warmstarted_model<leave_out_suffix>.pkl
-warmstarted_model_weight_type=log_likelihood
+warmstarted_model_similarity_budget=max_with_model
+warmstarted_model_sample_budget=max_available
+warmstarted_model_weight_type=leave_out_likelihood

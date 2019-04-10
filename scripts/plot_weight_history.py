@@ -62,7 +62,7 @@ if __name__ == "__main__":
         # do the plotting
         if not args.only_summary:
             for title, data in sorted(plot_data.items()):
-                    plt.plot(x_axis or list(range(len(data))), data,
+                    plt.plot(x_axis, data[:len(x_axis)],
                         label=title if title in show_labels else None,
                         linestyle="-." if title == "current" else ("-" if title in show_labels else ":"),
                         marker="x")
@@ -107,4 +107,5 @@ if __name__ == "__main__":
 
     plt.plot(times, values, marker="x")
     plt.title("weight deviation over time")
+    plt.xscale("log")
     plt.show()
