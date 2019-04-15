@@ -4,6 +4,7 @@ from autoPyTorch.pipeline.base.pipeline import Pipeline
 from autoPyTorch.pipeline.nodes.one_hot_encoding import OneHotEncoding
 from autoPyTorch.pipeline.nodes.metric_selector import MetricSelector
 from autoPyTorch.pipeline.nodes.ensemble import EnableComputePredictionsForEnsemble, SavePredictionsForEnsemble, BuildEnsemble, EnsembleServer
+from autoPyTorch.pipeline.nodes.create_dataset_info import CreateDatasetInfo
 
 class AutoNetEnsemble(AutoNet):
     def __init__(self, autonet, config_preset="medium_cs", **autonet_config):
@@ -29,6 +30,7 @@ class AutoNetEnsemble(AutoNet):
 
         self.base_config.update(autonet_config)
         self.trained_autonets = None
+        self.dataset_info = None
 
         if config_preset is not None:
             parser = self.get_autonet_config_file_parser()
@@ -41,6 +43,7 @@ class AutoNetEnsemble(AutoNet):
         self.autonet_config = self.pipeline.get_pipeline_config(**dict(self.base_config, **autonet_config))
         self.fit_result = self.pipeline.fit_pipeline(pipeline_config=self.autonet_config,
                                                      X_train=X_train, Y_train=Y_train, X_valid=X_valid, Y_valid=Y_valid)
+        self.dataset_info = self.pipeline[CreateDatasetInfo.get_name()].fit_output["dataset_info"]
         self.pipeline.clean()
         if refit:
             self.refit(X_train=X_train, Y_train=Y_train, X_valid=X_valid, Y_valid=Y_valid)

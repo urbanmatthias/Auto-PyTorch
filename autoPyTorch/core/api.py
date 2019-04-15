@@ -34,6 +34,7 @@ class AutoNet():
         self.base_config = autonet_config
         self.autonet_config = None
         self.fit_result = None
+        self.dataset_info = None
 
         if config_preset is not None:
             parser = self.get_autonet_config_file_parser()
@@ -70,10 +71,11 @@ class AutoNet():
         return self.pipeline.get_pipeline_config(**self.base_config)
     
     def get_hyperparameter_search_space(self, X_train=None, Y_train=None, X_valid=None, Y_valid=None, **autonet_config):
-        """Return hyperparameter search space of Auto-PyTorch. Does depend on the dataset and the configuration.!
+        """Return hyperparameter search space of Auto-PyTorch. Does depend on the dataset and the configuration!
+        You can either pass the dataset and the configuration or use dataset and configuration of last fit call.
         
         Keyword Arguments:
-            X_train {array} -- Training data.
+            X_train {array} -- Training data. ConfigSpace depends on Training data.
             Y_train {array} -- Targets of training data.
             X_valid {array} -- Validation data. Will be ignored if cv_splits > 1. (default: {None})
             Y_valid {array} -- Validation data. Will be ignored if cv_splits > 1. (default: {None})
@@ -83,7 +85,7 @@ class AutoNet():
             ConfigurationSpace -- The configuration space that should be optimized.
         """
 
-        dataset_info = None
+        dataset_info = self.dataset_info
         pipeline_config = dict(self.base_config, **autonet_config) if autonet_config else \
             self.get_current_autonet_config()
         if X_train is not None and Y_train is not None:
@@ -136,6 +138,7 @@ class AutoNet():
 
         self.fit_result = self.pipeline.fit_pipeline(pipeline_config=self.autonet_config,
                                                      X_train=X_train, Y_train=Y_train, X_valid=X_valid, Y_valid=Y_valid)
+        self.dataset_info = self.pipeline[CreateDatasetInfo.get_name()].fit_output["dataset_info"]
         self.pipeline.clean()
 
         if not self.fit_result["optimized_hyperparameter_config"]:
