@@ -52,7 +52,7 @@ if __name__ == "__main__":
         try:
             r = logged_results_to_HBS_result(os.path.dirname(weight_history_file))
             sampled_configs = set()
-            for run in r.get_all_runs():
+            for run in sorted(r.get_all_runs(), key=(lambda run: run.time_stamps["submitted"])):
                 if run.config_id not in sampled_configs:
                     x_axis.append(run.time_stamps["submitted"])
                 sampled_configs |= set([run.config_id])
