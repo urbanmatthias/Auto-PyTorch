@@ -66,10 +66,10 @@ class Trainer(object):
     def on_epoch_end(self, log, epoch):
         return any([t.on_epoch_end(trainer=self, log=log, epoch=epoch) for t in self.training_techniques])
     
-    def final_eval(self, opt_metric_name, logs, train_loader, valid_loader, minimize, best_over_epochs, refit):
+    def final_eval(self, opt_metric_name, logs, train_loader, valid_loader, best_over_epochs, refit):
         # select log
         if best_over_epochs:
-            final_log = (min if minimize else max)(logs, key=lambda log: log[opt_metric_name])
+            final_log = min(logs, key=lambda log: self.metrics[0].loss_transform(log[opt_metric_name]))
         else:
             final_log = None
             for t in self.training_techniques:

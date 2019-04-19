@@ -67,8 +67,7 @@ def csv_trajectory_loader(path, config_name, columns_description, trajectories):
                 trajectories[log_name][config_name] = list()
             trajectories[log_name][config_name].append({
                 "times_finished": sorted(times_finished),
-                "losses": list(zip(*sorted(zip(times_finished, performance_list))))[1],
-                "flipped": False
+                "losses": list(zip(*sorted(zip(times_finished, performance_list))))[1]
             })
 
 trajectory_loaders = {"csv": csv_trajectory_loader}

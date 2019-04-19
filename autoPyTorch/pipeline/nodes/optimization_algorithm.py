@@ -12,6 +12,7 @@ from hpbandster.core.result import logged_results_to_HBS_result
 
 from autoPyTorch.pipeline.base.sub_pipeline_node import SubPipelineNode
 from autoPyTorch.pipeline.base.pipeline import Pipeline
+from autoPyTorch.pipeline.nodes import MetricSelector
 from autoPyTorch.utils.config.config_option import ConfigOption, to_bool
 from autoPyTorch.utils.config.config_condition import ConfigCondition
 
@@ -79,8 +80,7 @@ class OptimizationAlgorithm(SubPipelineNode):
                                     optimize_start_time=time.time(), refit=True, hyperparameter_config_id=None, dataset_info=dataset_info)
             logger.info("Done Refitting")
             
-            return {'final_metric_score': res['loss'],
-                    'optimized_hyperparameter_config': refit["hyperparameter_config"],
+            return {'optimized_hyperparameter_config': refit["hyperparameter_config"],
                     'budget': refit['budget']}
 
         try:
@@ -104,7 +104,7 @@ class OptimizationAlgorithm(SubPipelineNode):
                     dataset_info=dataset_info, initial_design=initial_design, warmstarted_model=warmstarted_model, logger=logger)
    
             
-                res = self.parse_results(pipeline_config["result_logger_dir"])
+                res = self.parse_results(pipeline_config)
 
         except Exception as e:
             print(e)
@@ -113,9 +113,9 @@ class OptimizationAlgorithm(SubPipelineNode):
             self.clean_up(pipeline_config, ns_credentials_dir, tmp_models_dir)
 
         if (res):
-            return {'final_metric_score': res[0], 'optimized_hyperparameter_config': res[1], 'budget': res[2]}
+            return {'optimized_hyperparameter_config': res[1], 'budget': res[2]}
         else:
-            return {'final_metric_score': None, 'optimized_hyperparameter_config': dict(), 'budget': 0}
+            return {'optimized_hyperparameter_config': dict(), 'budget': 0}
 
     def predict(self, pipeline_config, X):
         result = self.sub_pipeline.predict_pipeline(pipeline_config=pipeline_config, X=X)
@@ -216,9 +216,9 @@ class OptimizationAlgorithm(SubPipelineNode):
         return hb
 
 
-    def parse_results(self, result_logger_dir):
+    def parse_results(self, pipeline_config):
         try:
-            res = logged_results_to_HBS_result(result_logger_dir)
+            res = logged_results_to_HBS_result(pipeline_config["result_logger_dir"])
             id2config = res.get_id2config_mapping()
             incumbent_trajectory = res.get_incumbent_trajectory(bigger_is_better=False, non_decreasing_budget=False)
         except Exception as e:
@@ -228,7 +228,8 @@ class OptimizationAlgorithm(SubPipelineNode):
             return dict()
         
         final_config_id = incumbent_trajectory['config_ids'][-1]
-        return incumbent_trajectory['losses'][-1], id2config[final_config_id]['config'], incumbent_trajectory['budgets'][-1]
+        final_info = [r for r in res.get_runs_by_id(final_config_id) if r.budget == incumbent_trajectory['budgets'][-1]][0].info
+        return get_final_metric_score(pipeline_config, final_info), id2config[final_config_id]['config'], incumbent_trajectory['budgets'][-1]
 
 
     def run_worker(self, pipeline_config, run_id, task_id, ns_credentials_dir, network_interface_name,
@@ -292,6 +293,12 @@ def save_warmstarted_model_weights(pipeline_config, warmstarted_model):
     def clean_fit_data(self):
         super(OptimizationAlgorithm, self).clean_fit_data()
         self.sub_pipeline.root.clean_fit_data()
+
+
+def get_final_metric_score(pipeline_config, info):
+    if "val_" + pipeline_config["train_metric"] in info:
+        return info["val_" + pipeline_config["train_metric"]]
+    return info["train_" + pipeline_config["train_metric"]]
 
 
 

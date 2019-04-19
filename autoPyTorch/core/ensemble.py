@@ -47,7 +47,7 @@ class AutoNetEnsemble(AutoNet):
         self.pipeline.clean()
         if refit:
             self.refit(X_train=X_train, Y_train=Y_train, X_valid=X_valid, Y_valid=Y_valid)
-        return self.fit_result["ensemble_configs"], self.fit_result["ensemble_final_metric_score"], self.fit_result["ensemble"]
+        return self.fit_result["ensemble_configs"], self.fit_result["ensemble"]
     
     def refit(self, X_train, Y_train, X_valid=None, Y_valid=None, ensemble_configs=None, ensemble=None, autonet_config=None):
         if (autonet_config is None):

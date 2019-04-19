@@ -73,7 +73,7 @@ class ModuleWorker(Worker):
         # that is not really elegant but we can want to achieve some kind of feedback
         network_name = [v for k, v in config.items() if k.endswith('network')] or "None"
 
-        self.autonet_logger.info("Training " + str(network_name) + " with budget " + str(budget) + " resulted in score: " + str(loss) + " took " + str((time.time()-start_time)) + " seconds")
+        self.autonet_logger.info("Training " + str(network_name) + " with budget " + str(budget) + " resulted in opt-metric-loss: " + str(loss) + " took " + str((time.time()-start_time)) + " seconds")
 
         return  result
     

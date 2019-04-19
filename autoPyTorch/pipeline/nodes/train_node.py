@@ -105,7 +105,7 @@ class TrainNode(PipelineNode):
             torch.cuda.empty_cache()
 
         # wrap up
-        loss, final_log = self.wrap_up_training(trainer=trainer, logs=logs, epoch=epoch, minimize=pipeline_config['minimize'],
+        loss, final_log = self.wrap_up_training(trainer=trainer, logs=logs, epoch=epoch,
             train_loader=train_loader, valid_loader=valid_loader, budget=budget, training_start_time=training_start_time, fit_start_time=fit_start_time,
             best_over_epochs=pipeline_config['best_over_epochs'], refit=refit, logger=logger)
     
@@ -162,7 +162,6 @@ class TrainNode(PipelineNode):
         options = [
             ConfigOption(name="batch_loss_computation_techniques", default=list(self.batch_loss_computation_techniques.keys()),
                 type=str, list=True, choices=list(self.batch_loss_computation_techniques.keys())),
-            ConfigOption("minimize", default=self.default_minimize_value, type=to_bool, choices=[True, False]),
             ConfigOption("cuda", default=True, type=to_bool, choices=[True, False]),
             ConfigOption("torch_num_threads", default=1, type=int),
             ConfigOption("full_eval_each_epoch", default=False, type=to_bool, choices=[True, False],
@@ -182,7 +181,7 @@ class TrainNode(PipelineNode):
         for name, value in log.items():
             tl.log_value(worker_path + name, float(value), int(time.time()))
     
-    def wrap_up_training(self, trainer, logs, epoch, minimize, train_loader, valid_loader, budget,
+    def wrap_up_training(self, trainer, logs, epoch, train_loader, valid_loader, budget,
             training_start_time, fit_start_time, best_over_epochs, refit, logger):
         wrap_up_start_time = time.time()
         trainer.model.epochs_trained = epoch
@@ -193,8 +192,8 @@ class TrainNode(PipelineNode):
             opt_metric_name = 'val_' + train_metric.__name__
 
         final_log = trainer.final_eval(opt_metric_name=opt_metric_name,
-            logs=logs, train_loader=train_loader, valid_loader=valid_loader, minimize=minimize, best_over_epochs=best_over_epochs, refit=refit)
-        loss = final_log[opt_metric_name] * (1 if minimize else -1)
+            logs=logs, train_loader=train_loader, valid_loader=valid_loader, best_over_epochs=best_over_epochs, refit=refit)
+        loss = trainer.metrics[0].loss_transform(final_log[opt_metric_name])
 
         logger.info("Finished train with budget " + str(budget) +
                          ": Preprocessing took " + str(int(training_start_time - fit_start_time)) +

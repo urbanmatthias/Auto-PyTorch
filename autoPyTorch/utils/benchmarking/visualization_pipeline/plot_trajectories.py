@@ -151,7 +151,7 @@ def process_trajectory(instance_name, metric_name, prefixes, trajectories, agglo
                     continue
                 if finishing_times and np.isclose(times_finished, finishing_times[-1]):
                     [x.pop() for x in [center, upper, lower, finishing_times]]
-                values = [v * (-1 if current_trajectory["flipped"] else 1) for v in trajectory_values if v is not None]
+                values = [v for v in trajectory_values if v is not None]
                 if agglomeration == "median":
                     center.append(np.median(values))
                     lower.append(np.percentile(values, int(50 - scale_uncertainty * 25)))

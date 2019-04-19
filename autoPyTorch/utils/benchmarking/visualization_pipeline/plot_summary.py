@@ -92,7 +92,7 @@ def process_summary(instance_name, metric_name, prefixes, trajectories, agglomer
         current_pointer = trajectory_pointers[(current_config, current_name)][current_instance][trajectory_id]
         current_value = current_trajectory["losses"][current_pointer]
 
-        trajectory_values[(current_config, current_name)][current_instance][trajectory_id] = current_value * (-1 if current_trajectory["flipped"] else 1)
+        trajectory_values[(current_config, current_name)][current_instance][trajectory_id] = current_value
         trajectory_pointers[(current_config, current_name)][current_instance][trajectory_id] += 1
 
         if trajectory_pointers[(current_config, current_name)][current_instance][trajectory_id] < len(current_trajectory["losses"]):
@@ -207,7 +207,6 @@ def trajectory_sampling(instance_name, metric_name, prefixes, trajectories, aggl
             averaged_trajectories[trajectory_name][config].append({
                 "times_finished": d["finishing_times"],
                 "losses": d["center"],
-                "flipped": False
             })
     
     # compute mean and stddev over the averaged trajectories

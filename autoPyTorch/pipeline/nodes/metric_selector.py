@@ -6,6 +6,8 @@ __license__ = "BSD"
 from autoPyTorch.pipeline.base.pipeline_node import PipelineNode
 from autoPyTorch.utils.config.config_option import ConfigOption
 
+import numpy as np
+
 class MetricSelector(PipelineNode):
     def __init__(self):
         super(MetricSelector, self).__init__()
@@ -19,18 +21,27 @@ class MetricSelector(PipelineNode):
 
         return {'train_metric': train_metric, 'additional_metrics': additional_metrics}
 
-    def add_metric(self, name, metric, is_default_train_metric=False):
+    def add_metric(self, name, metric, loss_transform=False, 
+                   requires_target_class_labels=False, is_default_train_metric=False):
         """Add a metric, this metric has to be a function that takes to arguments y_true and y_predict
         
         Arguments:
             name {string} -- name of metric for definition in config
+            loss_transform {callable / boolean} -- transform metric value to minimizable loss. If True: loss = 1 - metric_value
             metric {function} -- metric function takes y_true and y_pred
             is_default_train_metric {bool} -- should the given metric be the default train metric if not specified in config
         """
 
         if (not hasattr(metric, '__call__')):
             raise ValueError("Metric has to be a function")
-        self.metrics[name] = metric
+
+        ohe_transform = undo_ohe if requires_target_class_labels else no_transform
+        if isinstance(loss_transform, bool):
+            loss_transform = default_minimize_transform if loss_transform else no_transform
+
+        self.metrics[name] = AutoNetMetric(metric=metric,
+                                           loss_transform=loss_transform,
+                                           ohe_transform=ohe_transform)
         metric.__name__ = name
 
         if (not self.default_train_metric or is_default_train_metric):
@@ -51,3 +62,28 @@ class MetricSelector(PipelineNode):
             ConfigOption(name="additional_metrics", default=[], type=str, list=True, choices=list(self.metrics.keys()))
         ]
         return options
+
+
+def default_minimize_transform(value):
+    return 1 - value
+
+def no_transform(value):
+    return value
+
+def undo_ohe(y):
+    if len(y.shape) == 1:
+        return(y)
+    return np.argmax(y, axis=1)
+
+class AutoNetMetric():
+    def __init__(self, metric, loss_transform, ohe_transform):
+        self.loss_transform = loss_transform
+        self.metric = metric
+        self.ohe_transform = ohe_transform
+        self.__name__ = metric.__name__
+    
+    def __call__(self, Y_pred, Y_true):
+        return self.metric(self.ohe_transform(Y_true), self.ohe_transform(Y_pred))
+
+    def get_loss_value(self, Y_pred, Y_true):
+        return self.loss_transform(self.__call__(Y_pred, Y_true))

@@ -131,7 +131,6 @@ class AutoNet():
         
         Returns:
             optimized_hyperparameter_config -- The best found hyperparameter config.
-            final_metric_score --  The final score of the specified train metric.
             **autonet_config -- Configure AutoNet for your needs. You can also configure AutoNet in the constructor(). Call print_help() for more info.
         """
         self.autonet_config = self.pipeline.get_pipeline_config(**dict(self.base_config, **autonet_config))
@@ -146,7 +145,7 @@ class AutoNet():
         
         if (refit):
             self.refit(X_train, Y_train, X_valid, Y_valid)
-        return self.fit_result["optimized_hyperparameter_config"], self.fit_result['final_metric_score']
+        return self.fit_result["optimized_hyperparameter_config"]
 
     def refit(self, X_train, Y_train, X_valid=None, Y_valid=None, hyperparameter_config=None, autonet_config=None, budget=None, rescore=False):
         """Refit AutoNet to given hyperparameters. This will skip hyperparameter search.
@@ -185,9 +184,8 @@ class AutoNet():
                       'budget': budget,
                       'rescore': rescore}
     
-        result = self.pipeline.fit_pipeline(pipeline_config=autonet_config, refit=refit_data,
+        self.pipeline.fit_pipeline(pipeline_config=autonet_config, refit=refit_data,
                                     X_train=X_train, Y_train=Y_train, X_valid=X_valid, Y_valid=Y_valid)
-        return result["final_metric_score"]
 
     def predict(self, X, return_probabilities=False):
         """Predict the targets for a data matrix X.

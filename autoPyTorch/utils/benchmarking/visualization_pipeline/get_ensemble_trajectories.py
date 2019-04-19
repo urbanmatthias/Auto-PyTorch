@@ -56,7 +56,7 @@ def get_ensemble_trajectories(ensemble_log_file, started, prefix="ensemble_", on
     
                 # save in trajectory
                 if trajectory_name not in ensemble_trajectories:
-                    ensemble_trajectories[trajectory_name] = {"times_finished": [], "losses": [], "flipped": False}
+                    ensemble_trajectories[trajectory_name] = {"times_finished": [], "losses": []}
                 ensemble_trajectories[trajectory_name]["times_finished"].append(finished - started)
                 ensemble_trajectories[trajectory_name]["losses"].append(metric_value)
 

@@ -8,7 +8,7 @@ from autoPyTorch.pipeline.base.pipeline_node import PipelineNode
 
 class SaveResults(PipelineNode):
 
-    def fit(self, result_dir, fit_duration, final_score, autonet, task_id):
+    def fit(self, result_dir, fit_duration, autonet, task_id):
         if (task_id not in [-1, 1]):
             time.sleep(60)
             return dict()
@@ -26,7 +26,6 @@ class SaveResults(PipelineNode):
         final_info = [run["info"] for run in res.get_runs_by_id(final_config_id) if run["budget"] == final_budget][0]
 
         summary = dict()
-        summary["final_loss"] = final_score if autonet_config["minimize"] else -final_score
         summary["incumbent_config"] = incumbent_config
         summary["duration"] = fit_duration
         for name in autonet_config['additional_metrics'] + [autonet_config["train_metric"]]:

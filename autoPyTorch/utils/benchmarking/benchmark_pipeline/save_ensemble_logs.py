@@ -82,7 +82,7 @@ def save_ensemble_logs(pipeline_config, autonet, result_dir, ensemble_size=None,
         # build an ensemble with current subset and size
         ensemble_start_time = time.time()
         ensemble, _ = build_ensemble(result=result,
-            train_metric=train_metric, minimize=autonet_config["minimize"], ensemble_size=ensemble_size or autonet_config["ensemble_size"],
+            train_metric=train_metric, ensemble_size=ensemble_size or autonet_config["ensemble_size"],
             all_predictions=subset_predictions, labels=labels, model_identifiers=subset_model_identifiers,
             only_consider_n_best=autonet_config["ensemble_only_consider_n_best"],
             sorted_initialization_n_best=autonet_config["ensemble_sorted_initialization_n_best"])
@@ -115,7 +115,6 @@ def save_ensemble_logs(pipeline_config, autonet, result_dir, ensemble_size=None,
                 {
                     "ensemble_size": ensemble.ensemble_size,
                     "metric": autonet_config["train_metric"],
-                    "minimize": ensemble.minimize,
                     "sorted_initialization_n_best": ensemble.sorted_initialization_n_best,
                     "only_consider_n_best": ensemble.only_consider_n_best,
                     "bagging": ensemble.bagging,

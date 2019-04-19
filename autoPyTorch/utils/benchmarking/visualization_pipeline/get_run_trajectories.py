@@ -51,7 +51,6 @@ def build_run_trajectories(results_folder, autonet_config):
     
     # save incumbent trajectories
     incumbent_trajectories[metric_name] = incumbent_trajectory
-    incumbent_trajectory["flipped"] = not autonet_config["minimize"]
     for name in additional_metric_names:
         tj = copy(incumbent_trajectory)
         log_available = [name in run["info"] for config_id, budget in zip(tj["config_ids"], tj["budgets"])
@@ -61,10 +60,9 @@ def build_run_trajectories(results_folder, autonet_config):
                                           for run in res.get_runs_by_id(config_id)
                                           if run["budget"] == budget and name in run["info"]]
         for key, value_list in tj.items():
-            if key in ["losses", "flipped"]:
+            if key in ["losses"]:
                 continue
             tj[key] = [value for i, value in enumerate(value_list) if log_available[i]]
-        tj["flipped"] = False
         if tj["losses"]:
             incumbent_trajectories[name] = tj
     
