@@ -26,6 +26,7 @@ class PlotTrajectories(PipelineNode):
             ConfigOption('skip_dataset_plots', default=False, type=to_bool),
             ConfigOption('plot_markers', default=False, type=to_bool),
             ConfigOption('plot_individual', default=False, type=to_bool),
+            ConfigOption('plot_type', default="values", type=str, choices=["values", "losses"]),
             ConfigOption('xscale', default='log', type=str),
             ConfigOption('yscale', default='linear', type=str),
             ConfigOption('xmin', default=None, type=float),
@@ -62,6 +63,7 @@ def plot(pipeline_config, trajectories, train_metrics, instance, process_fnc):
                                             metric_name=metric_name,
                                             prefixes=pipeline_config["prefixes"],
                                             trajectories=trajectories,
+                                            plot_type=pipeline_config["plot_type"],
                                             agglomeration=pipeline_config["agglomeration"],
                                             scale_uncertainty=pipeline_config['scale_uncertainty'],
                                             cmap=plt.get_cmap('jet'))
@@ -77,7 +79,8 @@ def plot(pipeline_config, trajectories, train_metrics, instance, process_fnc):
                         do_label_rename=pipeline_config['label_rename'],
                         plt=plt,
                         plot_individual=pipeline_config["plot_individual"],
-                        plot_markers=pipeline_config["plot_markers"])
+                        plot_markers=pipeline_config["plot_markers"],
+                        plot_type=pipeline_config["plot_type"])
         
         plt.xscale(pipeline_config["xscale"])
         plt.yscale(pipeline_config["yscale"])
@@ -95,7 +98,7 @@ def plot(pipeline_config, trajectories, train_metrics, instance, process_fnc):
             plt.close(figure)
 
 
-def process_trajectory(instance_name, metric_name, prefixes, trajectories, agglomeration, scale_uncertainty, cmap):
+def process_trajectory(instance_name, metric_name, prefixes, trajectories, plot_type, agglomeration, scale_uncertainty, cmap):
     # iterate over the incumbent trajectories of the different runs
     linestyles = ['-', '--', '-.', ':']
     plot_empty = True
@@ -134,11 +137,11 @@ def process_trajectory(instance_name, metric_name, prefixes, trajectories, agglo
                 current_trajectory = trajectory[trajectory_id]
 
                 # update trajectory values and pointers
-                trajectory_values[trajectory_id] = current_trajectory["losses"][trajectory_pointers[trajectory_id]]
+                trajectory_values[trajectory_id] = current_trajectory[plot_type][trajectory_pointers[trajectory_id]]
                 individual_trajectories[trajectory_id].append(trajectory_values[trajectory_id])
                 individual_times_finished[trajectory_id].append(times_finished)
                 trajectory_pointers[trajectory_id] += 1
-                if trajectory_pointers[trajectory_id] < len(current_trajectory["losses"]):
+                if trajectory_pointers[trajectory_id] < len(current_trajectory[plot_type]):
                     heapq.heappush(heap,
                         (trajectory[trajectory_id]["times_finished"][trajectory_pointers[trajectory_id]], trajectory_id)
                     )
@@ -176,7 +179,7 @@ def process_trajectory(instance_name, metric_name, prefixes, trajectories, agglo
             }
     return plot_empty, plot_data
     
-def plot_trajectory(plot_data, instance_name, metric_name, font_size, do_label_rename, plt, plot_individual, plot_markers):
+def plot_trajectory(plot_data, instance_name, metric_name, font_size, do_label_rename, plt, plot_individual, plot_markers, plot_type):
     for label, d in plot_data.items():
 
         if do_label_rename:
@@ -189,7 +192,7 @@ def plot_trajectory(plot_data, instance_name, metric_name, font_size, do_label_r
         plt.step(d["finishing_times"], d["center"], color=d["color"], label=label, where='post', linestyle=d["linestyle"], marker="o" if plot_markers else None)
         plt.fill_between(d["finishing_times"], d["lower"], d["upper"], step="post", color=[(d["color"][0], d["color"][1], d["color"][2], 0.5)])
     plt.xlabel('wall clock time [s]', fontsize=font_size)
-    plt.ylabel('incumbent ' + metric_name, fontsize=font_size)
+    plt.ylabel('%s %s' % (metric_name, plot_type), fontsize=font_size)
     plt.legend(loc='best', prop={'size': font_size})
     plt.title(instance_name, fontsize=font_size)
 

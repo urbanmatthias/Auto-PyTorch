@@ -26,7 +26,11 @@ class EnableComputePredictionsForEnsemble(PipelineNode):
     def fit(self, pipeline_config, additional_metrics, refit, loss_penalty):
         if refit or pipeline_config["ensemble_size"] == 0 or loss_penalty > 0:
             return dict()
-        return {'additional_metrics': additional_metrics + [AutoNetMetric(predictions_for_ensemble, no_transform, no_transform)]}
+        return {'additional_metrics': additional_metrics + [
+            AutoNetMetric(name="predictions_for_ensemble",
+                          metric=predictions_for_ensemble,
+                          loss_transform=no_transform,
+                          ohe_transform=no_transform)]}
 
 
 class SavePredictionsForEnsemble(PipelineNode):

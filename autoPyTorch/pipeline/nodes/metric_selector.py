@@ -39,10 +39,10 @@ class MetricSelector(PipelineNode):
         if isinstance(loss_transform, bool):
             loss_transform = default_minimize_transform if loss_transform else no_transform
 
-        self.metrics[name] = AutoNetMetric(metric=metric,
+        self.metrics[name] = AutoNetMetric(name=name,
+                                           metric=metric,
                                            loss_transform=loss_transform,
                                            ohe_transform=ohe_transform)
-        metric.__name__ = name
 
         if (not self.default_train_metric or is_default_train_metric):
             self.default_train_metric = name
@@ -76,11 +76,11 @@ def undo_ohe(y):
     return np.argmax(y, axis=1)
 
 class AutoNetMetric():
-    def __init__(self, metric, loss_transform, ohe_transform):
+    def __init__(self, name, metric, loss_transform, ohe_transform):
         self.loss_transform = loss_transform
         self.metric = metric
         self.ohe_transform = ohe_transform
-        self.__name__ = metric.__name__
+        self.name = name
     
     def __call__(self, Y_pred, Y_true):
         return self.metric(self.ohe_transform(Y_true), self.ohe_transform(Y_pred))

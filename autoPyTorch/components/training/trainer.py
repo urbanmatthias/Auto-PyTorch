@@ -87,10 +87,10 @@ class Trainer(object):
 
             for i, metric in enumerate(self.metrics):
                 if valid_metric_results:
-                    final_log['val_' + metric.__name__] = valid_metric_results[i]
+                    final_log['val_' + metric.name] = valid_metric_results[i]
             if self.eval_additional_logs_on_snapshot and not refit:
                     for additional_log in self.log_functions:
-                        final_log[additional_log.__name__] = additional_log(self.model, None)
+                        final_log[additional_log.name] = additional_log(self.model, None)
         return final_log
 
     def train(self, epoch, train_loader):

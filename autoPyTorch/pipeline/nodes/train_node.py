@@ -80,13 +80,13 @@ class TrainNode(PipelineNode):
             # evaluate
             log['loss'] = train_loss
             for i, metric in enumerate(trainer.metrics):
-                log['train_' + metric.__name__] = train_metric_results[i]
+                log['train_' + metric.name] = train_metric_results[i]
 
                 if valid_loader is not None and trainer.eval_valid_each_epoch:
-                    log['val_' + metric.__name__] = valid_metric_results[i]
+                    log['val_' + metric.name] = valid_metric_results[i]
             if trainer.eval_additional_logs_each_epoch:
                 for additional_log in trainer.log_functions:
-                    log[additional_log.__name__] = additional_log(trainer.model, epoch)
+                    log[additional_log.name] = additional_log(trainer.model, epoch)
 
             # wrap up epoch
             stop_training = trainer.on_epoch_end(log=log, epoch=epoch) or stop_training
@@ -187,9 +187,9 @@ class TrainNode(PipelineNode):
         trainer.model.epochs_trained = epoch
         trainer.model.logs = logs
         train_metric = trainer.metrics[0]
-        opt_metric_name = 'train_' + train_metric.__name__
+        opt_metric_name = 'train_' + train_metric.name
         if valid_loader is not None:
-            opt_metric_name = 'val_' + train_metric.__name__
+            opt_metric_name = 'val_' + train_metric.name
 
         final_log = trainer.final_eval(opt_metric_name=opt_metric_name,
             logs=logs, train_loader=train_loader, valid_loader=valid_loader, best_over_epochs=best_over_epochs, refit=refit)
