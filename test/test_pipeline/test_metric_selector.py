@@ -26,8 +26,8 @@ class TestMetricSelectorMethods(unittest.TestCase):
         selected_train_metric = selector.fit_output['optimize_metric']
         selected_additional_metrics = selector.fit_output['additional_metrics']
 
-        self.assertEqual(selected_train_metric, accuracy)
-        self.assertSetEqual(set(selected_additional_metrics), set([auc_metric, mean_distance]))
+        self.assertEqual(selected_train_metric.metric, accuracy)
+        self.assertSetEqual(set(x.metric for x in selected_additional_metrics), set([auc_metric, mean_distance]))
 
 
 
