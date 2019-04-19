@@ -36,7 +36,7 @@ class TrainNode(PipelineNode):
     def fit(self, hyperparameter_config, pipeline_config,
             train_loader, valid_loader,
             network, optimizer,
-            train_metric, additional_metrics,
+            optimize_metric, additional_metrics,
             log_functions,
             budget,
             loss_function,
@@ -53,7 +53,7 @@ class TrainNode(PipelineNode):
         trainer = Trainer(
             model=network,
             loss_computation=self.batch_loss_computation_techniques[hyperparameter_config["batch_loss_computation_technique"]](),
-            metrics=[train_metric] + additional_metrics,
+            metrics=[optimize_metric] + additional_metrics,
             log_functions=log_functions,
             criterion=loss_function,
             budget=budget,
@@ -186,10 +186,10 @@ class TrainNode(PipelineNode):
         wrap_up_start_time = time.time()
         trainer.model.epochs_trained = epoch
         trainer.model.logs = logs
-        train_metric = trainer.metrics[0]
-        opt_metric_name = 'train_' + train_metric.name
+        optimize_metric = trainer.metrics[0]
+        opt_metric_name = 'train_' + optimize_metric.name
         if valid_loader is not None:
-            opt_metric_name = 'val_' + train_metric.name
+            opt_metric_name = 'val_' + optimize_metric.name
 
         final_log = trainer.final_eval(opt_metric_name=opt_metric_name,
             logs=logs, train_loader=train_loader, valid_loader=valid_loader, best_over_epochs=best_over_epochs, refit=refit)

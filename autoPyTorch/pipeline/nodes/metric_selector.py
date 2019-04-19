@@ -16,10 +16,10 @@ class MetricSelector(PipelineNode):
         self.default_train_metric = None
 
     def fit(self, pipeline_config):
-        train_metric = self.metrics[pipeline_config["train_metric"]]
-        additional_metrics = [self.metrics[metric] for metric in pipeline_config["additional_metrics"] if metric != pipeline_config["train_metric"]]
+        optimize_metric = self.metrics[pipeline_config["optimize_metric"]]
+        additional_metrics = [self.metrics[metric] for metric in pipeline_config["additional_metrics"] if metric != pipeline_config["optimize_metric"]]
 
-        return {'train_metric': train_metric, 'additional_metrics': additional_metrics}
+        return {'optimize_metric': optimize_metric, 'additional_metrics': additional_metrics}
 
     def add_metric(self, name, metric, loss_transform=False, 
                    requires_target_class_labels=False, is_default_train_metric=False):
@@ -57,7 +57,7 @@ class MetricSelector(PipelineNode):
 
     def get_pipeline_config_options(self):
         options = [
-            ConfigOption(name="train_metric", default=self.default_train_metric, type=str, choices=list(self.metrics.keys()),
+            ConfigOption(name="optimize_metric", default=self.default_train_metric, type=str, choices=list(self.metrics.keys()),
                 info="This is the meta train metric BOHB will try to optimize."),
             ConfigOption(name="additional_metrics", default=[], type=str, list=True, choices=list(self.metrics.keys()))
         ]

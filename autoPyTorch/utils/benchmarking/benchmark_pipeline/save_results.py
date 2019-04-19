@@ -28,7 +28,7 @@ class SaveResults(PipelineNode):
         summary = dict()
         summary["incumbent_config"] = incumbent_config
         summary["duration"] = fit_duration
-        for name in autonet_config['additional_metrics'] + [autonet_config["train_metric"]]:
+        for name in autonet_config['additional_metrics'] + [autonet_config["optimize_metric"]]:
             try:
                 summary["final_" + name] = final_info["val_" + name]
             except:

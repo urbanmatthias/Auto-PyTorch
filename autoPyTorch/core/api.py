@@ -210,7 +210,7 @@ class AutoNet():
         return result if not return_probabilities else (result, Y_pred)
 
     def score(self, X_test, Y_test):
-        """Calculate the sore on test data using the specified train_metric
+        """Calculate the sore on test data using the specified optimize_metric
         
         Arguments:
             X_test {array} -- The test data matrix.
@@ -229,5 +229,5 @@ class AutoNet():
         OHE = self.pipeline[OneHotEncoding.get_name()]
         Y_test = OHE.transform_y(Y_test, OHE.fit_output['y_one_hot_encoder'])
 
-        metric = self.pipeline[MetricSelector.get_name()].fit_output['train_metric']
+        metric = self.pipeline[MetricSelector.get_name()].fit_output['optimize_metric']
         return metric(Y_pred, Y_test)

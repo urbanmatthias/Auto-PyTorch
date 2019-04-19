@@ -20,7 +20,7 @@ class SetAutoNetConfig(PipelineNode):
                 os.path.join(run_result_dir, "hyperparameter_search_space_updates"))
 
         if (pipeline_config['use_dataset_metric'] and data_manager.metric is not None):
-            config['train_metric'] = data_manager.metric
+            config['optimize_metric'] = data_manager.metric
         if (pipeline_config['use_dataset_max_runtime'] and data_manager.max_runtime is not None):
             config['max_runtime'] = data_manager.max_runtime
 

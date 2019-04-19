@@ -81,7 +81,7 @@ class AutoNetEnsemble(AutoNet):
             current_prediction = autonet.pipeline.predict_pipeline(pipeline_config=autonet_config, X=X)["Y"]
             prediction = current_prediction if prediction is None else prediction + weight * current_prediction
             OHE = autonet.pipeline[OneHotEncoding.get_name()]
-            metric = autonet.pipeline[MetricSelector.get_name()].fit_output['train_metric']
+            metric = autonet.pipeline[MetricSelector.get_name()].fit_output['optimize_metric']
 
         # reverse one hot encoding 
         result = OHE.reverse_transform_y(prediction, OHE.fit_output['y_one_hot_encoder'])

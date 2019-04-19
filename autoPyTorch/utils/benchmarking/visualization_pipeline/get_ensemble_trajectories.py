@@ -14,17 +14,17 @@ import json
 
 class GetEnsembleTrajectories(PipelineNode):
 
-    def fit(self, pipeline_config, autonet, run_result_dir, train_metric, trajectories):
+    def fit(self, pipeline_config, autonet, run_result_dir, optimize_metric, trajectories):
         ensemble_log_file = os.path.join(run_result_dir, "ensemble_log.json")
         test_log_file = os.path.join(run_result_dir, "test_result.json")
-        if not pipeline_config["enable_ensemble"] or train_metric is None or \
+        if not pipeline_config["enable_ensemble"] or optimize_metric is None or \
             (not os.path.exists(ensemble_log_file) and not os.path.exists(test_log_file)):
-            return {"trajectories": trajectories, "train_metric": train_metric}
+            return {"trajectories": trajectories, "optimize_metric": optimize_metric}
 
         try:
             started = logged_results_to_HBS_result(run_result_dir).HB_config["time_ref"]
         except:
-            return {"trajectories": trajectories, "train_metric": train_metric}
+            return {"trajectories": trajectories, "optimize_metric": optimize_metric}
         
         metrics = autonet.pipeline[MetricSelector.get_name()].metrics
         ensemble_trajectories = dict()
@@ -34,7 +34,7 @@ class GetEnsembleTrajectories(PipelineNode):
         if os.path.exists(test_log_file):
             test_trajectories = get_ensemble_trajectories(test_log_file, started, metrics,  prefix="", only_test=True)
         
-        return {"trajectories": dict(trajectories, **ensemble_trajectories, **test_trajectories), "train_metric": train_metric}
+        return {"trajectories": dict(trajectories, **ensemble_trajectories, **test_trajectories), "optimize_metric": optimize_metric}
     
     def get_pipeline_config_options(self):
         options = [

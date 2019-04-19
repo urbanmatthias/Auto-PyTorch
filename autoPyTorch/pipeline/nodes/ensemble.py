@@ -78,13 +78,13 @@ class BuildEnsemble(PipelineNode):
             return {"optimized_hyperparameter_config": optimized_hyperparameter_config, "budget": budget}
         
         filename = os.path.join(pipeline_config["result_logger_dir"], 'predictions_for_ensemble.npy')
-        train_metric = self.pipeline[MetricSelector.get_name()].metrics[pipeline_config["train_metric"]]
+        optimize_metric = self.pipeline[MetricSelector.get_name()].metrics[pipeline_config["optimize_metric"]]
         y_transform = self.pipeline[OneHotEncoding.get_name()].complete_y_tranformation
         result = logged_results_to_HBS_result(pipeline_config["result_logger_dir"])
 
         all_predictions, labels, model_identifiers, _ = read_ensemble_prediction_file(filename=filename, y_transform=y_transform)
         ensemble_selection, ensemble_configs = build_ensemble(result=result,
-            train_metric=train_metric, ensemble_size=pipeline_config["ensemble_size"],
+            optimize_metric=optimize_metric, ensemble_size=pipeline_config["ensemble_size"],
             all_predictions=all_predictions, labels=labels, model_identifiers=model_identifiers,
             only_consider_n_best=pipeline_config["ensemble_only_consider_n_best"],
             sorted_initialization_n_best=pipeline_config["ensemble_sorted_initialization_n_best"])

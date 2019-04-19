@@ -97,7 +97,7 @@ class CollectRunTrajectories(ForRun):
                                                                 autonet_config_file=autonet_config_file,
                                                                 run_result_dir=run_result_dir)
             run_trajectories = pipeline_result["trajectories"]
-            train_metric = pipeline_result["train_metric"]
+            optimize_metric = pipeline_result["optimize_metric"]
 
             # merge the trajectories into one dict
             for metric, trajectory in run_trajectories.items():
@@ -105,8 +105,8 @@ class CollectRunTrajectories(ForRun):
                     result_trajectories[metric] = list()
                 result_trajectories[metric].append(trajectory)
 
-            if train_metric is not None:
-                train_metrics |= set([train_metric])
+            if optimize_metric is not None:
+                train_metrics |= set([optimize_metric])
         return {"trajectories": result_trajectories, "train_metrics": train_metrics}
 
 def parse_run_folder_name(run_folder_name):

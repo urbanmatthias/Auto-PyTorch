@@ -17,13 +17,13 @@ class GetRunTrajectories(PipelineNode):
 
         if pipeline_config["only_finished_runs"] and not os.path.exists(os.path.join(run_result_dir, "summary.json")):
             logging.getLogger('benchmark').info('Skipping ' + run_result_dir + ' because the run is not finished yet')
-            return {"trajectories": dict(), "train_metric": None}
+            return {"trajectories": dict(), "optimize_metric": None}
 
         trajectories = build_run_trajectories(run_result_dir, autonet_config, metrics, log_functions)
         if "test_result" in trajectories:
-            trajectories["test_%s" % autonet_config["train_metric"]] = trajectories["test_result"]
+            trajectories["test_%s" % autonet_config["optimize_metric"]] = trajectories["test_result"]
         return {"trajectories": trajectories,
-                "train_metric": autonet_config["train_metric"]}
+                "optimize_metric": autonet_config["optimize_metric"]}
     
     def get_pipeline_config_options(self):
         options = [
@@ -43,7 +43,7 @@ def build_run_trajectories(results_folder, autonet_config, metrics, log_function
         return dict()
 
     # prepare
-    metric_name = autonet_config["train_metric"]
+    metric_name = autonet_config["optimize_metric"]
     all_metrics = autonet_config["additional_metrics"] + [metric_name]
     additional_metric_names = [("val_" + m, metrics[m]) for m in all_metrics]
     additional_metric_names += [("train_" + m, metrics[m]) for m in all_metrics]

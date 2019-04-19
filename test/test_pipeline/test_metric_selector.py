@@ -20,10 +20,10 @@ class TestMetricSelectorMethods(unittest.TestCase):
         selector.add_metric("accuracy", accuracy)
         selector.add_metric("mean", mean_distance)
 
-        pipeline_config = pipeline.get_pipeline_config(train_metric="accuracy", additional_metrics=['auc', 'mean'])
+        pipeline_config = pipeline.get_pipeline_config(optimize_metric="accuracy", additional_metrics=['auc', 'mean'])
         pipeline.fit_pipeline(pipeline_config=pipeline_config)
 
-        selected_train_metric = selector.fit_output['train_metric']
+        selected_train_metric = selector.fit_output['optimize_metric']
         selected_additional_metrics = selector.fit_output['additional_metrics']
 
         self.assertEqual(selected_train_metric, accuracy)

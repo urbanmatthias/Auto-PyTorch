@@ -296,9 +296,9 @@ def save_warmstarted_model_weights(pipeline_config, warmstarted_model):
 
 
 def get_final_metric_score(pipeline_config, info):
-    if "val_" + pipeline_config["train_metric"] in info:
-        return info["val_" + pipeline_config["train_metric"]]
-    return info["train_" + pipeline_config["train_metric"]]
+    if "val_" + pipeline_config["optimize_metric"] in info:
+        return info["val_" + pipeline_config["optimize_metric"]]
+    return info["train_" + pipeline_config["optimize_metric"]]
 
 
 
