@@ -13,7 +13,7 @@ class MetricSelector(PipelineNode):
         super(MetricSelector, self).__init__()
 
         self.metrics = dict()
-        self.default_train_metric = None
+        self.default_optimize_metric = None
 
     def fit(self, pipeline_config):
         optimize_metric = self.metrics[pipeline_config["optimize_metric"]]
@@ -22,14 +22,14 @@ class MetricSelector(PipelineNode):
         return {'optimize_metric': optimize_metric, 'additional_metrics': additional_metrics}
 
     def add_metric(self, name, metric, loss_transform=False, 
-                   requires_target_class_labels=False, is_default_train_metric=False):
+                   requires_target_class_labels=False, is_default_optimize_metric=False):
         """Add a metric, this metric has to be a function that takes to arguments y_true and y_predict
         
         Arguments:
             name {string} -- name of metric for definition in config
             loss_transform {callable / boolean} -- transform metric value to minimizable loss. If True: loss = 1 - metric_value
             metric {function} -- metric function takes y_true and y_pred
-            is_default_train_metric {bool} -- should the given metric be the default train metric if not specified in config
+            is_default_optimize_metric {bool} -- should the given metric be the default train metric if not specified in config
         """
 
         if (not hasattr(metric, '__call__')):
@@ -44,20 +44,20 @@ class MetricSelector(PipelineNode):
                                            loss_transform=loss_transform,
                                            ohe_transform=ohe_transform)
 
-        if (not self.default_train_metric or is_default_train_metric):
-            self.default_train_metric = name
+        if (not self.default_optimize_metric or is_default_optimize_metric):
+            self.default_optimize_metric = name
 
     def remove_metric(self, name):
         del self.metrics[name]
-        if (self.default_train_metric == name):
+        if (self.default_optimize_metric == name):
             if (len(self.metrics) > 0):
-                self.default_train_metric = list(self.metrics.keys())[0]
+                self.default_optimize_metric = list(self.metrics.keys())[0]
             else:
-                self.default_train_metric = None
+                self.default_optimize_metric = None
 
     def get_pipeline_config_options(self):
         options = [
-            ConfigOption(name="optimize_metric", default=self.default_train_metric, type=str, choices=list(self.metrics.keys()),
+            ConfigOption(name="optimize_metric", default=self.default_optimize_metric, type=str, choices=list(self.metrics.keys()),
                 info="This is the meta train metric BOHB will try to optimize."),
             ConfigOption(name="additional_metrics", default=[], type=str, list=True, choices=list(self.metrics.keys()))
         ]

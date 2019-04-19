@@ -8,10 +8,10 @@ import heapq
 
 class PlotTrajectories(PipelineNode):
 
-    def fit(self, pipeline_config, trajectories, train_metrics, instance):
+    def fit(self, pipeline_config, trajectories, optimize_metrics, instance):
         if not pipeline_config["skip_dataset_plots"]:
-            plot(pipeline_config, trajectories, train_metrics, instance, process_trajectory)
-        return {"trajectories": trajectories, "train_metrics": train_metrics}
+            plot(pipeline_config, trajectories, optimize_metrics, instance, process_trajectory)
+        return {"trajectories": trajectories, "optimize_metrics": optimize_metrics}
     
 
     def get_pipeline_config_options(self):
@@ -37,12 +37,12 @@ class PlotTrajectories(PipelineNode):
         return options
 
 
-def plot(pipeline_config, trajectories, train_metrics, instance, process_fnc):
+def plot(pipeline_config, trajectories, optimize_metrics, instance, process_fnc):
     import matplotlib.pyplot as plt
     from matplotlib.backends.backend_pdf import PdfPages
     extension = "pdf"
 
-    plot_logs = pipeline_config['plot_logs'] or train_metrics
+    plot_logs = pipeline_config['plot_logs'] or optimize_metrics
     output_folder = pipeline_config['output_folder']
     instance_name = os.path.basename(instance).split(".")[0]
 

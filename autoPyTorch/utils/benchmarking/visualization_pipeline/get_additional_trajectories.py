@@ -4,7 +4,7 @@ import json, os, csv, traceback
 
 
 class GetAdditionalTrajectories(PipelineNode):
-    def fit(self, pipeline_config, trajectories, train_metrics, instance):
+    def fit(self, pipeline_config, trajectories, optimize_metrics, instance):
         for additional_trajectory_path in pipeline_config["additional_trajectories"]:
 
             # open trajectory description file
@@ -29,7 +29,7 @@ class GetAdditionalTrajectories(PipelineNode):
                         print("Trajectory could not be loaded: %s. Skipping." % e)
                         traceback.print_exc()                        
         return {"trajectories": trajectories,
-                "train_metrics": train_metrics}
+                "optimize_metrics": optimize_metrics}
     
     def get_pipeline_config_options(self):
         options = [
