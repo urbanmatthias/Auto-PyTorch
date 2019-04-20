@@ -52,7 +52,7 @@ get_plot_values_funcs = {
     "average": get_average_plot_values
 }
 
-def process_summary(instance_name, metric_name, prefixes, trajectories, plot_type, agglomeration, scale_uncertainty, cmap):
+def process_summary(instance_name, metric_name, prefixes, trajectories, plot_type, agglomeration, scale_uncertainty, value_multiplier, cmap):
     assert instance_name in get_plot_values_funcs.keys()
     trajectory_names_to_prefix = {(("%s_%s" % (prefix, metric_name)) if prefix else metric_name): prefix
         for prefix in prefixes}
@@ -108,7 +108,7 @@ def process_summary(instance_name, metric_name, prefixes, trajectories, plot_typ
             [x[k].pop() for x in [center, upper, lower] for k in x.keys()]
 
         # calculate ranks
-        values = to_dict([(instance, (config, name), value)
+        values = to_dict([(instance, (config, name), value * value_multiplier)
             for (config, name), instance_values in trajectory_values.items()
             for instance, values in instance_values.items()
             for value in values if value is not None])
@@ -158,7 +158,7 @@ def to_dict(tuple_list):
     return result
 
 
-def trajectory_sampling(instance_name, metric_name, prefixes, trajectories, plot_type, agglomeration, scale_uncertainty, cmap, num_samples=1000):
+def trajectory_sampling(instance_name, metric_name, prefixes, trajectories, plot_type, agglomeration, scale_uncertainty, value_multiplier, cmap, num_samples=1000):
     averaged_trajectories = dict()
 
     # sample #num_samples average trajectories
@@ -189,6 +189,7 @@ def trajectory_sampling(instance_name, metric_name, prefixes, trajectories, plot
             plot_type=plot_type,
             agglomeration=agglomeration,
             scale_uncertainty=0,
+            value_multiplier=value_multiplier,
             cmap=cmap
         )
 
@@ -219,5 +220,6 @@ def trajectory_sampling(instance_name, metric_name, prefixes, trajectories, plot
         plot_type=plot_type,
         agglomeration="mean",
         scale_uncertainty=scale_uncertainty,
+        value_multiplier=1,
         cmap=cmap
     )

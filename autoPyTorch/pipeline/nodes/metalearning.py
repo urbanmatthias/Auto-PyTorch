@@ -27,9 +27,7 @@ class MetaLearning(PipelineNode):
                 warmstarted_model = pickle.load(f)
                 warmstarted_model.choose_sample_budget_strategy = pipeline_config["warmstarted_model_sample_budget"]
                 warmstarted_model.choose_similarity_budget_strategy = pipeline_config["warmstarted_model_similarity_budget"]
-                warmstarted_model.num_nonzero_weight = pipeline_config["warmstarted_model_num_nonzero_weight"]
                 warmstarted_model.weight_type = pipeline_config["warmstarted_model_weight_type"]
-                warmstarted_model.average_type = pipeline_config["warmstarted_model_average_type"]
 
 
         return {"warmstarted_model": warmstarted_model, "initial_design": initial_design}
@@ -40,10 +38,6 @@ class MetaLearning(PipelineNode):
             ConfigOption(name="warmstarted_model", default=None, type="directory"),
             ConfigOption(name="warmstarted_model_similarity_budget", default="current", type=str, choices=["max_with_model", "current"]),
             ConfigOption(name="warmstarted_model_sample_budget", default="max_available", type=str, choices=["max_available", "current"]),
-            ConfigOption(name="warmstarted_model_num_nonzero_weight", default=0, type=int),
-            ConfigOption(name="warmstarted_model_weight_type", type=str, default="likelihood",
-                         choices=["max_likelihood", "likelihood", "likelihood_sum", "log_likelihood", "leave_out_likelihood"]),
-            ConfigOption(name="warmstarted_model_average_type", type=str, default="weighted_arithmetic_mean",
-                         choices=["weighted_arithmetic_mean", "weighted_geometric_mean"])
+            ConfigOption(name="warmstarted_model_weight_type", type=str, default="likelihood", choices=["max_likelihood", "likelihood"])
         ]
         return options

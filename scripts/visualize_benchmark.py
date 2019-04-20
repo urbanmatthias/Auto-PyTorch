@@ -40,6 +40,7 @@ if __name__ == "__main__":
     parser.add_argument("--xmax", default=None, type=float, help="Limit the x axis")
     parser.add_argument("--ymin", default=None, type=float, help="Limit the y axis")
     parser.add_argument("--ymax", default=None, type=float, help="Limit the y axis")
+    parser.add_argument("--value_multiplier", default=1, type=float, help="Multiply each value")
     parser.add_argument('benchmark', help='The benchmark to visualize')
 
     args = parser.parse_args()
@@ -94,6 +95,6 @@ if __name__ == "__main__":
     benchmark_config["plot_individual"] = args.plot_individual    
     benchmark_config["plot_markers"] = args.plot_markers
     benchmark_config["plot_type"] = args.plot_type
-    
+    benchmark_config["value_multiplier"] = args.value_multiplier
     
     benchmark.visualize_benchmark(**benchmark_config)

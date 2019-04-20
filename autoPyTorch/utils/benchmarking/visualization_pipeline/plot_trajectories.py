@@ -32,7 +32,8 @@ class PlotTrajectories(PipelineNode):
             ConfigOption('xmin', default=None, type=float),
             ConfigOption('xmax', default=None, type=float),
             ConfigOption('ymin', default=None, type=float),
-            ConfigOption('ymax', default=None, type=float)
+            ConfigOption('ymax', default=None, type=float),
+            ConfigOption('value_multiplier', default=1, type=float)
         ]
         return options
 
@@ -66,6 +67,7 @@ def plot(pipeline_config, trajectories, optimize_metrics, instance, process_fnc)
                                             plot_type=pipeline_config["plot_type"],
                                             agglomeration=pipeline_config["agglomeration"],
                                             scale_uncertainty=pipeline_config['scale_uncertainty'],
+                                            value_multiplier=pipeline_config['value_multiplier'],
                                             cmap=plt.get_cmap('jet'))
         if plot_empty:
             logging.getLogger('benchmark').warn('Not showing empty plot for ' + instance)
@@ -98,7 +100,7 @@ def plot(pipeline_config, trajectories, optimize_metrics, instance, process_fnc)
             plt.close(figure)
 
 
-def process_trajectory(instance_name, metric_name, prefixes, trajectories, plot_type, agglomeration, scale_uncertainty, cmap):
+def process_trajectory(instance_name, metric_name, prefixes, trajectories, plot_type, agglomeration, scale_uncertainty, value_multiplier, cmap):
     # iterate over the incumbent trajectories of the different runs
     linestyles = ['-', '--', '-.', ':']
     plot_empty = True
@@ -154,7 +156,7 @@ def process_trajectory(instance_name, metric_name, prefixes, trajectories, plot_
                     continue
                 if finishing_times and np.isclose(times_finished, finishing_times[-1]):
                     [x.pop() for x in [center, upper, lower, finishing_times]]
-                values = [v for v in trajectory_values if v is not None]
+                values = [v * value_multiplier for v in trajectory_values if v is not None]
                 if agglomeration == "median":
                     center.append(np.median(values))
                     lower.append(np.percentile(values, int(50 - scale_uncertainty * 25)))
@@ -192,7 +194,7 @@ def plot_trajectory(plot_data, instance_name, metric_name, font_size, do_label_r
         plt.step(d["finishing_times"], d["center"], color=d["color"], label=label, where='post', linestyle=d["linestyle"], marker="o" if plot_markers else None)
         plt.fill_between(d["finishing_times"], d["lower"], d["upper"], step="post", color=[(d["color"][0], d["color"][1], d["color"][2], 0.5)])
     plt.xlabel('wall clock time [s]', fontsize=font_size)
-    plt.ylabel('%s %s' % (metric_name, plot_type), fontsize=font_size)
+    plt.ylabel('incumbent %s %s' % (metric_name, plot_type), fontsize=font_size)
     plt.legend(loc='best', prop={'size': font_size})
     plt.title(instance_name, fontsize=font_size)
 
