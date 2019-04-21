@@ -7,7 +7,6 @@ optimize_metric=balanced_accuracy
 cross_validator=k_fold
 cross_validator_args={"n_splits": 5}
 memory_limit_mb=5000
-min_budget_for_cv=250
 algorithm=hyperband
 embeddings=[none]
 lr_scheduler=[cosine_annealing]

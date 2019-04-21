@@ -6,7 +6,6 @@ budget_type=time
 optimize_metric=accuracy
 cross_validator=k_fold
 cross_validator_args={"n_splits": 5}
-min_budget_for_cv=250
 embeddings=[none]
 lr_scheduler=[cosine_annealing,plateau]
 memory_limit_mb=7000
