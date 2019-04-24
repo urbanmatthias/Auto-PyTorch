@@ -209,7 +209,7 @@ class AutoNet():
         result = OHE.reverse_transform_y(Y_pred, OHE.fit_output['y_one_hot_encoder'])
         return result if not return_probabilities else (result, Y_pred)
 
-    def score(self, X_test, Y_test):
+    def score(self, X_test, Y_test, return_loss_value=False):
         """Calculate the sore on test data using the specified optimize_metric
         
         Arguments:
@@ -230,4 +230,6 @@ class AutoNet():
         Y_test = OHE.transform_y(Y_test, OHE.fit_output['y_one_hot_encoder'])
 
         metric = self.pipeline[MetricSelector.get_name()].fit_output['optimize_metric']
+        if return_loss_value:
+            return metric.get_loss_value(Y_pred, Y_test)
         return metric(Y_pred, Y_test)

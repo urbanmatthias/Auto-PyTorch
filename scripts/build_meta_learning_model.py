@@ -32,6 +32,12 @@ if __name__ == "__main__":
     parser.add_argument("--initial_design_convergence_threshold", default=None, type=float)
     parser.add_argument("--loss_matrix_db_config_file", default=None, type=str, help="File specifying mongodb host / port / login credentials")
     parser.add_argument("--leave_out", default=-1, type=int, help="Leave out dataset with given index")
+    parser.add_argument("--initial_design_force_num_max_budget", default=0, type=int,
+                        help="Force the number of configurations evaluated on the full budget to be a specific value")
+    parser.add_argument("--initial_design_force_num_sh_iter", default=0, type=int,
+                        help="Force the number of SH-iterations to be a specific value")
+    parser.add_argument("--initial_design_normalize_loss", default="normalized_distance_to_min", type=str,
+                        help="Strategy to normalize the loss")
     parser.add_argument('benchmark', help='The benchmark to learn from')
 
     args = parser.parse_args()
@@ -66,6 +72,9 @@ if __name__ == "__main__":
     config["print_missing_loss_matrix_entries"] = args.print_missing_loss_matrix_entries
     config["loss_matrix_db_config"] = dict()
     config["leave_out_instance"] = args.leave_out
+    config["initial_design_force_num_sh_iter"] = args.initial_design_force_num_sh_iter
+    config["initial_design_force_num_max_budget"] = args.initial_design_force_num_max_budget
+    config["initial_design_normalize_loss"] = args.initial_design_normalize_loss
     config['benchmark_name'] = os.path.basename(args.benchmark).split(".")[0]
 
     if args.loss_matrix_db_config_file is not None:

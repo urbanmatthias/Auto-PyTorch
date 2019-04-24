@@ -88,9 +88,10 @@ class AutoNetExactCostModel():
         return result
     
     def _evaluate(self, config, budget):
-        return self.autonet.refit(
+        self.autonet.refit(
             X_train=self.dm.X_train, Y_train=self.dm.Y_train, X_valid=self.dm.X_valid, Y_valid=self.dm.Y_valid,
             hyperparameter_config=config.get_dictionary(), budget=budget, rescore=True)
+        return self.autonet.score(X_test=dm.X_valid, Y_test=dm.Y_valid, return_loss_value=True)
     
     def __exit__(self, error_type, error_value, error_traceback):
         return error_type is not None

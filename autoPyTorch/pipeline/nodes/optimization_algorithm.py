@@ -113,7 +113,7 @@ class OptimizationAlgorithm(SubPipelineNode):
             self.clean_up(pipeline_config, ns_credentials_dir, tmp_models_dir)
 
         if (res):
-            return {'optimized_hyperparameter_config': res[1], 'budget': res[2]}
+            return {'optimized_hyperparameter_config': res[0], 'budget': res[1]}
         else:
             return {'optimized_hyperparameter_config': dict(), 'budget': 0}
 
@@ -228,8 +228,7 @@ class OptimizationAlgorithm(SubPipelineNode):
             return dict()
         
         final_config_id = incumbent_trajectory['config_ids'][-1]
-        final_info = [r for r in res.get_runs_by_id(final_config_id) if r.budget == incumbent_trajectory['budgets'][-1]][0].info
-        return get_final_metric_score(pipeline_config, final_info), id2config[final_config_id]['config'], incumbent_trajectory['budgets'][-1]
+        return id2config[final_config_id]['config'], incumbent_trajectory['budgets'][-1]
 
 
     def run_worker(self, pipeline_config, run_id, task_id, ns_credentials_dir, network_interface_name,
@@ -293,12 +292,6 @@ def save_warmstarted_model_weights(pipeline_config, warmstarted_model):
     def clean_fit_data(self):
         super(OptimizationAlgorithm, self).clean_fit_data()
         self.sub_pipeline.root.clean_fit_data()
-
-
-def get_final_metric_score(pipeline_config, info):
-    if "val_" + pipeline_config["optimize_metric"] in info:
-        return info["val_" + pipeline_config["optimize_metric"]]
-    return info["train_" + pipeline_config["optimize_metric"]]
 
 
 

@@ -26,7 +26,7 @@ class MetaLearning(PipelineNode):
                 if pipeline_config["initial_design_force_num_sh_iter"]:
                     initial_design.num_configs_per_sh_iter = Hydra.get_num_configs_per_sh_iter(
                         num_min_budget=len(initial_design),
-                        num_max_budget=1,
+                        num_max_budget=pipeline_config["initial_design_force_num_max_budget"],
                         num_sh_iter=pipeline_config["initial_design_force_num_sh_iter"])
         
         if warmstarted_model is not None:
@@ -46,6 +46,7 @@ class MetaLearning(PipelineNode):
             ConfigOption(name="warmstarted_model_similarity_budget", default="current", type=str, choices=["max_with_model", "current"]),
             ConfigOption(name="warmstarted_model_sample_budget", default="max_available", type=str, choices=["max_available", "current"]),
             ConfigOption(name="warmstarted_model_weight_type", type=str, default="likelihood", choices=["max_likelihood", "likelihood"]),
-            ConfigOption(name="initial_design_force_num_sh_iter", type=int, default=0)
+            ConfigOption(name="initial_design_force_num_sh_iter", type=int, default=0),
+            ConfigOption(name="initial_design_force_num_max_budget", type=int, default=0)
         ]
         return options

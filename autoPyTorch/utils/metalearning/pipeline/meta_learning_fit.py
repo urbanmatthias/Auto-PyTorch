@@ -34,7 +34,8 @@ class MetaLearningFit(PipelineNode):
             initial_design, cost = initial_design_learner[0].learn(
                 max_total_budget = pipeline_config["initial_design_max_total_budget"],
                 convergence_threshold = pipeline_config["initial_design_convergence_threshold"],
-                force_num_sh_iter=pipeline_config["initial_design_force_num_sh_iter"]
+                force_num_sh_iter=pipeline_config["initial_design_force_num_sh_iter"],
+                force_num_max_budget=pipeline_config["initial_design_force_num_max_budget"]
             )
             if initial_design is not None:
                 save_path = os.path.join(pipeline_config["save_path"], "initial_design%s.pkl" % leave_out_name_suffix)
@@ -73,6 +74,7 @@ class MetaLearningFit(PipelineNode):
             ConfigOption("initial_design_max_total_budget", default=None, type=float),
             ConfigOption("initial_design_convergence_threshold", default=None, type=float),
             ConfigOption("initial_design_force_num_sh_iter", default=0, type=int),
+            ConfigOption("initial_design_force_num_max_budget", default=0, type=int),
             ConfigOption("loss_matrix_db_config", default=dict(), type=dict)
         ]
         return options
