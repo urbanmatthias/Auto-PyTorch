@@ -73,7 +73,8 @@ class OptimizationAlgorithm(SubPipelineNode):
 
         if (refit is not None):
             logger.info("Start Refitting")
-            res = self.sub_pipeline.fit_pipeline( 
+
+            loss_info_dict = self.sub_pipeline.fit_pipeline( 
                                     hyperparameter_config=refit["hyperparameter_config"], pipeline_config=pipeline_config, 
                                     X_train=X_train, Y_train=Y_train, X_valid=X_valid, Y_valid=Y_valid, 
                                     budget=refit["budget"], rescore=refit["rescore"], budget_type=self.budget_types[pipeline_config['budget_type']],
@@ -81,7 +82,9 @@ class OptimizationAlgorithm(SubPipelineNode):
             logger.info("Done Refitting")
             
             return {'optimized_hyperparameter_config': refit["hyperparameter_config"],
-                    'budget': refit['budget']}
+                    'budget': refit['budget'],
+                    'loss': loss_info_dict['loss'],
+                    'info': loss_info_dict['info']}
 
         try:
             ns_credentials_dir, tmp_models_dir, network_interface_name = self.prepare_environment(pipeline_config)
@@ -112,10 +115,9 @@ class OptimizationAlgorithm(SubPipelineNode):
         finally:
             self.clean_up(pipeline_config, ns_credentials_dir, tmp_models_dir)
 
-        if (res):
-            return {'optimized_hyperparameter_config': res[0], 'budget': res[1]}
-        else:
-            return {'optimized_hyperparameter_config': dict(), 'budget': 0}
+        if res:
+            return res
+        return {'optimized_hyperparameter_config': dict(), 'budget': 0, 'loss': float('inf'), 'info': dict()}
 
     def predict(self, pipeline_config, X):
         result = self.sub_pipeline.predict_pipeline(pipeline_config=pipeline_config, X=X)
@@ -228,7 +230,12 @@ class OptimizationAlgorithm(SubPipelineNode):
             return dict()
         
         final_config_id = incumbent_trajectory['config_ids'][-1]
-        return id2config[final_config_id]['config'], incumbent_trajectory['budgets'][-1]
+        final_budget = incumbent_trajectory['budgets'][-1]
+        best_run = [r for r in res.get_runs_by_id(final_config_id) if r.budget == final_budget][0]
+        return {'optimized_hyperparameter_config': id2config[final_config_id]['config'],
+                'budget': final_budget,
+                'loss': best_run.loss,
+                'info': best_run.info}
 
 
     def run_worker(self, pipeline_config, run_id, task_id, ns_credentials_dir, network_interface_name,

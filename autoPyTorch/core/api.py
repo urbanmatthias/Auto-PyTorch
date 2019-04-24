@@ -145,7 +145,7 @@ class AutoNet():
         
         if (refit):
             self.refit(X_train, Y_train, X_valid, Y_valid)
-        return self.fit_result["optimized_hyperparameter_config"]
+        return self.fit_result
 
     def refit(self, X_train, Y_train, X_valid=None, Y_valid=None, hyperparameter_config=None, autonet_config=None, budget=None, rescore=False):
         """Refit AutoNet to given hyperparameters. This will skip hyperparameter search.
@@ -184,8 +184,8 @@ class AutoNet():
                       'budget': budget,
                       'rescore': rescore}
     
-        self.pipeline.fit_pipeline(pipeline_config=autonet_config, refit=refit_data,
-                                    X_train=X_train, Y_train=Y_train, X_valid=X_valid, Y_valid=Y_valid)
+        return self.pipeline.fit_pipeline(pipeline_config=autonet_config, refit=refit_data,
+                                          X_train=X_train, Y_train=Y_train, X_valid=X_valid, Y_valid=Y_valid)
 
     def predict(self, X, return_probabilities=False):
         """Predict the targets for a data matrix X.

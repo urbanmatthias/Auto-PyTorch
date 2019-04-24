@@ -73,7 +73,7 @@ class SavePredictionsForEnsemble(PipelineNode):
 
 class BuildEnsemble(PipelineNode):
     """Put this node after the optimization algorithm node"""
-    def fit(self, pipeline_config, optimized_hyperparameter_config, budget, refit=None):
+    def fit(self, pipeline_config, optimized_hyperparameter_config, budget, loss, info, refit=None):
         if refit or pipeline_config["ensemble_size"] == 0 or pipeline_config["task_id"] not in [-1, 1]:
             return {"optimized_hyperparameter_config": optimized_hyperparameter_config, "budget": budget}
         
@@ -91,7 +91,9 @@ class BuildEnsemble(PipelineNode):
 
         return {"optimized_hyperparameter_config": optimized_hyperparameter_config, "budget": budget,
             "ensemble": ensemble_selection,
-            "ensemble_configs": ensemble_configs
+            "ensemble_configs": ensemble_configs,
+            "loss": loss,
+            "info": info
             }
     
     def predict(self, Y):
