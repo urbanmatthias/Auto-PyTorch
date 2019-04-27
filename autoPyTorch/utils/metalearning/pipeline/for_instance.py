@@ -28,8 +28,8 @@ class ForInstance(BaseForInstance):
                 traceback.print_exc()
         return {"leave_out_instance_name": leave_out_instance_name}
     
-        def get_pipeline_config_options(self):
-            options = [
-                ConfigOption("leave_out_instance", default=-1, type=int)
-            ] + super(ForInstance, self).get_pipeline_config_options()
-            return options
+    def get_pipeline_config_options(self):
+        options = [
+            ConfigOption("leave_out_instance", default=-1, type=int)
+        ] + super(ForInstance, self).get_pipeline_config_options()
+        return options

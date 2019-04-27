@@ -5,7 +5,6 @@ sys.path.append(os.path.abspath(os.path.join(__file__, "..", "..")))
 
 from autoPyTorch.utils.config.config_file_parser import ConfigFileParser
 from autoPyTorch.utils.metalearning.meta_model_builder import MetaModelBuilder
-from autoPyTorch.utils.benchmarking.benchmark import Benchmark
 from hpbandster.core.nameserver import nic_name_to_host
 
 import argparse
@@ -51,9 +50,8 @@ if __name__ == "__main__":
     
     config_file = args.benchmark
 
-    benchmark = Benchmark()
-    config_parser = benchmark.get_benchmark_config_file_parser()
 
+    config_parser = MetaModelBuilder().get_benchmark_config_file_parser()
     config = config_parser.read(config_file)
 
     if (args.result_dir is not None):

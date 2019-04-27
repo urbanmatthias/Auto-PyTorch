@@ -18,6 +18,9 @@ class MetaModelBuilder():
     def run(self, **meta_learning_config):
         config = self.pipeline.get_pipeline_config(**meta_learning_config, throw_error_if_invalid=False)
         self.pipeline.fit_pipeline(pipeline_config=config)
+    
+    def get_benchmark_config_file_parser(self):
+        return ConfigFileParser(self.get_pipeline().get_pipeline_config_options())
 
     def get_pipeline(self):
         return Pipeline([  # [pipeline_config]
