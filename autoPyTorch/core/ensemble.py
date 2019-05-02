@@ -40,6 +40,7 @@ class AutoNetEnsemble(AutoNet):
             self.base_config = c
 
     def fit(self, X_train, Y_train, X_valid=None, Y_valid=None, refit=True, **autonet_config):
+        X_train, Y_train, X_valid, Y_valid = self.check_data_array_types(X_train, Y_train, X_valid, Y_valid)
         self.autonet_config = self.pipeline.get_pipeline_config(**dict(self.base_config, **autonet_config))
         self.fit_result = self.pipeline.fit_pipeline(pipeline_config=self.autonet_config,
                                                      X_train=X_train, Y_train=Y_train, X_valid=X_valid, Y_valid=Y_valid)
@@ -50,6 +51,7 @@ class AutoNetEnsemble(AutoNet):
         return self.fit_result
     
     def refit(self, X_train, Y_train, X_valid=None, Y_valid=None, ensemble_configs=None, ensemble=None, autonet_config=None):
+        X_train, Y_train, X_valid, Y_valid = self.check_data_array_types(X_train, Y_train, X_valid, Y_valid)
         if (autonet_config is None):
             autonet_config = self.autonet_config
         if (autonet_config is None):
@@ -74,6 +76,7 @@ class AutoNetEnsemble(AutoNet):
     
     def predict(self, X, return_probabilities=False, return_metric=False):
         # run predict pipeline
+        X = self.check_data_array_types(X)
         prediction = None
         models_with_weights = self.fit_result["ensemble"].get_models_with_weights(self.trained_autonets)
         autonet_config = self.autonet_config or self.base_config
@@ -96,6 +99,7 @@ class AutoNetEnsemble(AutoNet):
     
     def score(self, X_test, Y_test):
         # run predict pipeline
+        X_test, Y_test = self.check_data_array_types(X_test, Y_test)
         _, Y_pred, metric = self.predict(X_test, return_probabilities=True, return_metric=True)
         Y_test, _ = self.pipeline[OneHotEncoding.get_name()].complete_y_tranformation(Y_test)
         return metric(Y_pred, Y_test)

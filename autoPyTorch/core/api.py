@@ -4,6 +4,7 @@ __license__ = "BSD"
 
 
 import numpy as np
+import scipy.sparse
 import torch
 import torch.nn as nn
 import copy
@@ -84,7 +85,7 @@ class AutoNet():
         Returns:
             ConfigurationSpace -- The configuration space that should be optimized.
         """
-
+        X_train, Y_train, X_valid, Y_valid = self.check_data_array_types(X_train, Y_train, X_valid, Y_valid)
         dataset_info = self.dataset_info
         pipeline_config = dict(self.base_config, **autonet_config) if autonet_config else \
             self.get_current_autonet_config()
@@ -133,6 +134,7 @@ class AutoNet():
             optimized_hyperparameter_config -- The best found hyperparameter config.
             **autonet_config -- Configure AutoNet for your needs. You can also configure AutoNet in the constructor(). Call print_help() for more info.
         """
+        X_train, Y_train, X_valid, Y_valid = self.check_data_array_types(X_train, Y_train, X_valid, Y_valid)
         self.autonet_config = self.pipeline.get_pipeline_config(**dict(self.base_config, **autonet_config))
 
         self.fit_result = self.pipeline.fit_pipeline(pipeline_config=self.autonet_config,
@@ -165,6 +167,7 @@ class AutoNet():
         Raises:
             ValueError -- No hyperparameter config available
         """
+        X_train, Y_train, X_valid, Y_valid = self.check_data_array_types(X_train, Y_train, X_valid, Y_valid)
         if (autonet_config is None):
             autonet_config = self.autonet_config
         if (autonet_config is None):
@@ -201,6 +204,7 @@ class AutoNet():
         """
 
         # run predict pipeline
+        X = self.check_data_array_types(X)
         autonet_config = self.autonet_config or self.base_config
         Y_pred = self.pipeline.predict_pipeline(pipeline_config=autonet_config, X=X)['Y']
 
@@ -221,6 +225,7 @@ class AutoNet():
         """
 
         # run predict pipeline
+        X_test, Y_test = self.check_data_array_types(X_test, Y_test)
         autonet_config = self.autonet_config or self.base_config
         self.pipeline.predict_pipeline(pipeline_config=autonet_config, X=X_test)
         Y_pred = self.pipeline[OptimizationAlgorithm.get_name()].predict_output['Y']
@@ -233,3 +238,15 @@ class AutoNet():
         if return_loss_value:
             return metric.get_loss_value(Y_pred, Y_test)
         return metric(Y_pred, Y_test)
+    
+    def check_data_array_types(self, *arrays):
+        result = []
+        for array in arrays:
+            if array is None or scipy.sparse.issparse(array):
+                result.append(array)
+                continue
+            
+            result.append(np.asanyarray(array))
+            if not result[-1].shape:
+                raise RuntimeError("Given data-array is of unexpected type %s. Please pass numpy arrays instead." % type(array))
+        return result
