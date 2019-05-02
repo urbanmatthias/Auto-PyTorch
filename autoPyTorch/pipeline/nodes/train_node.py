@@ -20,8 +20,6 @@ from autoPyTorch.utils.configspace_wrapper import ConfigWrapper
 from autoPyTorch.utils.config.config_option import ConfigOption, to_bool
 from autoPyTorch.components.training.base_training import BaseTrainingTechnique, BaseBatchLossComputationTechnique
 from autoPyTorch.components.training.trainer import Trainer
-from autoPyTorch.components.training.lr_scheduling import LrScheduling
-from autoPyTorch.components.training.budget_types import BudgetTypeTime, BudgetTypeEpochs
 
 import signal
 

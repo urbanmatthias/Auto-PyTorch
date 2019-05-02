@@ -20,7 +20,7 @@ from autoPyTorch.core.hpbandster_extensions.bohb_ext import BOHBExt
 from autoPyTorch.core.hpbandster_extensions.hyperband_ext import HyperBandExt
 from autoPyTorch.core.worker import ModuleWorker
 
-from autoPyTorch.components.training.budget_types import BudgetTypeTime, BudgetTypeEpochs
+from autoPyTorch.components.training.budget_types import BudgetTypeTime, BudgetTypeEpochs, BudgetTypeTrainingTime
 import copy
 
 class OptimizationAlgorithm(SubPipelineNode):
@@ -57,6 +57,7 @@ class OptimizationAlgorithm(SubPipelineNode):
         self.budget_types = dict()
         self.budget_types["time"] = BudgetTypeTime
         self.budget_types["epochs"] = BudgetTypeEpochs
+        self.budget_types["training_time"] = BudgetTypeTrainingTime
 
     def fit(self, pipeline_config, X_train, Y_train, X_valid, Y_valid, result_loggers, dataset_info, shutdownables,
             initial_design=None, warmstarted_model=None, refit=None):

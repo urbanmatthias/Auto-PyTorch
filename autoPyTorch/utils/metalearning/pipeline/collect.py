@@ -11,7 +11,6 @@ from autoPyTorch.pipeline.nodes.optimization_algorithm import OptimizationAlgori
 from autoPyTorch.utils.benchmarking.benchmark_pipeline.prepare_result_folder import \
     get_run_result_dir
 from autoPyTorch.utils.config.config_option import ConfigOption, to_bool
-from autoPyTorch.components.training.budget_types import BudgetTypeTime
 from hpbandster.core.dispatcher import Job
 from hpbandster.core.result import logged_results_to_HBS_result
 from hpbandster.optimizers.config_generators.bohb import \
