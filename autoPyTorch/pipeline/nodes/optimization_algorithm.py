@@ -18,7 +18,7 @@ from autoPyTorch.utils.config.config_condition import ConfigCondition
 
 from autoPyTorch.core.hpbandster_extensions.bohb_ext import BOHBExt
 from autoPyTorch.core.hpbandster_extensions.hyperband_ext import HyperBandExt
-from autoPyTorch.core.worker import ModuleWorker
+from autoPyTorch.core.worker import AutoNetWorker
 
 from autoPyTorch.components.training.budget_types import BudgetTypeTime, BudgetTypeEpochs, BudgetTypeTrainingTime
 import copy
@@ -247,7 +247,7 @@ class OptimizationAlgorithm(SubPipelineNode):
             time.sleep(5)
         host = nic_name_to_host(network_interface_name)
         
-        worker = ModuleWorker(pipeline=self.sub_pipeline, pipeline_config=pipeline_config,
+        worker = AutoNetWorker(pipeline=self.sub_pipeline, pipeline_config=pipeline_config,
                               X_train=X_train, Y_train=Y_train, X_valid=X_valid, Y_valid=Y_valid, dataset_info=dataset_info,
                               budget_type=self.budget_types[pipeline_config['budget_type']],
                               max_budget=pipeline_config["max_budget"],

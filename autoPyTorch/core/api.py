@@ -22,6 +22,7 @@ from autoPyTorch.pipeline.nodes.create_dataset_info import CreateDatasetInfo
 from autoPyTorch.utils.config.config_file_parser import ConfigFileParser
 
 class AutoNet():
+    """Find an optimal neural network given a ML-task using BOHB"""
     preset_folder_name = None
 
     def __init__(self, config_preset="medium_cs", pipeline=None, **autonet_config):

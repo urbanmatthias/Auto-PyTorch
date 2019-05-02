@@ -7,6 +7,9 @@ from autoPyTorch.pipeline.nodes.ensemble import EnableComputePredictionsForEnsem
 from autoPyTorch.pipeline.nodes.create_dataset_info import CreateDatasetInfo
 
 class AutoNetEnsemble(AutoNet):
+    """Build an ensemble of several neural networks that were evaluated during the architecure search"""
+
+    # OVERRIDE
     def __init__(self, autonet, config_preset="medium_cs", **autonet_config):
         if isinstance(autonet, AutoNet):
             self.pipeline = autonet.pipeline
@@ -39,6 +42,7 @@ class AutoNetEnsemble(AutoNet):
             c.update(self.base_config)
             self.base_config = c
 
+    # OVERRIDE
     def fit(self, X_train, Y_train, X_valid=None, Y_valid=None, refit=True, **autonet_config):
         X_train, Y_train, X_valid, Y_valid = self.check_data_array_types(X_train, Y_train, X_valid, Y_valid)
         self.autonet_config = self.pipeline.get_pipeline_config(**dict(self.base_config, **autonet_config))
@@ -50,6 +54,7 @@ class AutoNetEnsemble(AutoNet):
             self.refit(X_train=X_train, Y_train=Y_train, X_valid=X_valid, Y_valid=Y_valid)
         return self.fit_result
     
+    # OVERRIDE
     def refit(self, X_train, Y_train, X_valid=None, Y_valid=None, ensemble_configs=None, ensemble=None, autonet_config=None):
         X_train, Y_train, X_valid, Y_valid = self.check_data_array_types(X_train, Y_train, X_valid, Y_valid)
         if (autonet_config is None):
@@ -74,6 +79,7 @@ class AutoNetEnsemble(AutoNet):
                 hyperparameter_config=hyperparameter_config, autonet_config=autonet_config, budget=budget)
             self.trained_autonets[tuple(identifier)] = autonet
     
+    # OVERRIDE
     def predict(self, X, return_probabilities=False, return_metric=False):
         # run predict pipeline
         X = self.check_data_array_types(X)
@@ -97,6 +103,7 @@ class AutoNetEnsemble(AutoNet):
             result.append(metric)
         return tuple(result)
     
+    # OVERRIDE
     def score(self, X_test, Y_test):
         # run predict pipeline
         X_test, Y_test = self.check_data_array_types(X_test, Y_test)
