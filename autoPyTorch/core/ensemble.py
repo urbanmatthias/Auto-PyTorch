@@ -82,7 +82,7 @@ class AutoNetEnsemble(AutoNet):
     # OVERRIDE
     def predict(self, X, return_probabilities=False, return_metric=False):
         # run predict pipeline
-        X = self.check_data_array_types(X)
+        X, = self.check_data_array_types(X)
         prediction = None
         models_with_weights = self.fit_result["ensemble"].get_models_with_weights(self.trained_autonets)
         autonet_config = self.autonet_config or self.base_config

@@ -205,7 +205,7 @@ class AutoNet():
         """
 
         # run predict pipeline
-        X = self.check_data_array_types(X)
+        X, = self.check_data_array_types(X)
         autonet_config = self.autonet_config or self.base_config
         Y_pred = self.pipeline.predict_pipeline(pipeline_config=autonet_config, X=X)['Y']
 
