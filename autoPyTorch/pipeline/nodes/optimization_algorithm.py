@@ -61,17 +61,39 @@ class OptimizationAlgorithm(SubPipelineNode):
 
     def fit(self, pipeline_config, X_train, Y_train, X_valid, Y_valid, result_loggers, dataset_info, shutdownables,
             initial_design=None, warmstarted_model=None, refit=None):
+        """Run the optimization algorithm.
+        
+        Arguments:
+            pipeline_config {dict} -- The configuration of the pipeline.
+            X_train {array} -- The data
+            Y_train {array} -- The data
+            X_valid {array} -- The data
+            Y_valid {array} -- The data
+            result_loggers {list} -- List of loggers that log the result
+            dataset_info {DatasetInfo} -- Object with information about the dataset
+            shutdownables {list} -- List of objects that need to shutdown when optimization is finished.
+        
+        Keyword Arguments:
+            initial_design {InitialDesign} -- InitialDesign used for warmstarting (default: {None})
+            warmstarted_model {WarmstartedModel} -- WarmstartedModel used for warmstarting (default: {None})
+            refit {dict} -- dict containing information for refitting. None if optimization run should be started. (default: {None})
+        
+        Returns:
+            dict -- Summary of optimization run.
+        """
         logger = logging.getLogger('autonet')
         res = None
 
         run_id, task_id = pipeline_config['run_id'], pipeline_config['task_id']
 
+        # Use tensorboard logger
         if pipeline_config['use_tensorboard_logger'] and not refit:            
             import tensorboard_logger as tl
             directory = os.path.join(pipeline_config['result_logger_dir'], "worker_logs_" + str(task_id))
             os.makedirs(directory, exist_ok=True)
             tl.configure(directory, flush_secs=5)
 
+        # Only do refitting
         if (refit is not None):
             logger.info("Start Refitting")
 
@@ -87,6 +109,7 @@ class OptimizationAlgorithm(SubPipelineNode):
                     'loss': loss_info_dict['loss'],
                     'info': loss_info_dict['info']}
 
+        # Start Optimization Algorithm
         try:
             ns_credentials_dir, tmp_models_dir, network_interface_name = self.prepare_environment(pipeline_config)
 
@@ -121,9 +144,19 @@ class OptimizationAlgorithm(SubPipelineNode):
         return {'optimized_hyperparameter_config': dict(), 'budget': 0, 'loss': float('inf'), 'info': dict()}
 
     def predict(self, pipeline_config, X):
+        """Run the predict pipeline.
+        
+        Arguments:
+            pipeline_config {dict} -- The configuration of the pipeline
+            X {array} -- The data
+        
+        Returns:
+            dict -- The predicted values in a dictionary
+        """
         result = self.sub_pipeline.predict_pipeline(pipeline_config=pipeline_config, X=X)
         return {'Y': result['Y']}
 
+    # OVERRIDE
     def get_pipeline_config_options(self):
         options = [
             ConfigOption("run_id", default="0", type=str, info="Unique id for each run."),
@@ -151,6 +184,7 @@ class OptimizationAlgorithm(SubPipelineNode):
         ]
         return options
 
+    # OVERRIDE
     def get_pipeline_config_conditions(self):
         def check_runtime(pipeline_config):
             return pipeline_config["budget_type"] != "time" or pipeline_config["max_runtime"] >= pipeline_config["max_budget"]
@@ -162,12 +196,25 @@ class OptimizationAlgorithm(SubPipelineNode):
 
 
     def get_default_network_interface_name(self):
+        """Get the default network interface name
+        
+        Returns:
+            str -- The default network interface name
+        """
         try:
             return netifaces.gateways()['default'][netifaces.AF_INET][1]
         except:
             return 'lo'
 
     def prepare_environment(self, pipeline_config):
+        """Create necessary folders and get network interface name
+        
+        Arguments:
+            pipeline_config {dict} -- The configuration of the pipeline
+        
+        Returns:
+            tuple -- path to created directories and network interface namei
+        """
         if not os.path.exists(pipeline_config["working_dir"]) and pipeline_config['task_id'] in [1, -1]:
             try:
                 os.mkdir(pipeline_config["working_dir"])
@@ -178,12 +225,19 @@ class OptimizationAlgorithm(SubPipelineNode):
         network_interface_name = self.get_nic_name(pipeline_config)
         
         if os.path.exists(tmp_models_dir) and pipeline_config['task_id'] in [1, -1]:
-            shutil.rmtree(tmp_models_dir)
+            shutil.rmtree(tmp_models_dir)  # not used right now
         if os.path.exists(ns_credentials_dir) and pipeline_config['task_id'] in [1, -1]:
             shutil.rmtree(ns_credentials_dir)
         return ns_credentials_dir, tmp_models_dir, network_interface_name
 
     def clean_up(self, pipeline_config, tmp_models_dir, ns_credentials_dir):
+        """Remove created folders
+        
+        Arguments:
+            pipeline_config {dict} -- The pipeline config
+            tmp_models_dir {[type]} -- The path to the temporary models (not used right now)
+            ns_credentials_dir {[type]} --  The path to the nameserver credentials
+        """
         if pipeline_config['task_id'] in [1, -1]:
             # Delete temporary files
             if os.path.exists(tmp_models_dir):
@@ -192,6 +246,17 @@ class OptimizationAlgorithm(SubPipelineNode):
                 shutil.rmtree(ns_credentials_dir)
 
     def get_nameserver(self, run_id, task_id, ns_credentials_dir, network_interface_name):
+        """Get the namesever object
+        
+        Arguments:
+            run_id {str} -- The id of the run
+            task_id {int} -- An id for the worker
+            ns_credentials_dir {str} -- Path to ns credentials
+            network_interface_name {str} -- The network interface name
+        
+        Returns:
+            NameServer -- The NameServer object
+        """
         if not os.path.isdir(ns_credentials_dir):
             try:
                 os.mkdir(ns_credentials_dir)
@@ -201,6 +266,24 @@ class OptimizationAlgorithm(SubPipelineNode):
     
     def get_optimization_algorithm_instance(self, config_space, run_id, pipeline_config, ns_host, ns_port, loggers, previous_result=None,
             initial_design=None, warmstarted_model=None):
+        """Get an instance of the optimization algorithm
+        
+        Arguments:
+            config_space {ConfigurationSpace} -- The config space to optimize.
+            run_id {str} -- An Id for the current run.
+            pipeline_config {dict} -- The configuration of the pipeline.
+            ns_host {str} -- Nameserver host.
+            ns_port {int} -- Nameserver port.
+            loggers {list} -- Loggers to log the results.
+        
+        Keyword Arguments:
+            previous_result {Result} -- A previous result to warmstart the search (default: {None})
+            initial_design {InitialDesign} -- The Initial Design used for warmstarting (default: {None})
+            warmstarted_model {WarmstartedModel} -- A Warmstarted Model tp warmstart the search (default: {None})
+        
+        Returns:
+            Master -- An optimization algorithm.
+        """
         optimization_algorithm = self.algorithms[pipeline_config["algorithm"]]
         kwargs = {"configspace": config_space, "run_id": run_id,
                   "eta": pipeline_config["eta"], "min_budget": pipeline_config["min_budget"], "max_budget": pipeline_config["max_budget"],
@@ -220,6 +303,17 @@ class OptimizationAlgorithm(SubPipelineNode):
 
 
     def parse_results(self, pipeline_config):
+        """Parse the results of the optimization run
+        
+        Arguments:
+            pipeline_config {dict} -- The configuration of the pipeline.
+        
+        Raises:
+            RuntimeError:  An Error occurred when parsing the results.
+        
+        Returns:
+            dict -- Dictionary summarizing the results
+        """
         try:
             res = logged_results_to_HBS_result(pipeline_config["result_logger_dir"])
             id2config = res.get_id2config_mapping()
@@ -241,6 +335,21 @@ class OptimizationAlgorithm(SubPipelineNode):
 
     def run_worker(self, pipeline_config, run_id, task_id, ns_credentials_dir, network_interface_name,
             X_train, Y_train, X_valid, Y_valid, dataset_info, shutdownables):
+        """ Run the AutoNetWorker
+        
+        Arguments:
+            pipeline_config {dict} -- The configuration of the pipeline
+            run_id {str} -- An id for the run
+            task_id {int} -- An id for the worker
+            ns_credentials_dir {str} -- path to nameserver credentials
+            network_interface_name {str} -- the name of the network interface
+            X_train {array} -- The data
+            Y_train {array} -- The data
+            X_valid {array} -- The data
+            Y_valid {array} -- The data
+            dataset_info {DatasetInfo} -- Object describing the dataset
+            shutdownables {list} -- A list of objects that need to shutdown when the optimization is finished
+        """
         if not task_id == -1:
             time.sleep(5)
         while not os.path.isdir(ns_credentials_dir):
@@ -261,6 +370,21 @@ class OptimizationAlgorithm(SubPipelineNode):
 
     def run_optimization_algorithm(self, pipeline_config, run_id, ns_host, ns_port, nameserver, task_id, result_loggers,
             dataset_info, initial_design, warmstarted_model, logger):
+        """ 
+        
+        Arguments:
+            pipeline_config {dict} -- The configuration of the pipeline
+            run_id {str} -- An id for the run
+            ns_host {str} -- Nameserver host.
+            ns_port {int} -- Nameserver port.
+            nameserver {[type]} -- The nameserver.
+            task_id {int} -- An id for the worker
+            result_loggers {[type]} -- [description]
+            dataset_info {DatasetInfo} -- Object describing the dataset
+            initial_design {InitialDesign} -- The Initial Design used for warmstarting (default: {None})
+            warmstarted_model {WarmstartedModel} -- A Warmstarted Model tp warmstart the search (default: {None})
+            logger {list} -- Loggers to log the results.
+        """
         config_space = self.pipeline.get_hyperparameter_search_space(dataset_info=dataset_info, **pipeline_config)
 
 
@@ -288,9 +412,16 @@ class OptimizationAlgorithm(SubPipelineNode):
     
     @staticmethod
     def get_nic_name(pipeline_config):
+        """Get the nic name from the pipeline config"""
         return pipeline_config["network_interface_name"] or (netifaces.interfaces()[1] if len(netifaces.interfaces()) > 1 else "lo")
 
 def save_warmstarted_model_weights(pipeline_config, warmstarted_model):
+    """Save the weights of the warmstarted model
+    
+    Arguments:
+        pipeline_config {dict} -- The configuration of the pipeline
+        warmstarted_model {WarmstartedModel} -- The warmstarted model used in the optimization run
+    """
     if warmstarted_model is not None:    
         file_name = os.path.join(pipeline_config["result_logger_dir"], 'warmstarted_model_weights_history.txt')
         with open(file_name, "w") as f:
@@ -300,8 +431,6 @@ def save_warmstarted_model_weights(pipeline_config, warmstarted_model):
     def clean_fit_data(self):
         super(OptimizationAlgorithm, self).clean_fit_data()
         self.sub_pipeline.root.clean_fit_data()
-
-
 
 
 class tensorboard_logger(object):
