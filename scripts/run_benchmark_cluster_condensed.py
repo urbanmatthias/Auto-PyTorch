@@ -165,7 +165,7 @@ if __name__ == "__main__":
         replacement_dicts_split = replacement_dicts[k * args.num_condense : (k + 1) * args.num_condense]
 
         # unify replacement dict
-        unified_replacement_dict = dict()
+        unified_replacement_dict = {"OUTPUT_DIR": output_dir}
         for key in replacement_dict_keys:
             all_values = [replacement_dict[key] for replacement_dict in replacement_dicts_split]
 
@@ -191,6 +191,7 @@ if __name__ == "__main__":
 
             final_runscript += ["TASK_ID=$GLOBAL_TASK_ID\n"]
             for j, replacement_dict in enumerate(replacement_dicts_split):
+                replacement_dict["OUTPUT_DIR"] = output_dir
                 runscript = [
                     "if [ $TASK_ID -gt 0 ]; then\n",
                     "if [ $TASK_ID -le %s ]; then\n" % replacement_dict["NUM_NODES"],
