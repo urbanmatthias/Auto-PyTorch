@@ -25,6 +25,7 @@ if __name__ == "__main__":
     parser.add_argument("--result_dir", default=None, help="The dir to save the results")
     parser.add_argument("--output_dir", default=None, help="The dir to save the outputs")
     parser.add_argument("--template_args", default=[], nargs="+", type=str, help="Additional args specified in template")
+    parser.add_argument("--num_condense", default=100, type=int, help="How many jobs should be condensed to single job array")
     parser.add_argument("runscript", help="The script template used to submit job on cluster.")
     parser.add_argument('benchmark', help='The benchmark to run')
     args = parser.parse_args()
@@ -79,12 +80,10 @@ if __name__ == "__main__":
     outputs_folder = os.path.abspath(args.output_dir) if args.output_dir is not None else os.path.join(base_dir, "outputs")
     benchmark = args.benchmark if os.path.isabs(args.benchmark) else os.path.join(base_dir, args.benchmark)
     output_base_dir = os.path.join(outputs_folder, os.path.basename(benchmark).split(".")[0])
-    output_dir = output_base_dir
     replacement_dict = {
         "BASE_DIR": base_dir,
         "OUTPUTS_FOLDER": outputs_folder,
         "OUTPUT_BASE_DIR": output_base_dir,
-        "OUTPUT_DIR": output_dir,
         "AUTONET_HOME": autonet_home,
         "BENCHMARK": benchmark,
         "BENCHMARK_NAME": os.path.basename(benchmark).split(".")[0],
@@ -157,66 +156,72 @@ if __name__ == "__main__":
                 replacement_dicts.append(copy(replacement_dict))
                 replacement_dict_keys |= set(replacement_dict.keys())
 
-    # unify replacement dict
-    unified_replacement_dict = dict()
-    for key in replacement_dict_keys:
-        all_values = [replacement_dict[key] for replacement_dict in replacement_dicts]
-
-        if key == "NUM_NODES":
-            unified_replacement_dict[key] = sum(map(int, all_values))
-        elif key in ["NUM_PROCESSES", "MEMORY_LIMIT_MB"] or key.startswith("TIME_LIMIT"):
-            unified_replacement_dict[key] = max(map(int, all_values))
-        elif all(all_values[0] == v for v in all_values):
-            unified_replacement_dict[key] = all_values[0]
-    
     # build final runscript
-    final_runscript = []
-    for i, part in enumerate(divided_runscript_template):
-        if i != 1:
-            pattern = re.compile("|".join(map(lambda x: re.escape("$${" + x + "}"), unified_replacement_dict.keys())))
-            runscript = [pattern.sub(lambda x: str(unified_replacement_dict[x.group()[3:-1]]), l) for l in part]
+    for k in range(ceil(len(replacement_dicts) / args.num_condense)):
+        output_dir = os.path.join(output_base_dir, "part_%s" % k)
+        if os.path.exists(output_dir) and input("%s exists. Delete? (y/n)" % output_dir).startswith("y"):
+            shutil.rmtree(output_dir)
+        os.mkdir(output_dir)
+        replacement_dicts_split = replacement_dicts[k * args.num_condense : (k + 1) * args.num_condense]
 
-            # DEFINE STATEMENTS
-            for i in range(len(runscript)):
-                if runscript[i].startswith("#DEFINE"):
-                    runscript[i] = "GLOBAL_%s=%s\n" % (runscript[i].split()[1], " ".join(runscript[i].split()[2:]))
-            final_runscript.extend(runscript)
-            continue
+        # unify replacement dict
+        unified_replacement_dict = dict()
+        for key in replacement_dict_keys:
+            all_values = [replacement_dict[key] for replacement_dict in replacement_dicts_split]
+
+            if key == "NUM_NODES":
+                unified_replacement_dict[key] = sum(map(int, all_values))
+            elif key in ["NUM_PROCESSES", "MEMORY_LIMIT_MB"] or key.startswith("TIME_LIMIT"):
+                unified_replacement_dict[key] = max(map(int, all_values))
+            elif all(all_values[0] == v for v in all_values):
+                unified_replacement_dict[key] = all_values[0]
+
+        final_runscript = []
+        for i, part in enumerate(divided_runscript_template):
+            if i != 1:
+                pattern = re.compile("|".join(map(lambda x: re.escape("$${" + x + "}"), unified_replacement_dict.keys())))
+                runscript = [pattern.sub(lambda x: str(unified_replacement_dict[x.group()[3:-1]]), l) for l in part]
+
+                # DEFINE STATEMENTS
+                for j in range(len(runscript)):
+                    if runscript[j].startswith("#DEFINE"):
+                        runscript[j] = "GLOBAL_%s=%s\n" % (runscript[j].split()[1], " ".join(runscript[j].split()[2:]))
+                final_runscript.extend(runscript)
+                continue
+
+            final_runscript += ["TASK_ID=$GLOBAL_TASK_ID\n"]
+            for j, replacement_dict in enumerate(replacement_dicts_split):
+                runscript = [
+                    "if [ $TASK_ID -gt 0 ]; then\n",
+                    "if [ $TASK_ID -le %s ]; then\n" % replacement_dict["NUM_NODES"],
+                    "RUN_ID=\"${GLOBAL_RUN_ID}_[%s]\"\n" % j]
+                pattern = re.compile("|".join(map(lambda x: re.escape("$${" + x + "}"), replacement_dict.keys())))
+                runscript += [pattern.sub(lambda x: str(replacement_dict[x.group()[3:-1]]), l) for l in part]
+                runscript += ["fi\n", "fi\n", "TASK_ID=`expr $TASK_ID - %s`\n" % replacement_dict["NUM_NODES"], "\n"]
+                final_runscript.extend(runscript)
         
-        consumed_nodes = 0
-        final_runscript += ["TASK_ID=$GLOBAL_TASK_ID\n"]
-        for j, replacement_dict in enumerate(replacement_dicts):
-            runscript = [
-                "if [ $TASK_ID -gt 0 ]; then\n",
-                "if [ $TASK_ID -le %s ]; then\n" % replacement_dict["NUM_NODES"],
-                "RUN_ID=\"${GLOBAL_RUN_ID}_[%s]\"\n" % j]
-            pattern = re.compile("|".join(map(lambda x: re.escape("$${" + x + "}"), replacement_dict.keys())))
-            runscript += [pattern.sub(lambda x: str(replacement_dict[x.group()[3:-1]]), l) for l in part]
-            runscript += ["fi\n", "fi\n", "TASK_ID=`expr $TASK_ID - %s`\n" % replacement_dict["NUM_NODES"], "\n"]
-            final_runscript.extend(runscript)
-    
-    command = [l[9:] for l in final_runscript if l.startswith("#COMMAND ")][0].strip()
+        command = [l[9:] for l in final_runscript if l.startswith("#COMMAND ")][0].strip()
 
-    # save runscript
-    with open(os.path.join(output_dir, runscript_name), "w") as f:
-        f.writelines(final_runscript)
+        # save runscript
+        with open(os.path.join(output_dir, runscript_name), "w") as f:
+            f.writelines(final_runscript)
 
-    # submit job
-    os.chdir(output_dir)
-    print("Calling %s in %s" % (command, os.getcwd()))
-    try:
-        command_output = subprocess.check_output(command, shell=True)
-    except subprocess.CalledProcessError as e:
-        print("Warning: %s" % e)
-        command_output = str(e).encode("utf-8")
-        if not input("Continue (y/n)? ").startswith("y"):
-            raise
-    os.chdir(base_dir)
+        # submit job
+        os.chdir(output_dir)
+        print("Calling %s in %s" % (command, os.getcwd()))
+        try:
+            command_output = subprocess.check_output(command, shell=True)
+        except subprocess.CalledProcessError as e:
+            print("Warning: %s" % e)
+            command_output = str(e).encode("utf-8")
+            if not input("Continue (y/n)? ").startswith("y"):
+                raise
+        os.chdir(base_dir)
 
-    # save output and info data
-    with open(os.path.join(output_dir, "call.info"), "w") as f:
-        print(command, file=f)
-        json.dump([unified_replacement_dict, replacement_dicts], f)
-        print("", file=f)
-    with open(os.path.join(output_dir, "call.info"), "ba") as f:
-        f.write(command_output)
+        # save output and info data
+        with open(os.path.join(output_dir, "call.info"), "w") as f:
+            print(command, file=f)
+            json.dump([unified_replacement_dict, replacement_dicts_split], f)
+            print("", file=f)
+        with open(os.path.join(output_dir, "call.info"), "ba") as f:
+            f.write(command_output)
