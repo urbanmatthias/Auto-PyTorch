@@ -81,9 +81,9 @@ class CollectRunTrajectories(ForRun):
 
         # iterate over all run_numbers and run_ids
         for run_result_dir in run_result_dirs:
-            run_id, run_number = parse_run_folder_name(run_result_dir)
+            run_id, run_id_int, run_number = parse_run_folder_name(run_result_dir)
             run_result_dir = get_run_result_dir(pipeline_config, instance, autonet_config_file, run_id, run_number)
-            if (run_id_range is not None and run_id not in run_id_range) or run_number not in run_number_range:
+            if (run_id_range is not None and run_id_int not in run_id_range) or run_number not in run_number_range:
                 continue
 
             run_result_dir = get_run_result_dir(pipeline_config, instance, autonet_config_file, run_id, run_number)
@@ -112,6 +112,7 @@ class CollectRunTrajectories(ForRun):
 def parse_run_folder_name(run_folder_name):
     assert run_folder_name.startswith("run_")
     run_folder_name = run_folder_name[4:].split("_")
-    run_id = int(run_folder_name[0])
-    run_number = int(run_folder_name[1])
-    return run_id, run_number
+    run_id_int = int(run_folder_name[0])
+    run_id = "_".join(run_folder_name[:-1])
+    run_number = int(run_folder_name[-1])
+    return run_id, run_id_int, run_number

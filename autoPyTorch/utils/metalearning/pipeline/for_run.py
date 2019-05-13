@@ -18,9 +18,9 @@ class ForRun(BaseForRun):
             return dict()
         run_result_dirs = next(os.walk(instance_result_dir))[1]
         for run_result_dir in run_result_dirs:
-            run_id, run_number = parse_run_folder_name(run_result_dir)
+            run_id, run_id_int, run_number = parse_run_folder_name(run_result_dir)
             run_result_dir = get_run_result_dir(pipeline_config, instance, autonet_config_file, run_id, run_number)
-            if (run_id_range is not None and run_id not in run_id_range) or run_number not in run_number_range:
+            if (run_id_range is not None and run_id_int not in run_id_range) or run_number not in run_number_range:
                 continue
             logging.getLogger('metalearning').info("Fit run " + str(run_id) + "_" + str(run_number))
             try:
