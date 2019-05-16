@@ -26,16 +26,20 @@ class ForAutoNetConfig(SubPipelineNode):
     def get_config_files(pipeline_config, parse_slice=True):
         config_files = pipeline_config['autonet_configs']
         autonet_config_slice = ForAutoNetConfig.parse_slice(pipeline_config['autonet_config_slice'])
-        if autonet_config_slice is not None and parse_slice:
+        if isinstance(autonet_config_slice, slice) and parse_slice:
             return config_files[autonet_config_slice]
+        if isinstance(autonet_config_slice, list) and parse_slice:
+            return [config_files[i] for i in autonet_config_slice]
         return config_files
 
     @staticmethod
-    def parse_slice(splice_string):
-        if (splice_string is None):
+    def parse_slice(slice_string):
+        if (slice_string is None):
             return None
+        if "," in slice_string:
+            return [int(x) for x in slice_string.split(",")]
 
-        split = splice_string.split(":")
+        split = slice_string.split(":")
         if len(split) == 1:
             start = int(split[0]) if split[0] != "" else 0
             stop = (int(split[0]) + 1) if split[0] != "" else None

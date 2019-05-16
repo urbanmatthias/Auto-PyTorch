@@ -50,16 +50,20 @@ class ForInstance(SubPipelineNode):
             for root, directories, filenames in os.walk(benchmark_config["instances"]):
                 for filename in filenames: 
                     instances.append(os.path.join(root,filename))
-        if instance_slice is not None:
+        if isinstance(instance_slice, slice):
             return instances[instance_slice]
+        if isinstance(instance_slice, list):
+            return [instances[i] for i in instance_slice]
         return instances
 
     @staticmethod
-    def parse_slice(splice_string):
-        if (splice_string is None):
+    def parse_slice(slice_string):
+        if (slice_string is None):
             return None
+        if "," in slice_string:
+            return [int(x) for x in slice_string.split(",")]
 
-        split = splice_string.split(":")
+        split = slice_string.split(":")
         if len(split) == 1:
             start = int(split[0]) if split[0] != "" else 0
             stop = (int(split[0]) + 1) if split[0] != "" else None
