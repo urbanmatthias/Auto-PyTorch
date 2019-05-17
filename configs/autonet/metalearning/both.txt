@@ -22,4 +22,4 @@ normalization_strategies=[standardize]
 optimizer=[sgd]
 hyperparameter_search_space_updates=configs/configspace/tiny_cs.txt
 warmstarted_model=metamodels/warmstarted_model<leave_out_suffix>.pkl
-initial_design=metamodels/initial_design/fix_sh/<leave_out_suffix>.pkl
+initial_design=metamodels/fix_sh/initial_design<leave_out_suffix>.pkl
