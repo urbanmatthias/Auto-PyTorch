@@ -7,6 +7,7 @@ from autoPyTorch.utils.config.config_file_parser import ConfigFileParser
 from autoPyTorch.utils.benchmarking.benchmark import Benchmark
 
 import argparse
+import json
 
 __author__ = "Max Dippel, Michael Burkart and Matthias Urban"
 __version__ = "0.0.1"
@@ -27,7 +28,7 @@ if __name__ == "__main__":
     parser.add_argument("--font_size", default=12, type=int, help="Set font size.")
     parser.add_argument("--prefixes", default=["val"], type=str, nargs="+", help="The prefixes to plot. Choices: none, train, val, test, ensemble, ensemble_test")
     parser.add_argument("--additional_trajectories", default=[], type=str, nargs="+", help="Path to json file describing additional trajectories")
-    parser.add_argument("--do_label_rename", action="store_true", help="Whether the default labels should be renamed")
+    parser.add_argument("--label_rename", nargs="?", default=False, const=True, help="Whether the default labels should be renamed. You can also pass a json file for renaming.")
     parser.add_argument("--skip_dataset_plots", action="store_true", help="Whether the plots for each dataset should be skipped")
     parser.add_argument("--skip_ranking_plot", action="store_true", help="Whether the ranking plot should be skipped")
     parser.add_argument("--skip_average_plot", action="store_true", help="Whether the average plot should be skipped")
@@ -82,7 +83,6 @@ if __name__ == "__main__":
     benchmark_config['prefixes'] = [p if p != "none" else "" for p in args.prefixes]
     benchmark_config['additional_trajectories'] = args.additional_trajectories
     benchmark_config['benchmark_name'] = os.path.basename(args.benchmark).split(".")[0]
-    benchmark_config['label_rename'] = args.do_label_rename
     benchmark_config["skip_dataset_plots"] = args.skip_dataset_plots
     benchmark_config["skip_ranking_plot"] = args.skip_ranking_plot
     benchmark_config["skip_average_plot"] = args.skip_average_plot
@@ -96,5 +96,11 @@ if __name__ == "__main__":
     benchmark_config["plot_markers"] = args.plot_markers
     benchmark_config["plot_type"] = args.plot_type
     benchmark_config["value_multiplier"] = args.value_multiplier
+
+    benchmark_config['label_rename'] = args.label_rename
+    if isinstance(benchmark_config['label_rename'], str):
+        with open(benchmark_config['label_rename'], "r") as f:
+            benchmark_config['label_rename'] = json.load(f)
+
     
     benchmark.visualize_benchmark(**benchmark_config)

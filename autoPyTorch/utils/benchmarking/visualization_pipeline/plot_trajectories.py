@@ -9,6 +9,9 @@ import heapq
 class PlotTrajectories(PipelineNode):
 
     def fit(self, pipeline_config, trajectories, optimize_metrics, instance):
+        global LABEL_RENAME
+        if isinstance(pipeline_config["label_rename"], dict):
+            LABEL_RENAME = pipeline_config["label_rename"]
         if not pipeline_config["skip_dataset_plots"]:
             plot(pipeline_config, trajectories, optimize_metrics, instance, process_trajectory)
         return {"trajectories": trajectories, "optimize_metrics": optimize_metrics}
