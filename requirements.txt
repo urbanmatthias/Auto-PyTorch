@@ -3,7 +3,7 @@ Cython
 netifaces
 numpy
 pandas
-scipy
+scipy==1.2.1
 statsmodels
 scikit-learn==0.20.2
 imblearn
