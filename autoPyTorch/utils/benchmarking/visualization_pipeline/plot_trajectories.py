@@ -12,6 +12,7 @@ class PlotTrajectories(PipelineNode):
         global LABEL_RENAME
         if isinstance(pipeline_config["label_rename"], dict):
             LABEL_RENAME = pipeline_config["label_rename"]
+            LABEL_RENAME["LABEL_RENAME_SET_BY_JSON"] = True
         if not pipeline_config["skip_dataset_plots"]:
             plot(pipeline_config, trajectories, optimize_metrics, instance, process_trajectory)
         return {"trajectories": trajectories, "optimize_metrics": optimize_metrics}
@@ -209,9 +210,11 @@ def plot_trajectory(plot_data, instance_name, metric_name, font_size, do_label_r
         plt.legend(loc='best', prop={'size': font_size})
     plt.title(instance_name if not do_label_rename else label_rename(instance_name), fontsize=font_size)
 
-LABEL_RENAME = dict()
+LABEL_RENAME = {"LABEL_RENAME_SET_BY_JSON": False}
 def label_rename(label):
-    if label not in LABEL_RENAME:
+    if label not in LABEL_RENAME and LABEL_RENAME["LABEL_RENAME_SET_BY_JSON"]:
+        LABEL_RENAME[label] = label
+    elif label not in LABEL_RENAME:
         rename = input("Rename label %s to? (Leave empty for no rename) " % label)
         LABEL_RENAME[label] = rename if rename else label
     return LABEL_RENAME[label]
