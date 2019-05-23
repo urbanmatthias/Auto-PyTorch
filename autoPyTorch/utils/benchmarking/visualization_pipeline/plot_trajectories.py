@@ -36,7 +36,8 @@ class PlotTrajectories(PipelineNode):
             ConfigOption('xmax', default=None, type=float),
             ConfigOption('ymin', default=None, type=float),
             ConfigOption('ymax', default=None, type=float),
-            ConfigOption('value_multiplier', default=1, type=float)
+            ConfigOption('value_multiplier', default=1, type=float),
+            ConfigOption('hide_legend', default=False, type=to_bool)
         ]
         return options
 
@@ -85,7 +86,8 @@ def plot(pipeline_config, trajectories, optimize_metrics, instance, process_fnc)
                         plt=plt,
                         plot_individual=pipeline_config["plot_individual"],
                         plot_markers=pipeline_config["plot_markers"],
-                        plot_type=pipeline_config["plot_type"])
+                        agglomeration=pipeline_config["agglomeration"],
+                        hide_legend=pipeline_config["hide_legend"])
         
         plt.xscale(pipeline_config["xscale"])
         plt.yscale(pipeline_config["yscale"])
@@ -184,7 +186,8 @@ def process_trajectory(instance_name, metric_name, prefixes, trajectories, plot_
             }
     return plot_empty, plot_data
     
-def plot_trajectory(plot_data, instance_name, metric_name, font_size, do_label_rename, plt, plot_individual, plot_markers, plot_type):
+
+def plot_trajectory(plot_data, instance_name, metric_name, font_size, do_label_rename, plt, plot_individual, plot_markers, agglomeration, hide_legend):
     for label, d in plot_data.items():
 
         if do_label_rename:
@@ -196,10 +199,15 @@ def plot_trajectory(plot_data, instance_name, metric_name, font_size, do_label_r
         
         plt.step(d["finishing_times"], d["center"], color=d["color"], label=label, where='post', linestyle=d["linestyle"], marker="o" if plot_markers else None)
         plt.fill_between(d["finishing_times"], d["lower"], d["upper"], step="post", color=[(d["color"][0], d["color"][1], d["color"][2], 0.5)])
-    plt.xlabel('wall clock time [s]', fontsize=font_size)
-    plt.ylabel('incumbent %s %s' % (metric_name, plot_type), fontsize=font_size)
-    plt.legend(loc='best', prop={'size': font_size})
-    plt.title(instance_name, fontsize=font_size)
+    xlabel = 'wall clock time [s]'
+    ylabel = agglomeration + " " + metric_name
+
+
+    plt.xlabel(xlabel if not do_label_rename else label_rename(xlabel), fontsize=font_size)
+    plt.ylabel(ylabel if not do_label_rename else label_rename(ylabel), fontsize=font_size)
+    if not hide_legend:
+        plt.legend(loc='best', prop={'size': font_size})
+    plt.title(instance_name if not do_label_rename else label_rename(instance_name), fontsize=font_size)
 
 LABEL_RENAME = dict()
 def label_rename(label):

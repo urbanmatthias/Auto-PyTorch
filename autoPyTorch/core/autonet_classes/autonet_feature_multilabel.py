@@ -27,11 +27,14 @@ class AutoNetMultilabel(AutoNetFeatureData):
 
         metric_selector = pipeline[MetricSelector.get_name()]
         metric_selector.add_metric('multilabel_accuracy', multilabel_accuracy,
-                                   loss_transform=True, requires_target_class_labels=True)
+                                   loss_transform=True, requires_target_class_labels=True,
+                                   dummy_value=-float("inf"))
         metric_selector.add_metric('auc_metric', auc_metric, loss_transform=True,
-                                   requires_target_class_labels=False)
+                                   requires_target_class_labels=False,
+                                   dummy_value=-float("inf"))
         metric_selector.add_metric('pac_metric', pac_metric, loss_transform=True,
-                                   requires_target_class_labels=False)
+                                   requires_target_class_labels=False,
+                                   dummy_value=-float("inf"))
 
         train_node = pipeline[TrainNode.get_name()]
         train_node.default_minimize_value = False

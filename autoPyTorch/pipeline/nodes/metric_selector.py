@@ -21,7 +21,7 @@ class MetricSelector(PipelineNode):
 
         return {'optimize_metric': optimize_metric, 'additional_metrics': additional_metrics}
 
-    def add_metric(self, name, metric, loss_transform=False, 
+    def add_metric(self, name, metric, loss_transform=False, dummy_value=float("inf"),
                    requires_target_class_labels=False, is_default_optimize_metric=False):
         """Add a metric, this metric has to be a function that takes to arguments y_true and y_predict
         
@@ -42,7 +42,8 @@ class MetricSelector(PipelineNode):
         self.metrics[name] = AutoNetMetric(name=name,
                                            metric=metric,
                                            loss_transform=loss_transform,
-                                           ohe_transform=ohe_transform)
+                                           ohe_transform=ohe_transform,
+                                           dummy_value=dummy_value)
 
         if (not self.default_optimize_metric or is_default_optimize_metric):
             self.default_optimize_metric = name
@@ -76,11 +77,12 @@ def undo_ohe(y):
     return np.argmax(y, axis=1)
 
 class AutoNetMetric():
-    def __init__(self, name, metric, loss_transform, ohe_transform):
+    def __init__(self, name, metric, loss_transform, ohe_transform, dummy_value):
         self.loss_transform = loss_transform
         self.metric = metric
         self.ohe_transform = ohe_transform
         self.name = name
+        self.dummy_value = dummy_value
     
     def __call__(self, Y_pred, Y_true):
         return self.metric(self.ohe_transform(Y_true), self.ohe_transform(Y_pred))

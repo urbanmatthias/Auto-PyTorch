@@ -34,13 +34,17 @@ class AutoNetClassification(AutoNetFeatureData):
 
         metric_selector = pipeline[MetricSelector.get_name()]
         metric_selector.add_metric('accuracy', accuracy, loss_transform=True,
-                                   requires_target_class_labels=True)
+                                   requires_target_class_labels=True,
+                                   dummy_value=-float("inf"))
         metric_selector.add_metric('auc_metric', auc_metric, loss_transform=True,
-                                   requires_target_class_labels=False)
+                                   requires_target_class_labels=False,
+                                   dummy_value=-float("inf"))
         metric_selector.add_metric('pac_metric', pac_metric, loss_transform=True,
-                                   requires_target_class_labels=False)
+                                   requires_target_class_labels=False,
+                                   dummy_value=-float("inf"))
         metric_selector.add_metric('balanced_accuracy', balanced_accuracy, loss_transform=True,
-                                   requires_target_class_labels=True)
+                                   requires_target_class_labels=True,
+                                   dummy_value=-float("inf"))
 
         resample_selector = pipeline[ResamplingStrategySelector.get_name()]
         resample_selector.add_over_sampling_method('random', RandomOverSamplingWithReplacement)

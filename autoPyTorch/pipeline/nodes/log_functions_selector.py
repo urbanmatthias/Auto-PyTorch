@@ -17,7 +17,7 @@ class LogFunctionsSelector(PipelineNode):
     def fit(self, pipeline_config):
         return {'log_functions': [self.log_functions[log_function] for log_function in pipeline_config["additional_logs"]]}
 
-    def add_log_function(self, name, log_function, loss_transform=False):
+    def add_log_function(self, name, log_function, loss_transform=False, dummy_value=None):
         """Add a log function, will be called with the current trained network and the current training epoch
         
         Arguments:
@@ -31,7 +31,7 @@ class LogFunctionsSelector(PipelineNode):
         if isinstance(loss_transform, bool):
             loss_transform = default_minimize_transform if loss_transform else no_transform
 
-        self.log_functions[name] = AutoNetLog(name, log_function, loss_transform)
+        self.log_functions[name] = AutoNetLog(name, log_function, loss_transform, dummy_value)
 
     def remove_log_function(self, name):
         del self.log_functions[name]
@@ -44,10 +44,11 @@ class LogFunctionsSelector(PipelineNode):
 
 
 class AutoNetLog():
-    def __init__(self, name, log, loss_transform):
+    def __init__(self, name, log, loss_transform, dummy_value):
         self.loss_transform = loss_transform
         self.log = log
         self.name = name
+        self.dummy_value = dummy_value
 
     def __call__(self, *args):
         return self.log(*args)

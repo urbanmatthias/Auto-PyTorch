@@ -63,18 +63,20 @@ def build_run_trajectories(results_folder, autonet_config, metrics, log_function
                                           if run["budget"] == budget and name in run["info"]]
         tj["losses"] = [obj.loss_transform(x) for x in tj["values"]]
 
+        # filter out timestamps etc, where no log value is given
         for key, value_list in tj.items():
-            if key in ["losses"]:
+            if key in ["losses", "values"]:
                 continue
             tj[key] = [value for i, value in enumerate(value_list) if log_available[i]]
+
+        # add to result
         if tj["losses"]:
             incumbent_trajectories[name] = tj
-    
-    # assume first random config has been evaluated already at time 0
-    for name, trajectory in incumbent_trajectories.items():
-        for key, value_list in trajectory.items():
-            if not isinstance(value_list, (list, tuple)):
-                continue
-            trajectory[key] = [value_list[0] if key != "times_finished" else 0] + value_list
+        
+        # insert dummy values
+        dummy_value = obj.dummy_value if obj.dummy_value is not None else metrics[autonet_config["optimize_metric"]].dummy_value
+        tj["losses"] = [float("inf")] + tj["losses"]
+        tj["values"] = [dummy_value] + tj["values"]
+        tj["times_finished"] = [0] + tj["times_finished"]
 
     return incumbent_trajectories
