@@ -5,13 +5,13 @@
 #MOAB -V
 #MOAB -E
 
-cd $HOME/Auto-PyTorch
+cd $HOME/workspace/Auto-PyTorch
 cp metalearning_data.tar.gz $TMPDIR
 
 mkdir $TMPDIR/benchmark_results
 tar -zxf $TMPDIR/metalearning_data.tar.gz -C $TMPDIR/benchmark_results
 
-COMMAND="python scripts/build_meta_learning_model.py configs/benchmark/collect_metalearning_data_tiny.txt --result_dir $TMPDIR/benchmark_results --only_finished_runs --save_path $TMPDIR --learn_warmstarted_model --leave_out $MOAB_JOBARRAYINDEX"
+COMMAND="python scripts/build_meta_learning_model.py configs/benchmark/collect_metalearning_data.txt --result_dir $TMPDIR/benchmark_results --only_finished_runs --save_path $TMPDIR --learn_warmstarted_model --leave_out $MOAB_JOBARRAYINDEX"
 $COMMAND 1> $TMPDIR/stdout.txt 2> $TMPDIR/stderr.txt
 
 mkdir meta_outputs
@@ -20,4 +20,4 @@ cp $TMPDIR/stderr.txt meta_outputs/stderr_build_meta_model_$MOAB_JOBARRAYINDEX.t
 
 mkdir metamodels
 cd $TMPDIR
-cp warmstarted_model*.pkl $HOME/Auto-PyTorch/metamodels
+cp warmstarted_model*.pkl $HOME/workspace/Auto-PyTorch/metamodels
