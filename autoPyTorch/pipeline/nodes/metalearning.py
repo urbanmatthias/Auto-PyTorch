@@ -45,7 +45,7 @@ class MetaLearning(PipelineNode):
             ConfigOption(name="warmstarted_model", default=None, type="directory"),
             ConfigOption(name="warmstarted_model_similarity_budget", default="current", type=str, choices=["max_with_model", "current"]),
             ConfigOption(name="warmstarted_model_sample_budget", default="max_available", type=str, choices=["max_available", "current"]),
-            ConfigOption(name="warmstarted_model_weight_type", type=str, default="max_likelihood", choices=["max_likelihood", "likelihood"]),
+            ConfigOption(name="warmstarted_model_weight_type", type=str, default="likelihood", choices=["max_likelihood", "likelihood"]),
             ConfigOption(name="initial_design_force_num_sh_iter", type=int, default=0),
             ConfigOption(name="initial_design_force_num_max_budget", type=int, default=0)
         ]

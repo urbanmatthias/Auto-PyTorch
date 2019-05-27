@@ -49,7 +49,9 @@ def csv_trajectory_loader(path, config_name, columns_description, trajectories):
         for row in reader:
             for i, col in enumerate(row):
                 if i == columns_description["time_column"]:
-                    times_finished.append(max(0, float(col)))
+                    time_transform = columns_description["time_transform"] if \
+                        "time_transform" in columns_description else "x"
+                    times_finished.append(max(0, eval_expr(time_transform.replace("x", col))))
                 if str(i) in columns_description["metric_columns"].keys():
                     log_name = columns_description["metric_columns"][str(i)]["name"]
                     transform = columns_description["metric_columns"][str(i)]["transform"] \
