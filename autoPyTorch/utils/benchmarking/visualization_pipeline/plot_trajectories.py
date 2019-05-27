@@ -14,7 +14,12 @@ class PlotTrajectories(PipelineNode):
             LABEL_RENAME = pipeline_config["label_rename"]
             LABEL_RENAME["LABEL_RENAME_SET_BY_JSON"] = True
         if not pipeline_config["skip_dataset_plots"]:
-            plot(pipeline_config, trajectories, optimize_metrics, instance, process_trajectory)
+            plot(pipeline_config, trajectories, optimize_metrics, instance, process_trajectory, plot_trajectory)
+            if pipeline_config["show_speedup_plot"]:
+                plot_speedup = get_plot_speedup_func(pipeline_config["show_speedup_plot"])
+                plot(dict(pipeline_config, scale_uncertainty=0, plot_type="losses", y_scale="linear"),
+                    trajectories, optimize_metrics, instance, process_trajectory, plot_speedup)
+
         return {"trajectories": trajectories, "optimize_metrics": optimize_metrics}
     
 
@@ -38,12 +43,13 @@ class PlotTrajectories(PipelineNode):
             ConfigOption('ymin', default=None, type=float),
             ConfigOption('ymax', default=None, type=float),
             ConfigOption('value_multiplier', default=1, type=float),
-            ConfigOption('hide_legend', default=False, type=to_bool)
+            ConfigOption('hide_legend', default=False, type=to_bool),
+            ConfigOption('show_speedup_plot', default=None, type=str)
         ]
         return options
 
 
-def plot(pipeline_config, trajectories, optimize_metrics, instance, process_fnc):
+def plot(pipeline_config, trajectories, optimize_metrics, instance, process_fnc, plot_fnc):
     import matplotlib.pyplot as plt
     from matplotlib.backends.backend_pdf import PdfPages
     extension = "pdf"
@@ -79,16 +85,16 @@ def plot(pipeline_config, trajectories, optimize_metrics, instance, process_fnc)
             plt.close(figure)
             continue
 
-        plot_trajectory(plot_data=plot_data,
-                        instance_name=instance_name,
-                        metric_name=metric_name,
-                        font_size=pipeline_config["font_size"],
-                        do_label_rename=pipeline_config['label_rename'],
-                        plt=plt,
-                        plot_individual=pipeline_config["plot_individual"],
-                        plot_markers=pipeline_config["plot_markers"],
-                        agglomeration=pipeline_config["agglomeration"],
-                        hide_legend=pipeline_config["hide_legend"])
+        plot_fnc(plot_data=plot_data,
+                instance_name=instance_name,
+                metric_name=metric_name,
+                font_size=pipeline_config["font_size"],
+                do_label_rename=pipeline_config['label_rename'],
+                plt=plt,
+                plot_individual=pipeline_config["plot_individual"],
+                plot_markers=pipeline_config["plot_markers"],
+                agglomeration=pipeline_config["agglomeration"],
+                hide_legend=pipeline_config["hide_legend"])
         
         plt.xscale(pipeline_config["xscale"])
         plt.yscale(pipeline_config["yscale"])
@@ -203,12 +209,72 @@ def plot_trajectory(plot_data, instance_name, metric_name, font_size, do_label_r
     xlabel = 'wall clock time [s]'
     ylabel = agglomeration + " " + metric_name
 
-
     plt.xlabel(xlabel if not do_label_rename else label_rename(xlabel), fontsize=font_size)
     plt.ylabel(ylabel if not do_label_rename else label_rename(ylabel), fontsize=font_size)
     if not hide_legend:
         plt.legend(loc='best', prop={'size': font_size})
     plt.title(instance_name if not do_label_rename else label_rename(instance_name), fontsize=font_size)
+
+def get_plot_speedup_func(reference_label):
+    def plot_speedup(plot_data, instance_name, metric_name, font_size, do_label_rename, plt, plot_individual, plot_markers, agglomeration, hide_legend):
+        reference_data = plot_data[reference_label]["center"]
+        reference_times = plot_data[reference_label]["finishing_times"]
+
+        for compare_label, d in plot_data.items():
+            compare_data = d["center"]
+            compare_times = d["finishing_times"]
+
+            compare_pointer = 0
+            reference_pointer = 0
+
+            speedup_data = []
+            speedup_times = []
+            while True:
+                if reference_data[reference_pointer] > compare_data[compare_pointer]:
+                    while reference_pointer < len(reference_times) and reference_data[reference_pointer] > compare_data[compare_pointer]:
+                        reference_pointer += 1
+                    if reference_pointer >= len(reference_times):
+                        break
+
+                elif reference_data[reference_pointer] < compare_data[compare_pointer]:
+                    if compare_times[compare_pointer] > 0:
+                        speedup_data.append(reference_times[reference_pointer] / compare_times[compare_pointer])
+                        speedup_times.append(compare_times[compare_pointer])
+
+                    while compare_pointer < len(compare_times) and reference_data[reference_pointer] < compare_data[compare_pointer]:
+                        compare_pointer += 1
+                    if compare_pointer >= len(compare_times):
+                        break
+
+                    if compare_times[compare_pointer] > 0:
+                        speedup_data.append(reference_times[reference_pointer] / compare_times[compare_pointer])
+                        speedup_times.append(compare_times[compare_pointer])
+                
+                else:
+                    if compare_times[compare_pointer] > 0:
+                        speedup_data.append(reference_times[reference_pointer] / compare_times[compare_pointer])
+                        speedup_times.append(compare_times[compare_pointer])
+
+                    reference_pointer += 1
+                    compare_pointer += 1
+
+                    if compare_pointer >= len(compare_times) or reference_pointer >= len(reference_times):
+                        break
+                    if compare_times[compare_pointer] > 0:
+                        speedup_data.append(reference_times[reference_pointer] / compare_times[compare_pointer])
+                        speedup_times.append(compare_times[compare_pointer])
+                    
+
+            
+            plt.plot(speedup_times, speedup_data, color=d["color"], linestyle=d["linestyle"],
+                     label=label_rename(compare_label) if do_label_rename else compare_label)
+
+            plt.xlabel('wall clock time [s]' if not do_label_rename else label_rename('wall clock time [s]'), fontsize=font_size)
+            plt.ylabel('speedup' if not do_label_rename else label_rename('speedup'), fontsize=font_size)
+            plt.title('speedup compared to %s' % (label_rename(reference_label) if do_label_rename else reference_label))
+            if not hide_legend:
+                plt.legend(loc='best', prop={'size': font_size})
+    return plot_speedup
 
 LABEL_RENAME = {"LABEL_RENAME_SET_BY_JSON": False}
 def label_rename(label):

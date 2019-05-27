@@ -1,5 +1,5 @@
 from autoPyTorch.pipeline.base.pipeline_node import PipelineNode
-from autoPyTorch.utils.benchmarking.visualization_pipeline.plot_trajectories import plot, label_rename, process_trajectory
+from autoPyTorch.utils.benchmarking.visualization_pipeline.plot_trajectories import plot, label_rename, process_trajectory, plot_trajectory, get_plot_speedup_func
 from autoPyTorch.utils.config.config_option import ConfigOption, to_bool
 import os
 import logging
@@ -10,10 +10,19 @@ import heapq
 class PlotSummary(PipelineNode):
     def fit(self, pipeline_config, trajectories, optimize_metrics):
         if not pipeline_config["skip_ranking_plot"]:
-            plot(dict(pipeline_config, plot_type="losses", y_scale="linear"), trajectories, optimize_metrics, "ranking", process_summary)
+            plot(dict(pipeline_config, plot_type="losses", y_scale="linear"),
+                 trajectories, optimize_metrics, "ranking", process_summary, plot_trajectory)
+
+        if pipeline_config["show_speedup_plot"]:
+            plot_speedup = get_plot_speedup_func(
+                pipeline_config["show_speedup_plot"])
+            plot(dict(pipeline_config, scale_uncertainty=0, plot_type="losses", y_scale="linear"),
+                 trajectories, optimize_metrics, "average", process_summary, plot_speedup)
+
         if not pipeline_config["skip_average_plot"]:
-            plot(dict(pipeline_config, scale_uncertainty=0), trajectories, optimize_metrics, "average", process_summary)
-            plot(pipeline_config, trajectories, optimize_metrics, "sampled_average", trajectory_sampling)
+            plot(dict(pipeline_config, scale_uncertainty=0),
+                 trajectories, optimize_metrics, "average", process_summary, plot_trajectory)
+            plot(pipeline_config, trajectories, optimize_metrics, "sampled_average", trajectory_sampling, plot_trajectory)
         return dict()
 
     def get_pipeline_config_options(self):
