@@ -1,0 +1,11 @@
+{
+    "val: both": "combination",
+    "val: hb": "hyperband",
+    "val: none": "vanilla BOHB",
+    "val: init_default": "default",
+    "val: init_small": "small",
+    "val: init_large": "large",
+    "val: init_tiny": "tiny",
+    "mean balanced_accuracy": "mean rank",
+    "median balanced_accuracy": "median rank"
+}

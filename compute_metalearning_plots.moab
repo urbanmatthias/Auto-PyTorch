@@ -1,0 +1,111 @@
+#!/bin/bash
+#MOAB -N LOL
+#MOAB -l nodes=1:ppn=1,walltime=90:00:00,pmem=8gb
+#MOAB -V
+#MOAB -E
+#MOAB -t 1-96
+
+cd $HOME/workspace/Auto-PyTorch
+MOAB_JOBARRAYINDEX=`expr $MOAB_JOBARRAYINDEX - 1`
+
+AGGLOMERATION="mean"
+if [ `expr $MOAB_JOBARRAYINDEX % 2` == 0 ]; then
+    AGGLOMERATION="median"
+fi
+MOAB_JOBARRAYINDEX=`expr $MOAB_JOBARRAYINDEX / 2`
+
+HIDE_LEGEND=""
+if [ `expr $MOAB_JOBARRAYINDEX % 2` == 0 ]; then
+    HIDE_LEGEND="--hide_legend"
+fi
+MOAB_JOBARRAYINDEX=`expr $MOAB_JOBARRAYINDEX / 2`
+
+SKIP="--skip_average_plot --skip_dataset_plots"
+PLOT_TYPE="ranking"
+if [ `expr $MOAB_JOBARRAYINDEX % 2` == 0 ]; then
+    SKIP="--skip_ranking_plot"
+    PLOT_TYPE="average"
+fi
+MOAB_JOBARRAYINDEX=`expr $MOAB_JOBARRAYINDEX / 2`
+
+#final
+if [ $MOAB_JOBARRAYINDEX == 0 ]; then
+    PARTIAL_BENCHMARK=": 0,1,2,6,15"
+    FOCUS="FINAL"
+    LABEL_RENAME="labels/final_${PLOT_TYPE}.json"
+fi
+
+if [ $MOAB_JOBARRAYINDEX == 1 ]; then
+    PARTIAL_BENCHMARK=": 1,2,6,15,23"
+    FOCUS="FINAL2"
+    LABEL_RENAME="labels/final_${PLOT_TYPE}.json"
+fi
+
+### dmw 
+if [ $MOAB_JOBARRAYINDEX == 2 ]; then
+    PARTIAL_BENCHMARK=": 2,11,12,13,14"
+    FOCUS="DMW_LH"
+    LABEL_RENAME="labels/wm_method_${PLOT_TYPE}.json"
+fi
+
+if [ $MOAB_JOBARRAYINDEX == 3 ]; then
+    PARTIAL_BENCHMARK=": 2,15,16,17,18"
+    FOCUS="DMW_ML"
+    LABEL_RENAME="labels/wm_method_${PLOT_TYPE}.json"
+fi
+
+
+if [ $MOAB_JOBARRAYINDEX == 4 ]; then
+    PARTIAL_BENCHMARK=": 2,11,13,15,17"
+    FOCUS="DMW_SAMPLE_MAX"
+    LABEL_RENAME="labels/wm_sample_${PLOT_TYPE}.json"
+fi
+
+if [ $MOAB_JOBARRAYINDEX == 5 ]; then
+    PARTIAL_BENCHMARK=": 2,12,14,16,18"
+    FOCUS="DMW_SAMPLE_CURRENT"
+    LABEL_RENAME="labels/wm_sample_${PLOT_TYPE}.json"
+fi
+
+if [ $MOAB_JOBARRAYINDEX == 6 ]; then
+    PARTIAL_BENCHMARK=": 2,11,12,15,16"
+    FOCUS="DMW_SIMILARITY_MAX"
+    LABEL_RENAME="labels/wm_weight_${PLOT_TYPE}.json"
+fi
+
+if [ $MOAB_JOBARRAYINDEX == 7 ]; then
+    PARTIAL_BENCHMARK=": 2,13,14,17,18"
+    FOCUS="DMW_SIMILARITY_CURRENT"
+    LABEL_RENAME="labels/wm_weight_${PLOT_TYPE}.json"
+fi
+
+# init
+if [ $MOAB_JOBARRAYINDEX == 8 ]; then
+    PARTIAL_BENCHMARK=": 2,3,4,5,19"
+    FOCUS="INIT_SIZE"
+    LABEL_RENAME="labels/init_size_${PLOT_TYPE}.json"
+fi
+
+if [ $MOAB_JOBARRAYINDEX == 9 ]; then
+    PARTIAL_BENCHMARK=": 2,3,6,8,9"
+    FOCUS="INIT_COMPARISON"
+    LABEL_RENAME="labels/init_${PLOT_TYPE}.json"
+fi
+
+if [ $MOAB_JOBARRAYINDEX == 10 ]; then
+    PARTIAL_BENCHMARK=": 7,10"
+    FOCUS="INIT_SIM_SH"
+    LABEL_RENAME="labels/init_${PLOT_TYPE}.json"
+fi
+
+if [ $MOAB_JOBARRAYINDEX == 11 ]; then
+    PARTIAL_BENCHMARK=": 2,19,20,21,22"
+    FOCUS="INIT_TINY"
+    LABEL_RENAME="labels/init_${PLOT_TYPE}.json"
+fi
+
+mkdir metalearning_plots
+OUTPUT_FOLDER="metalearning_plots/${FOCUS}_${AGGLOMERATION}_${HIDE_LEGEND}"
+mkdir $OUTPUT_FOLDER
+
+python scripts/visualize_benchmark.py configs/benchmark/metalearning_comparison.txt --output_folder $OUTPUT_FOLDER --plot_logs balanced_accuracy --agglomeration $AGGLOMERATION --partial_benchmark $PARTIAL_BENCHMARK --label_rename $LABEL_RENAME $SKIP $HIDE_LEGEND
