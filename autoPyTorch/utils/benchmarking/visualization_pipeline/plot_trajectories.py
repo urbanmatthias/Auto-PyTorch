@@ -66,7 +66,7 @@ def plot(pipeline_config, trajectories, optimize_metrics, instance, process_fnc,
         
         # prepare pdf
         if output_folder is not None:
-            pdf_destination = os.path.join(output_folder, instance_name + '_' + metric_name + '.' + extension)
+            pdf_destination = os.path.join(output_folder, instance_name + '_' + metric_name + '_' + plot_fnc.__name__ + '.' + extension)
             pp = PdfPages(pdf_destination)
 
         # create figure
