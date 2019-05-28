@@ -9,6 +9,8 @@ import numpy as np
 
 sys.path.append(os.path.abspath(os.path.join(__file__, '..', '..', 'submodules/HpBandSter')))
 
+from hpbandster.core.result import logged_results_to_HBS_result
+
 
 
 sum_of_weights_history = None
@@ -63,15 +65,11 @@ if __name__ == "__main__":
             r = logged_results_to_HBS_result(
                 os.path.dirname(weight_history_file))
             sampled_configs = set()
-            budget_consumed = 0
             for run in sorted(r.get_all_runs(), key=(lambda run: run.time_stamps["submitted"])):
-                print(run.config_id, run.budget)
                 if run.config_id not in sampled_configs:
-                    x_axis.append(budget_consumed)
+                    x_axis.append(run.time_stamps["submitted"])
                 sampled_configs |= set([run.config_id])
-                budget_consumed += run.budget
         except Exception as e:
-            print(e)
             continue
 
         for title, data in sorted(plot_data.items()):
