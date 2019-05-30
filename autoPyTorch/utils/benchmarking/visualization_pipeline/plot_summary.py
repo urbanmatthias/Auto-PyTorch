@@ -145,7 +145,7 @@ def process_summary(instance_name, metric_name, prefixes, trajectories, plot_typ
         plot_data[label] = {
             "individual_trajectory": None,
             "individual_times_finished": None,
-            "color": color,
+            "color": (1.0, 0, 0) if config.startswith("mf") else (0, 0, 1.0),
             "linestyle": "-",
             "center": center[(config, name)],
             "lower": lower[(config, name)],
