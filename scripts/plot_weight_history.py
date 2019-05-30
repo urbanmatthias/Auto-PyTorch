@@ -12,10 +12,6 @@ sys.path.append(os.path.abspath(os.path.join(__file__, '..', '..', 'submodules/H
 from hpbandster.core.result import logged_results_to_HBS_result
 
 
-
-sum_of_weights_history = None
-
-
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Run benchmarks for autonet.')
     parser.add_argument("weight_history_files", type=str, nargs="+", help="The files to plot")
@@ -64,6 +60,7 @@ if __name__ == "__main__":
         try:
             r = logged_results_to_HBS_result(
                 os.path.dirname(weight_history_file))
+            r.get_incumbent_trajectory()
             sampled_configs = set()
             for run in sorted(r.get_all_runs(), key=(lambda run: run.time_stamps["submitted"])):
                 if run.config_id not in sampled_configs:
