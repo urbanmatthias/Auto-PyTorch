@@ -6,3 +6,4 @@ from autoPyTorch.utils.benchmarking.visualization_pipeline.visualization_setting
 from autoPyTorch.utils.benchmarking.visualization_pipeline.get_ensemble_trajectories import GetEnsembleTrajectories
 from autoPyTorch.utils.benchmarking.visualization_pipeline.plot_summary import PlotSummary
 from autoPyTorch.utils.benchmarking.visualization_pipeline.get_additional_trajectories import GetAdditionalTrajectories
+from autoPyTorch.utils.benchmarking.visualization_pipeline.compute_speedup import ComputeSpeedup

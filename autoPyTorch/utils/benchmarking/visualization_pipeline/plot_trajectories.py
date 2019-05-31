@@ -2,23 +2,24 @@ import os
 from autoPyTorch.utils.config.config_option import ConfigOption, to_bool
 from autoPyTorch.pipeline.base.pipeline_node import PipelineNode
 import numpy as np
+import scipy.stats
 import logging
 import json
 import heapq
 
 class PlotTrajectories(PipelineNode):
 
-    def fit(self, pipeline_config, trajectories, optimize_metrics, instance):
+    def fit(self, pipeline_config, trajectories, speedup_trajectories, optimize_metrics, instance):
         global LABEL_RENAME
         if isinstance(pipeline_config["label_rename"], dict):
             LABEL_RENAME = pipeline_config["label_rename"]
             LABEL_RENAME["LABEL_RENAME_SET_BY_JSON"] = True
         if not pipeline_config["skip_dataset_plots"]:
             plot(pipeline_config, trajectories, optimize_metrics, instance, process_trajectory, plot_trajectory)
-            if pipeline_config["show_speedup_plot"]:
-                plot_speedup = get_plot_speedup_func(pipeline_config["show_speedup_plot"])
-                plot(dict(pipeline_config, scale_uncertainty=0, plot_type="losses", y_scale="linear"),
-                    trajectories, optimize_metrics, instance, process_trajectory, plot_speedup)
+        
+            if speedup_trajectories:
+                plot(dict(pipeline_config, agglomeration="gmean", step=False),
+                     speedup_trajectories, optimize_metrics, instance, process_trajectory, plot_trajectory)
 
         return {"trajectories": trajectories, "optimize_metrics": optimize_metrics}
     
@@ -27,7 +28,7 @@ class PlotTrajectories(PipelineNode):
         options = [
             ConfigOption('plot_logs', default=None, type='str', list=True),
             ConfigOption('output_folder', default=None, type='directory'),
-            ConfigOption('agglomeration', default='mean', choices=['mean', 'median']),
+            ConfigOption('agglomeration', default='mean', choices=['mean', 'median', 'mean+sem']),
             ConfigOption('scale_uncertainty', default=1, type=float),
             ConfigOption('font_size', default=12, type=int),
             ConfigOption('prefixes', default=["val"], list=True, choices=["", "train", "val", "test", "ensemble", "ensemble_test"]),
@@ -44,7 +45,7 @@ class PlotTrajectories(PipelineNode):
             ConfigOption('ymax', default=None, type=float),
             ConfigOption('value_multiplier', default=1, type=float),
             ConfigOption('hide_legend', default=False, type=to_bool),
-            ConfigOption('show_speedup_plot', default=None, type=str)
+            ConfigOption('step', default=True, type=to_bool)
         ]
         return options
 
@@ -94,7 +95,8 @@ def plot(pipeline_config, trajectories, optimize_metrics, instance, process_fnc,
                 plot_individual=pipeline_config["plot_individual"],
                 plot_markers=pipeline_config["plot_markers"],
                 agglomeration=pipeline_config["agglomeration"],
-                hide_legend=pipeline_config["hide_legend"])
+                hide_legend=pipeline_config["hide_legend"],
+                step=pipeline_config["step"])
         
         plt.xscale(pipeline_config["xscale"])
         plt.yscale(pipeline_config["yscale"])
@@ -175,14 +177,22 @@ def process_trajectory(instance_name, metric_name, prefixes, trajectories, plot_
                     upper.append(np.percentile(values, int(50 + scale_uncertainty * 25)))
                 elif agglomeration == "mean":
                     center.append(np.mean(values))
-                    lower.append(-1 * scale_uncertainty * np.std(values) + center[-1])
-                    upper.append(scale_uncertainty * np.std(values) + center[-1])
+                    lower.append(-1 * scale_uncertainty * scipy.stats.sem(values) + center[-1])
+                    upper.append(scale_uncertainty * scipy.stats.sem(values) + center[-1])
+                elif agglomeration == "mean+sem":
+                    center.append(np.mean(values))
+                    lower.append(-1 * scale_uncertainty * scipy.stats.sem(values) + center[-1])
+                    upper.append(scale_uncertainty * scipy.stats.sem(values) + center[-1])
+                elif agglomeration == "gmean":
+                    center.append(scipy.stats.gmean(values))
+                    lower.append(np.exp(-1 * scale_uncertainty * np.std(np.log(values)) +  np.log(center[-1])))
+                    upper.append(np.exp(scale_uncertainty * np.std(np.log(values)) + np.log(center[-1])))
                 finishing_times.append(times_finished)
                 plot_empty = False
             label = ("%s: %s" % (prefix, config_name)) if prefix else config_name
 
             plot_data[label] = {
-                "individual_trajectory": individual_trajectories,
+                "individual_trajectories": individual_trajectories,
                 "individual_times_finished": individual_times_finished,
                 "color": color,
                 "linestyle": linestyle,
@@ -192,9 +202,8 @@ def process_trajectory(instance_name, metric_name, prefixes, trajectories, plot_
                 "finishing_times": finishing_times
             }
     return plot_empty, plot_data
-    
 
-def plot_trajectory(plot_data, instance_name, metric_name, font_size, do_label_rename, plt, plot_individual, plot_markers, agglomeration, hide_legend):
+def plot_trajectory(plot_data, instance_name, metric_name, font_size, do_label_rename, plt, plot_individual, plot_markers, agglomeration, hide_legend, step):
     for label, d in plot_data.items():
 
         if do_label_rename:
@@ -204,8 +213,12 @@ def plot_trajectory(plot_data, instance_name, metric_name, font_size, do_label_r
             for individual_trajectory, individual_times_finished in zip(d["individual_trajectories"], d["individual_times_finished"]):
                 plt.step(individual_times_finished, individual_trajectory, color=d["color"], where='post', linestyle=":", marker="x" if plot_markers else None)
         
-        plt.step(d["finishing_times"], d["center"], color=d["color"], label=label, where='post', linestyle=d["linestyle"], marker="o" if plot_markers else None)
-        plt.fill_between(d["finishing_times"], d["lower"], d["upper"], step="post", color=[(d["color"][0], d["color"][1], d["color"][2], 0.5)])
+        if step:
+            plt.step(d["finishing_times"], d["center"], color=d["color"], label=label, where='post', linestyle=d["linestyle"], marker="o" if plot_markers else None)
+            plt.fill_between(d["finishing_times"], d["lower"], d["upper"], step="post", color=[(d["color"][0], d["color"][1], d["color"][2], 0.5)])
+        else:
+            plt.plot(d["finishing_times"], d["center"], color=d["color"], label=label, linestyle=d["linestyle"], marker="o" if plot_markers else None)
+            plt.fill_between(d["finishing_times"], d["lower"], d["upper"], color=[(d["color"][0], d["color"][1], d["color"][2], 0.5)])
     xlabel = 'wall clock time [s]'
     ylabel = agglomeration + " " + metric_name
 
@@ -215,66 +228,6 @@ def plot_trajectory(plot_data, instance_name, metric_name, font_size, do_label_r
         plt.legend(loc='best', prop={'size': font_size})
     plt.title(instance_name if not do_label_rename else label_rename(instance_name), fontsize=font_size)
 
-def get_plot_speedup_func(reference_label):
-    def plot_speedup(plot_data, instance_name, metric_name, font_size, do_label_rename, plt, plot_individual, plot_markers, agglomeration, hide_legend):
-        reference_data = plot_data[reference_label]["center"]
-        reference_times = plot_data[reference_label]["finishing_times"]
-
-        for compare_label, d in plot_data.items():
-            compare_data = d["center"]
-            compare_times = d["finishing_times"]
-
-            compare_pointer = 0
-            reference_pointer = 0
-
-            speedup_data = []
-            speedup_times = []
-            while True:
-                if reference_data[reference_pointer] > compare_data[compare_pointer]:
-                    while reference_pointer < len(reference_times) and reference_data[reference_pointer] > compare_data[compare_pointer]:
-                        reference_pointer += 1
-                    if reference_pointer >= len(reference_times):
-                        break
-
-                elif reference_data[reference_pointer] < compare_data[compare_pointer]:
-                    if compare_times[compare_pointer] > 0:
-                        speedup_data.append(reference_times[reference_pointer] / compare_times[compare_pointer])
-                        speedup_times.append(compare_times[compare_pointer])
-
-                    while compare_pointer < len(compare_times) and reference_data[reference_pointer] < compare_data[compare_pointer]:
-                        compare_pointer += 1
-                    if compare_pointer >= len(compare_times):
-                        break
-
-                    if compare_times[compare_pointer] > 0:
-                        speedup_data.append(reference_times[reference_pointer] / compare_times[compare_pointer])
-                        speedup_times.append(compare_times[compare_pointer])
-                
-                else:
-                    if compare_times[compare_pointer] > 0:
-                        speedup_data.append(reference_times[reference_pointer] / compare_times[compare_pointer])
-                        speedup_times.append(compare_times[compare_pointer])
-
-                    reference_pointer += 1
-                    compare_pointer += 1
-
-                    if compare_pointer >= len(compare_times) or reference_pointer >= len(reference_times):
-                        break
-                    if compare_times[compare_pointer] > 0:
-                        speedup_data.append(reference_times[reference_pointer] / compare_times[compare_pointer])
-                        speedup_times.append(compare_times[compare_pointer])
-                    
-
-            
-            plt.plot(speedup_times, speedup_data, color=d["color"], linestyle=d["linestyle"],
-                     label=label_rename(compare_label) if do_label_rename else compare_label)
-
-            plt.xlabel('wall clock time [s]' if not do_label_rename else label_rename('wall clock time [s]'), fontsize=font_size)
-            plt.ylabel('speedup' if not do_label_rename else label_rename('speedup'), fontsize=font_size)
-            plt.title('speedup compared to %s' % (label_rename(reference_label) if do_label_rename else reference_label))
-            if not hide_legend:
-                plt.legend(loc='best', prop={'size': font_size})
-    return plot_speedup
 
 LABEL_RENAME = {"LABEL_RENAME_SET_BY_JSON": False}
 def label_rename(label):

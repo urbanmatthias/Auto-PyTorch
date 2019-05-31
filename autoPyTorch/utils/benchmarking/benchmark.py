@@ -19,7 +19,8 @@ from autoPyTorch.utils.benchmarking.visualization_pipeline import (CollectAutoNe
                                                                VisualizationSettings,
                                                                GetEnsembleTrajectories,
                                                                PlotSummary,
-                                                               GetAdditionalTrajectories)
+                                                               GetAdditionalTrajectories,
+                                                               ComputeSpeedup)
 from autoPyTorch.utils.config.config_file_parser import ConfigFileParser
 
 class Benchmark():
@@ -74,6 +75,7 @@ class Benchmark():
                     ])
                 ]),
                 GetAdditionalTrajectories(),
+                ComputeSpeedup(),
                 PlotTrajectories()
             ]),
             PlotSummary()
