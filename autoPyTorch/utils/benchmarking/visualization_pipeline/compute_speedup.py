@@ -24,7 +24,7 @@ class ComputeSpeedup(PipelineNode):
         return options
 
 
-def speedup_sampling(pipeline_config, trajectories, optimize_metrics, instance, num_samples=100):
+def speedup_sampling(pipeline_config, trajectories, optimize_metrics, instance, num_samples=1000):
     reference = pipeline_config["show_speedup_plot"]
 
     plot_logs = pipeline_config['plot_logs'] or optimize_metrics

@@ -33,6 +33,7 @@ if __name__ == "__main__":
     parser.add_argument("--skip_ranking_plot", action="store_true", help="Whether the ranking plot should be skipped")
     parser.add_argument("--skip_average_plot", action="store_true", help="Whether the average plot should be skipped")
     parser.add_argument("--show_speedup_plot", type=str, default=None, help="Show speedup plot. Specify reference label here.")
+    parser.add_argument("--show_significance_plot", type=str, default=None, help="Show speedup plot. Specify reference label here.")
     parser.add_argument("--plot_markers", action="store_true", help="Whether markers should be plotted")
     parser.add_argument("--plot_individual", action="store_true", help="Whether the individual trajectories should be plotted")
     parser.add_argument("--plot_type", default="values", help="Whether to plot metric values or losses")
@@ -100,6 +101,7 @@ if __name__ == "__main__":
     benchmark_config["value_multiplier"] = args.value_multiplier
     benchmark_config["hide_legend"] = args.hide_legend
     benchmark_config["show_speedup_plot"] = args.show_speedup_plot
+    benchmark_config["show_significance_plot"] = args.show_significance_plot
 
     benchmark_config['label_rename'] = args.label_rename
     if isinstance(benchmark_config['label_rename'], str):

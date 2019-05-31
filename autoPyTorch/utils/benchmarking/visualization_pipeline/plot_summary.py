@@ -6,6 +6,7 @@ import logging
 import numpy as np
 import random
 import heapq
+import scipy.stats
 
 class PlotSummary(PipelineNode):
     def fit(self, pipeline_config, trajectories, optimize_metrics):
@@ -22,7 +23,8 @@ class PlotSummary(PipelineNode):
     def get_pipeline_config_options(self):
         options = [
             ConfigOption('skip_ranking_plot', default=False, type=to_bool),
-            ConfigOption('skip_average_plot', default=False, type=to_bool)
+            ConfigOption('skip_average_plot', default=False, type=to_bool),
+            ConfigOption('show_significance_plot', default=False, type=to_bool)
         ]
         return options
 
@@ -55,7 +57,8 @@ get_plot_values_funcs = {
     "average": get_average_plot_values
 }
 
-def process_summary(instance_name, metric_name, prefixes, trajectories, plot_type, agglomeration, scale_uncertainty, value_multiplier, cmap):
+def process_summary(instance_name, metric_name, prefixes, trajectories, plot_type, agglomeration,
+                    scale_uncertainty, value_multiplier, cmap, significance_reference):
     assert instance_name in get_plot_values_funcs.keys()
     trajectory_names_to_prefix = {(("%s_%s" % (prefix, metric_name)) if prefix else metric_name): prefix
         for prefix in prefixes}
@@ -81,8 +84,17 @@ def process_summary(instance_name, metric_name, prefixes, trajectories, plot_typ
     center = {(config, name): [] for name in trajectory_names for config in trajectories[name].keys()}
     upper = {(config, name): [] for name in trajectory_names for config in trajectories[name].keys()}
     lower = {(config, name): [] for name in trajectory_names for config in trajectories[name].keys()}
+    p_values = {(config, name): [] for name in trajectory_names for config in trajectories[name].keys()}
     finishing_times = []
     plot_empty = True
+
+    significance_reference_key = None
+    if instance_name == "ranking":
+        for i, (config, name) in enumerate(center.keys()):
+            prefix = trajectory_names_to_prefix[name]
+            label = ("%s: %s" % (prefix, config)) if prefix else config
+            if label == significance_reference:
+                significance_reference_key = (config, name)
 
     # iterate simultaneously over all trajectories with increasing finishing times
     while heap:
@@ -108,7 +120,7 @@ def process_summary(instance_name, metric_name, prefixes, trajectories, plot_typ
 
         if finishing_times and np.isclose(times_finished, finishing_times[-1]):
             finishing_times.pop()
-            [x[k].pop() for x in [center, upper, lower] for k in x.keys()]
+            [(x[k].pop() if x[k] else None) for x in [center, upper, lower, p_values] for k in x.keys()]
 
         # calculate ranks
         values = to_dict([(instance, (config, name), value * value_multiplier)
@@ -123,7 +135,11 @@ def process_summary(instance_name, metric_name, prefixes, trajectories, plot_typ
                 center[key].append(float("nan"))
                 lower[key].append(float("nan"))
                 upper[key].append(float("nan"))
+                if significance_reference_key and key != significance_reference_key:
+                    p_values[key].append(float("nan"))
 
+            if significance_reference_key and key != significance_reference_key:
+                p_values[key].append(scipy.stats.wilcoxon(plot_values[key], plot_values[significance_reference_key])[1])
             center[key].append(np.mean(plot_values[key]))
             lower[key].append(-1 * scale_uncertainty * np.std(plot_values[key]) + center[key][-1])
             upper[key].append(scale_uncertainty * np.std(plot_values[key]) + center[key][-1])
@@ -144,6 +160,7 @@ def process_summary(instance_name, metric_name, prefixes, trajectories, plot_typ
             "center": center[(config, name)],
             "lower": lower[(config, name)],
             "upper": upper[(config, name)],
+            "p_values": p_values[(config, name)],
             "finishing_times": finishing_times
         }
     return plot_empty, plot_data
@@ -161,7 +178,8 @@ def to_dict(tuple_list):
     return result
 
 
-def trajectory_sampling(instance_name, metric_name, prefixes, trajectories, plot_type, agglomeration, scale_uncertainty, value_multiplier, cmap, num_samples=1000):
+def trajectory_sampling(instance_name, metric_name, prefixes, trajectories, plot_type, agglomeration,
+                        scale_uncertainty, value_multiplier, cmap, significance_reference, num_samples=1000):
     averaged_trajectories = dict()
 
     # sample #num_samples average trajectories
@@ -193,7 +211,8 @@ def trajectory_sampling(instance_name, metric_name, prefixes, trajectories, plot
             agglomeration=agglomeration,
             scale_uncertainty=0,
             value_multiplier=value_multiplier,
-            cmap=cmap
+            cmap=cmap,
+            significance_reference=False
         )
 
         if plot_empty:
@@ -224,5 +243,6 @@ def trajectory_sampling(instance_name, metric_name, prefixes, trajectories, plot
         agglomeration="mean",
         scale_uncertainty=scale_uncertainty,
         value_multiplier=1,
-        cmap=cmap
+        cmap=cmap,
+        significance_reference=False
     )

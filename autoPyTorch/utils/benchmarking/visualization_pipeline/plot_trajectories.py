@@ -80,7 +80,8 @@ def plot(pipeline_config, trajectories, optimize_metrics, instance, process_fnc,
                                             agglomeration=pipeline_config["agglomeration"],
                                             scale_uncertainty=pipeline_config['scale_uncertainty'],
                                             value_multiplier=pipeline_config['value_multiplier'],
-                                            cmap=plt.get_cmap('jet'))
+                                            cmap=plt.get_cmap('jet'),
+                                            significance_reference=pipeline_config["show_significance_plot"])
         if plot_empty:
             logging.getLogger('benchmark').warn('Not showing empty plot for ' + instance)
             plt.close(figure)
@@ -114,7 +115,8 @@ def plot(pipeline_config, trajectories, optimize_metrics, instance, process_fnc,
             plt.close(figure)
 
 
-def process_trajectory(instance_name, metric_name, prefixes, trajectories, plot_type, agglomeration, scale_uncertainty, value_multiplier, cmap):
+def process_trajectory(instance_name, metric_name, prefixes, trajectories, plot_type, agglomeration,
+                       scale_uncertainty, value_multiplier, cmap, significance_reference):
     # iterate over the incumbent trajectories of the different runs
     linestyles = ['-', '--', '-.', ':']
     plot_empty = True
@@ -204,6 +206,16 @@ def process_trajectory(instance_name, metric_name, prefixes, trajectories, plot_
     return plot_empty, plot_data
 
 def plot_trajectory(plot_data, instance_name, metric_name, font_size, do_label_rename, plt, plot_individual, plot_markers, agglomeration, hide_legend, step):
+    plot_p_values = any(("p_values" in d and d["p_values"]) for d in plot_data.values())
+    gridshape = (5, 1) if plot_p_values else (4,1)
+    if plot_p_values:
+        ax2 = plt.subplot2grid(gridshape, (4, 0))
+        ax2.set_xscale("log")
+        ax2.set_yscale("log")
+    ax1 = plt.subplot2grid(gridshape, (0, 0), rowspan=4)
+    if plot_p_values:
+        ax1.get_xaxis().set_visible(False)
+    
     for label, d in plot_data.items():
 
         if do_label_rename:
@@ -219,10 +231,14 @@ def plot_trajectory(plot_data, instance_name, metric_name, font_size, do_label_r
         else:
             plt.plot(d["finishing_times"], d["center"], color=d["color"], label=label, linestyle=d["linestyle"], marker="o" if plot_markers else None)
             plt.fill_between(d["finishing_times"], d["lower"], d["upper"], color=[(d["color"][0], d["color"][1], d["color"][2], 0.5)])
+        
+        if "p_values" in d and d["p_values"]:
+            ax2.plot(d["finishing_times"], d["p_values"], color=d["color"], linestyle=d["linestyle"])
+            ax2.plot(d["finishing_times"], [0.05] * len(d["finishing_times"]), color="black")
     xlabel = 'wall clock time [s]'
     ylabel = agglomeration + " " + metric_name
 
-    plt.xlabel(xlabel if not do_label_rename else label_rename(xlabel), fontsize=font_size)
+    (ax2 if plot_p_values else ax1).set_xlabel(xlabel if not do_label_rename else label_rename(xlabel), fontsize=font_size)
     plt.ylabel(ylabel if not do_label_rename else label_rename(ylabel), fontsize=font_size)
     if not hide_legend:
         plt.legend(loc='best', prop={'size': font_size})
