@@ -81,13 +81,14 @@ if __name__ == "__main__":
     num_subplots = (1 + len(additional_info_names)) * 100
     gridshape = (max(1, len(additional_info_names) * 4), 1)
     ax1 = plt.subplot2grid(gridshape, (0, 0), rowspan=max(1, len(additional_info) * 3))
+    plt.ylabel("weights", fontsize=15)
 
     for plot_data in all_plot_data:
         for title, (x_axis, data) in plot_data.items():
-            plt.plot(x_axis, data[:len(x_axis)], lw=0.1 if title != "current" else 0.5,
+            plt.plot(x_axis, data[:len(x_axis)], lw=0.2 if title != "current" else 0.5,
                 color="red" if title == "current" else "blue")
 
-    plt.title("weight history")
+    plt.title("weight history", fontsize=15)
     plt.xscale("log")
 
     for i, title in enumerate(sorted(additional_info_names)):
@@ -97,5 +98,5 @@ if __name__ == "__main__":
             plt.scatter(x_axis, data[:len(x_axis)], label=title if j == 0 else None, marker="x", color="orange")
         plt.legend(loc='upper left')
 
-
+    plt.xlabel("wall clock time [s]", fontsize=15)
     plt.show()

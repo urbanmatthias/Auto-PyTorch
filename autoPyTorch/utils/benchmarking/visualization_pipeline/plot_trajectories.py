@@ -18,7 +18,7 @@ class PlotTrajectories(PipelineNode):
             plot(pipeline_config, trajectories, optimize_metrics, instance, process_trajectory, plot_trajectory)
         
             if speedup_trajectories:
-                plot(dict(pipeline_config, agglomeration="gmean", step=False),
+                plot(dict(pipeline_config, agglomeration="gmean", step=False, yscale="log"),
                      speedup_trajectories, optimize_metrics, instance, process_trajectory, plot_trajectory)
 
         return {"trajectories": trajectories, "optimize_metrics": optimize_metrics}
