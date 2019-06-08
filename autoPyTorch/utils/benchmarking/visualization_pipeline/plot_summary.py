@@ -12,12 +12,12 @@ class PlotSummary(PipelineNode):
     def fit(self, pipeline_config, trajectories, optimize_metrics):
         if not pipeline_config["skip_ranking_plot"]:
             plot(dict(pipeline_config, plot_type="losses", y_scale="linear"),
-                 trajectories, optimize_metrics, "ranking", process_summary, plot_trajectory)
+                 trajectories, optimize_metrics, "ranking", process_summary, plot_trajectory, "plot")
 
         if not pipeline_config["skip_average_plot"]:
             plot(dict(pipeline_config, scale_uncertainty=0),
-                 trajectories, optimize_metrics, "average", process_summary, plot_trajectory)
-            plot(pipeline_config, trajectories, optimize_metrics, "sampled_average", trajectory_sampling, plot_trajectory)
+                 trajectories, optimize_metrics, "average", process_summary, plot_trajectory, "plot")
+            plot(pipeline_config, trajectories, optimize_metrics, "sampled_average", trajectory_sampling, plot_trajectory, "plot")
         return dict()
 
     def get_pipeline_config_options(self):

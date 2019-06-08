@@ -34,7 +34,6 @@ if __name__ == "__main__":
         current_read = False
         with open(weight_history_file, "r") as f:
             for line in f:
-
                 #read the data
                 line = line.split("\t")
                 if len(line) == 1 or not line[-1].strip():
@@ -42,6 +41,7 @@ if __name__ == "__main__":
                 data = line[-1]
                 data = list(map(float, map(str.strip, data.split(","))))
                 title = "\t".join(line[:-1]).strip()
+                title = title if title.replace(":", "_") != weight_history_file.split("/")[2] else "same_dataset"
 
                 # and save it later for plotting
                 if not current_read:
@@ -85,8 +85,24 @@ if __name__ == "__main__":
 
     for plot_data in all_plot_data:
         for title, (x_axis, data) in plot_data.items():
-            plt.plot(x_axis, data[:len(x_axis)], lw=0.2 if title != "current" else 0.5,
-                color="red" if title == "current" else "blue")
+            if title in ["current", "same_dataset"]:
+                continue
+            plt.plot(x_axis, data[:len(x_axis)], lw=0.2,
+                     color="blue")
+
+    for plot_data in all_plot_data:
+        for title, (x_axis, data) in plot_data.items():
+            if title != "current":
+                continue
+            plt.plot(x_axis, data[:len(x_axis)], lw=0.5,
+                     color="red")
+
+    for plot_data in all_plot_data:
+        for title, (x_axis, data) in plot_data.items():
+            if title != "same_dataset":
+                continue
+            plt.plot(x_axis, data[:len(x_axis)], lw=3,
+                     color="yellow")
 
     plt.title("weight history", fontsize=15)
     plt.xscale("log")

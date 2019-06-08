@@ -15,11 +15,11 @@ class PlotTrajectories(PipelineNode):
             LABEL_RENAME = pipeline_config["label_rename"]
             LABEL_RENAME["LABEL_RENAME_SET_BY_JSON"] = True
         if not pipeline_config["skip_dataset_plots"]:
-            plot(pipeline_config, trajectories, optimize_metrics, instance, process_trajectory, plot_trajectory)
+            plot(pipeline_config, trajectories, optimize_metrics, instance, process_trajectory, plot_trajectory, "plot")
         
             if speedup_trajectories:
                 plot(dict(pipeline_config, agglomeration="gmean", step=False, yscale="log"),
-                     speedup_trajectories, optimize_metrics, instance, process_trajectory, plot_trajectory)
+                     speedup_trajectories, optimize_metrics, instance, process_trajectory, plot_trajectory, "speedup")
 
         return {"trajectories": trajectories, "optimize_metrics": optimize_metrics}
     
@@ -50,7 +50,7 @@ class PlotTrajectories(PipelineNode):
         return options
 
 
-def plot(pipeline_config, trajectories, optimize_metrics, instance, process_fnc, plot_fnc):
+def plot(pipeline_config, trajectories, optimize_metrics, instance, process_fnc, plot_fnc, filename_suffix):
     import matplotlib.pyplot as plt
     from matplotlib.backends.backend_pdf import PdfPages
     extension = "pdf"
@@ -67,7 +67,7 @@ def plot(pipeline_config, trajectories, optimize_metrics, instance, process_fnc,
         
         # prepare pdf
         if output_folder is not None:
-            pdf_destination = os.path.join(output_folder, instance_name + '_' + metric_name + '_' + plot_fnc.__name__ + '.' + extension)
+            pdf_destination = os.path.join(output_folder, instance_name + '_' + metric_name + '_' + filename_suffix + '.' + extension)
             pp = PdfPages(pdf_destination)
 
         # create figure
@@ -211,7 +211,7 @@ def plot_trajectory(plot_data, instance_name, metric_name, font_size, do_label_r
     if plot_p_values:
         ax2 = plt.subplot2grid(gridshape, (4, 0))
         ax2.set_xscale("log")
-        ax2.set_yscale("log")
+        ax2.set_ylim([0,0.2])
     ax1 = plt.subplot2grid(gridshape, (0, 0), rowspan=4)
     if plot_p_values:
         ax1.get_xaxis().set_visible(False)
