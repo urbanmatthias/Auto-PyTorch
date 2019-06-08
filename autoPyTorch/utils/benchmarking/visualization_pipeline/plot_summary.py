@@ -79,6 +79,7 @@ def process_summary(instance_name, metric_name, prefixes, trajectories, plot_typ
             for instance, run_trajectories in instance_trajectories.items()
             for j in range(len(run_trajectories))]
     heapq.heapify(heap)
+    uncertainty_func = scipy.stats.sem if instance_name == "ranking" else np.std
 
     # data to plot
     center = {(config, name): [] for name in trajectory_names for config in trajectories[name].keys()}
@@ -141,8 +142,8 @@ def process_summary(instance_name, metric_name, prefixes, trajectories, plot_typ
             if significance_reference_key and key != significance_reference_key:
                 p_values[key].append(scipy.stats.wilcoxon(plot_values[key], plot_values[significance_reference_key])[1])
             center[key].append(np.mean(plot_values[key]))
-            lower[key].append(-1 * scale_uncertainty * scipy.stats.sem(plot_values[key]) + center[key][-1])
-            upper[key].append(scale_uncertainty * scipy.stats.sem(plot_values[key]) + center[key][-1])
+            lower[key].append(-1 * scale_uncertainty * uncertainty_func(plot_values[key]) + center[key][-1])
+            upper[key].append(scale_uncertainty * uncertainty_func(plot_values[key]) + center[key][-1])
         finishing_times.append(times_finished)
         plot_empty = False
         
