@@ -211,7 +211,7 @@ def plot_trajectory(plot_data, instance_name, metric_name, font_size, do_label_r
     if plot_p_values:
         ax2 = plt.subplot2grid(gridshape, (4, 0))
         ax2.set_xscale("log")
-        ax2.set_ylim([0,0.2])
+        ax2.set_ylim([-0.01,0.2])
     ax1 = plt.subplot2grid(gridshape, (0, 0), rowspan=4)
     if plot_p_values:
         ax1.get_xaxis().set_visible(False)
