@@ -99,8 +99,6 @@ def compute_speedup(sampled_trajectories, reference_label, x_log_scale):
                 while compare_pointer < len(compare_times) and reference_data[reference_pointer] < compare_data[compare_pointer]:
                     compare_pointer += 1
                 if compare_pointer >= len(compare_times):
-                    speedup_data.append(reference_times[reference_pointer] / compare_times[compare_pointer - 1])
-                    speedup_times.append(reference_times[reference_pointer] - 1)
                     break
 
             else:
