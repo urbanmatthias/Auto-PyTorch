@@ -11,5 +11,6 @@
     "val: wm_ml_current_max": "current-max",
     "val: wm_ml_current_current": "current-current",
     "mean balanced_accuracy": "mean rank",
-    "median balanced_accuracy": "median rank"
+    "median balanced_accuracy": "median rank",
+    "gmean balanced_accuracy": "gmean speedup"
 }

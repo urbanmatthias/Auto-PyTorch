@@ -9,5 +9,6 @@
     "val: wm_ml_max_max": "max-max",
     "val: wm_ml_max_current": "max-current",
     "val: wm_ml_current_max": "current-max",
-    "val: wm_ml_current_current": "current-current"
+    "val: wm_ml_current_current": "current-current",
+    "gmean balanced_accuracy": "gmean speedup"
 }

@@ -3,7 +3,7 @@
 #MOAB -l nodes=1:ppn=1,walltime=90:00:00,pmem=8gb
 #MOAB -V
 #MOAB -E
-#MOAB -t 1-96
+#MOAB -t 1-144
 
 cd $HOME/workspace/Auto-PyTorch
 MOAB_JOBARRAYINDEX=`expr $MOAB_JOBARRAYINDEX - 1`
@@ -20,13 +20,17 @@ if [ `expr $MOAB_JOBARRAYINDEX % 2` == 0 ]; then
 fi
 MOAB_JOBARRAYINDEX=`expr $MOAB_JOBARRAYINDEX / 2`
 
-SKIP="--skip_average_plot --skip_dataset_plots"
+SKIP="--skip_average_plot --skip_dataset_plots --show_significance_plot \"val: none\""
 PLOT_TYPE="ranking"
-if [ `expr $MOAB_JOBARRAYINDEX % 2` == 0 ]; then
-    SKIP="--skip_ranking_plot"
+if [ `expr $MOAB_JOBARRAYINDEX % 3` == 0 ]; then
+    SKIP="--skip_ranking_plot --skip_dataset_plots"
     PLOT_TYPE="average"
 fi
-MOAB_JOBARRAYINDEX=`expr $MOAB_JOBARRAYINDEX / 2`
+if [ `expr $MOAB_JOBARRAYINDEX % 3` == 1 ]; then
+    SKIP="--show_speedup_plot \"val: none\" --skip_average_plot --skip_ranking_plot"
+    PLOT_TYPE="average"
+fi
+MOAB_JOBARRAYINDEX=`expr $MOAB_JOBARRAYINDEX / 3`
 
 #final
 if [ $MOAB_JOBARRAYINDEX == 0 ]; then
@@ -108,4 +112,4 @@ mkdir metalearning_plots
 OUTPUT_FOLDER="metalearning_plots/${FOCUS}_${AGGLOMERATION}_${HIDE_LEGEND}"
 mkdir $OUTPUT_FOLDER
 
-python scripts/visualize_benchmark.py configs/benchmark/metalearning_comparison.txt --output_folder $OUTPUT_FOLDER --plot_logs balanced_accuracy --agglomeration $AGGLOMERATION --partial_benchmark $PARTIAL_BENCHMARK --label_rename $LABEL_RENAME $SKIP $HIDE_LEGEND
+eval python scripts/visualize_benchmark.py configs/benchmark/metalearning_comparison.txt --output_folder $OUTPUT_FOLDER --plot_logs balanced_accuracy --agglomeration $AGGLOMERATION --partial_benchmark $PARTIAL_BENCHMARK --label_rename $LABEL_RENAME $SKIP $HIDE_LEGEND

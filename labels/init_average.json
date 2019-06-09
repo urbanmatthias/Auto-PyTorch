@@ -22,5 +22,6 @@
     "val: init_tiny": "optimize SH-iteration",
     "val: init_tiny_fix_sh": "simulate SH-iteration",
     "val: init_tiny_no_sh_eval": "basic initial design",
-    "val: init_tiny_no_sh_sim": "evaluate as SH-iteration"
+    "val: init_tiny_no_sh_sim": "evaluate as SH-iteration",
+    "gmean balanced_accuracy": "gmean speedup"
 }

@@ -7,5 +7,6 @@
     "val: init_large": "large",
     "val: init_tiny": "tiny",
     "mean balanced_accuracy": "mean rank",
-    "median balanced_accuracy": "median rank"
+    "median balanced_accuracy": "median rank",
+    "gmean balanced_accuracy": "gmean speedup"
 }

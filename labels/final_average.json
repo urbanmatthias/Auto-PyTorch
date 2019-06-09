@@ -22,5 +22,6 @@
     "val: init_tiny": "initial design",
     "val: init_tiny_fix_sh": "initial design",
     "val: init_tiny_no_sh_eval": "initial design",
-    "val: init_tiny_no_sh_sim": "initial design"
+    "val: init_tiny_no_sh_sim": "initial design",
+    "gmean balanced_accuracy": "gmean speedup"
 }
